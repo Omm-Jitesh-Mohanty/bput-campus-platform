@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Give Feedback" %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 620px; margin: 0 auto;">
+
+<h1>💬 {% trans "Give Feedback" %}</h1>
+<p style="color: #64748b; margin-bottom: 24px;">
+    {% trans "Your feedback helps us improve campus facilities." %}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="form-group">
+            <label for="category">{% trans "What are you reviewing?" %}</label>
+            <select name="category" id="category" required>
+                {% for code, name in categories %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>{% trans "How would you rate it?" %}</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% for i in "12345" %}
+                <label style="flex: 1; text-align: center; cursor: pointer; min-width: 80px;">
+                    <input type="radio" name="rating" value="{{ i }}" required style="display: none;"
+                           onchange="this.parentElement.querySelector('.rating-box').classList.add('selected');
+                                     this.parentElement.parentElement.querySelectorAll('.rating-box').forEach(el => el.classList.remove('selected'));
+                                     this.parentElement.querySelector('.rating-box').classList.add('selected');">
+                    <div class="rating-box" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px;
+                         transition: all 0.15s;">
+                        <div style="font-size: 24px;">
+                            {% if i == "1" %}😞
+                            {% elif i == "2" %}😐
+                            {% elif i == "3" %}🙂
+                            {% elif i == "4" %}😀
+                            {% else %}🤩{% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{ i }}/5</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="comments">{% trans "Comments (optional)" %}</label>
+            <textarea name="comments" id="comments" rows="4"
+                      placeholder="{% trans 'Tell us more…' %}"></textarea>
+        </div>
+
+        <label style="display: flex; gap: 8px; align-items: center; font-size: 14px; color: #64748b;">
+            <input type="checkbox" name="is_anonymous">
+            {% trans "Submit anonymously" %}
+        </label>
+
+        <button type="submit" class="btn" style="width: 100%; margin-top: 16px; padding: 12px;">
+            {% trans "Submit Feedback" %}
+        </button>
+    </div>
+
+</form>
+
+</div>
+
+<style>
+.rating-box.selected {
+    border-color: #1e40af !important;
+    background: #eff6ff;
+    transform: scale(1.05);
+}
+</style>
+{% endblock %}

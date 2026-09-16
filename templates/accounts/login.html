@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Login" %} — Campus Platform{% endblock %}
+
+{% block content %}
+<div style="max-width: 420px; margin: 60px auto;">
+    <div class="card">
+        <h2 style="text-align: center; margin-bottom: 8px;">
+            🏛 {% trans "Campus Platform" %}
+        </h2>
+        <p style="text-align: center; color: #64748b; margin-bottom: 24px; font-size: 14px;">
+            {% trans "One platform for attendance, requests, notices & more" %}
+        </p>
+
+        <form method="post" action="{% url 'accounts:login' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">
+                    {% trans "Username" %}
+                </label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">
+                    {% trans "Password" %}
+                </label>
+                {{ form.password }}
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%;">
+                {% trans "Log In" %}
+            </button>
+        </form>
+
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+        <p style="font-size: 13px; color: #64748b; text-align: center;">
+            <strong>Demo credentials:</strong><br>
+            Student → <code>aditya</code> / <code>demo1234</code><br>
+            Admin → <code>warden_a</code> / <code>demo1234</code>
+        </p>
+    </div>
+</div>
+{% endblock %}

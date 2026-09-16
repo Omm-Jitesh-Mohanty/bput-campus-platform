@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Assign Ticket" %} #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 620px; margin: 0 auto;">
+
+<h1>🎯 {% trans "Assign Ticket" %} #{{ ticket.id }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="form-group">
+            <label for="department">{% trans "Department" %}</label>
+            <select name="department" id="department">
+                {% for code, name in departments %}
+                    <option value="{{ code }}"
+                        {% if ticket.assigned_department == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="priority">{% trans "Priority" %}</label>
+            <select name="priority" id="priority">
+                {% for code, name in priorities %}
+                    <option value="{{ code }}"
+                        {% if ticket.priority == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%;">
+            {% trans "Assign" %}
+        </button>
+    </div>
+</form>
+
+</div>
+{% endblock %}

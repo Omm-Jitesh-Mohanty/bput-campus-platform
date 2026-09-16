@@ -1,0 +1,109 @@
+/* ===================================================
+   Lite Mode: minimal UI for low-end devices & slow nets
+   - No images, shadows, gradients, animations, transitions
+   - Serif font, high contrast, larger text
+   - Instant rendering
+   =================================================== */
+
+body.lite * {
+    box-shadow: none !important;
+    background-image: none !important;
+    transition: none !important;
+    animation: none !important;
+    border-radius: 0 !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+body.lite {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 18px !important;
+    line-height: 1.6 !important;
+}
+
+body.lite a {
+    color: #000080 !important;
+    text-decoration: underline !important;
+}
+
+/* Hide all non-essential visual elements */
+body.lite img,
+body.lite svg,
+body.lite video,
+body.lite canvas,
+body.lite .navbar-brand a::before,
+body.lite .no-lite {
+    display: none !important;
+}
+
+/* Flatten all cards and containers */
+body.lite .card,
+body.lite .navbar,
+body.lite .footer,
+body.lite .kpi,
+body.lite .ageing-card {
+    background: #ffffff !important;
+    border: 2px solid #000 !important;
+    padding: 12px !important;
+    margin: 8px 0 !important;
+}
+
+body.lite .kpi-value,
+body.lite .ageing-count {
+    font-size: 28px !important;
+    font-weight: bold !important;
+}
+
+body.lite .btn,
+body.lite .btn-secondary,
+body.lite .btn-success,
+body.lite .btn-danger,
+body.lite .btn-lite {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    font-weight: bold !important;
+    padding: 10px 16px !important;
+    border-radius: 0 !important;
+}
+
+body.lite input,
+body.lite select,
+body.lite textarea {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+    font-size: 16px !important;
+    padding: 8px !important;
+    color: #000 !important;
+    width: 100% !important;
+}
+
+body.lite table,
+body.lite th,
+body.lite td {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+}
+
+body.lite .badge {
+    background: #ffffff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+}
+
+/* Dashboard charts won't render in lite — show fallback text instead */
+body.lite canvas {
+    display: none;
+}
+
+body.lite .chart-fallback {
+    display: block !important;
+}
+
+.chart-fallback {
+    display: none;
+}

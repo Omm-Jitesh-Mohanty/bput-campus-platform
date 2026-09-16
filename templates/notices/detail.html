@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ notice.title }}{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 16px;">
+    <a href="{% url 'notices:list' %}" style="font-size: 14px;">← {% trans "All notices" %}</a>
+</div>
+
+<div class="card">
+    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+        {% if notice.ai_priority == 'high' %}
+            <span class="badge badge-red">🔴 {% trans "High priority" %}</span>
+        {% elif notice.ai_priority == 'medium' %}
+            <span class="badge badge-yellow">🟡 {% trans "Medium" %}</span>
+        {% else %}
+            <span class="badge badge-gray">⚪ {% trans "Low" %}</span>
+        {% endif %}
+    </div>
+
+    <h1 style="margin: 0 0 8px 0;">{{ notice.title }}</h1>
+    <p style="color: #64748b; font-size: 13px;">
+        {% trans "Posted by" %}
+        {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}
+        · {{ notice.created_at|date:"d M Y, H:i" }}
+    </p>
+
+    {% if notice.ai_summary %}
+    <div style="background: #eff6ff; padding: 14px; border-radius: 6px;
+                border-left: 4px solid #1e40af; margin-top: 20px;">
+        <strong>✨ {% trans "AI Summary" %}</strong>
+        <p style="margin-top: 6px; color: #1e3a8a;">{{ notice.ai_summary }}</p>
+    </div>
+    {% endif %}
+
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+    <div style="white-space: pre-wrap; line-height: 1.7;">{{ notice.content }}</div>
+
+    {% if notice.attachment %}
+    <hr style="margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;">
+    <h4>📎 {% trans "Attachment" %}</h4>
+    <a href="{{ notice.attachment.url }}" target="_blank" class="btn btn-secondary" style="margin-top: 8px;">
+        {% trans "Download" %}
+    </a>
+    {% endif %}
+</div>
+
+{% if user.is_admin_role %}
+<div class="card">
+    <h3>📊 {% trans "Read Analytics" %}</h3>
+    <p>{{ notice.read_count }} / {{ notice.total_targeted }}
+        ({{ notice.read_percentage }}%) {% trans "students read this notice" %}</p>
+    <div style="background: #e5e7eb; border-radius: 6px; height: 12px; overflow: hidden; margin-top: 8px;">
+        <div style="width: {{ notice.read_percentage }}%; height: 100%; background: #16a34a;"></div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

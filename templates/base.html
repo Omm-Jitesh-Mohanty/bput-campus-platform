@@ -1,0 +1,206 @@
+{% load i18n static %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BPUT Campus Platform — unified student & admin portal">
+
+    <title>{% block title %}Campus Platform{% endblock %}</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#1e40af">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    {% if request.session.lite_mode %}
+        <link rel="stylesheet" href="{% static 'css/lite.css' %}">
+    {% endif %}
+
+    <!-- HTMX: for partial page updates without full reload -->
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="{% if request.session.lite_mode %}lite{% endif %}">
+
+    <!-- ===== Skip to content (accessibility) ===== -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- ===== Navbar ===== -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            <a href="{% url 'accounts:home' %}">
+                🏛 {% trans "Campus" %}
+            </a>
+        </div>
+
+        {% if user.is_authenticated %}
+            <nav class="navbar-links">
+                <a href="{% url 'accounts:home' %}">
+                    {% trans "Home" %}
+                </a>
+
+                {% if user.is_student %}
+                    <a href="{% url 'attendance:list' %}">
+                        {% trans "Attendance" %}
+                    </a>
+
+                    <a href="{% url 'attendance:timetable' %}">
+                        {% trans "Timetable" %}
+                    </a>
+
+                    <a href="{% url 'tickets:my_tickets' %}">
+                        {% trans "My Requests" %}
+                    </a>
+
+                    <a href="{% url 'notices:list' %}">
+                        {% trans "Notices" %}
+                    </a>
+
+                    <a href="{% url 'feedback:submit' %}">
+                        {% trans "Feedback" %}
+                    </a>
+                {% endif %}
+
+                {% if user.is_admin_role %}
+                    <a href="{% url 'dashboard:admin_home' %}">
+                        {% trans "Dashboard" %}
+                    </a>
+
+                    <a href="{% url 'tickets:my_tickets' %}">
+                        {% trans "Queue" %}
+                    </a>
+
+                    <a href="{% url 'notices:publish' %}">
+                        {% trans "Publish" %}
+                    </a>
+
+                    <a href="{% url 'notices:list' %}">
+                        {% trans "Notices" %}
+                    </a>
+
+                    <a href="{% url 'tickets:kiosk_new' %}">
+                        🏪 {% trans "Kiosk" %}
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="navbar-right">
+
+                <!-- Language switcher -->
+                <form
+                    action="{% url 'set_language' %}"
+                    method="post"
+                    class="lang-form"
+                >
+                    {% csrf_token %}
+
+                    <input
+                        name="next"
+                        type="hidden"
+                        value="{{ request.path }}"
+                    >
+
+                    <select
+                        name="language"
+                        onchange="this.form.submit()"
+                    >
+                        <option
+                            value="en"
+                            {% if LANGUAGE_CODE == 'en' %}selected{% endif %}
+                        >
+                            EN
+                        </option>
+
+                        <option
+                            value="hi"
+                            {% if LANGUAGE_CODE == 'hi' %}selected{% endif %}
+                        >
+                            हिं
+                        </option>
+
+                        <option
+                            value="or"
+                            {% if LANGUAGE_CODE == 'or' %}selected{% endif %}
+                        >
+                            ଓଡ଼
+                        </option>
+                    </select>
+                </form>
+
+                <!-- Lite mode toggle -->
+                <form
+                    method="post"
+                    action="{% url 'accounts:toggle_lite' %}"
+                    style="display: inline;"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn-lite"
+                        title="{% trans 'Switch to lightweight mode' %}"
+                    >
+                        {% if request.session.lite_mode %}
+                            🌐 Full
+                        {% else %}
+                            ⚡ Lite
+                        {% endif %}
+                    </button>
+                </form>
+
+                <!-- User info -->
+                <span
+                    class="user-chip"
+                    title="{{ user.get_full_name }}"
+                >
+                    {{ user.get_short_name|default:user.username }}
+                    <small>
+                        ({{ user.get_role_display }})
+                    </small>
+                </span>
+
+                <a
+                    href="{% url 'accounts:logout' %}"
+                    class="btn-logout"
+                >
+                    {% trans "Logout" %}
+                </a>
+            </div>
+        {% endif %}
+    </header>
+
+    <!-- ===== Flash messages ===== -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message message-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- ===== Main content ===== -->
+    <main id="main-content" class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ===== Footer ===== -->
+    <footer class="footer">
+        <p>
+            © {% now "Y" %} BPUT Campus Platform — Hackathon 2026
+        </p>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}" defer></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Publish Notice" %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 0 auto;">
+
+<h1>📢 {% trans "Publish Notice" %}</h1>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="form-group">
+            <label for="title">{% trans "Title" %}</label>
+            <input type="text" name="title" id="title" required>
+        </div>
+
+        <div class="form-group">
+            <label for="content">{% trans "Content" %}</label>
+            <textarea name="content" id="content" rows="8" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="priority">{% trans "Priority" %}</label>
+            <select name="priority" id="priority">
+                <option value="low">⚪ {% trans "Low" %}</option>
+                <option value="medium" selected>🟡 {% trans "Medium" %}</option>
+                <option value="high">🔴 {% trans "High" %}</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>🎯 {% trans "Target Audience" %}</h3>
+        <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">
+            {% trans "Leave blank to send to everyone." %}
+        </p>
+
+        <div class="form-group">
+            <label for="target_department">{% trans "Department" %}</label>
+            <select name="target_department" id="target_department">
+                <option value="">{% trans "All departments" %}</option>
+                {% for code, name in departments %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="target_batch">{% trans "Batch Year" %}</label>
+            <select name="target_batch" id="target_batch">
+                <option value="">{% trans "All batches" %}</option>
+                {% for code, name in batch_years %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="target_hostel">{% trans "Hostel Block" %}</label>
+            <select name="target_hostel" id="target_hostel">
+                <option value="">{% trans "All hostels" %}</option>
+                {% for code, name in hostel_blocks %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%; font-size: 16px; padding: 14px;">
+        🚀 {% trans "Publish" %}
+    </button>
+
+</form>
+
+</div>
+{% endblock %}

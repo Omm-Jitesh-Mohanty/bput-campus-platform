@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Attendance" %}{% endblock %}
+
+{% block content %}
+
+<h1>📊 {% trans "My Attendance" %}</h1>
+
+<!-- ===== Overall summary card ===== -->
+<div class="card" style="background: {% if summary.is_safe %}#f0fdf4{% else %}#fef2f2{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">Overall: {{ summary.overall_percentage }}%</h2>
+            <p style="color: #64748b; margin-top: 4px;">
+                Attended {{ summary.total_attended }} / {{ summary.total_held }} classes
+            </p>
+        </div>
+        <div style="text-align: right;">
+            {% if summary.is_safe %}
+                <span class="badge badge-green" style="font-size: 14px; padding: 8px 14px;">
+                    ✅ {% trans "Safe" %}
+                </span>
+            {% else %}
+                <span class="badge badge-red" style="font-size: 14px; padding: 8px 14px;">
+                    ⚠️ {% trans "Below 75%" %}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ===== Per-subject list ===== -->
+<h2 style="margin-top: 32px;">{% trans "Subject-wise Breakdown" %}</h2>
+
+{% for item in detailed %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1;">
+            <h3 style="margin: 0;">{{ item.record.subject_name }}</h3>
+            <p style="color: #64748b; font-size: 13px; margin-top: 2px;">
+                {{ item.record.subject_code }}
+                {% if item.record.faculty_name %} · {{ item.record.faculty_name }}{% endif %}
+            </p>
+
+            <!-- Progress bar -->
+            <div style="background: #e5e7eb; border-radius: 6px; height: 10px; margin: 12px 0 6px 0; overflow: hidden;">
+                <div style="width: {{ item.record.percentage }}%;
+                            height: 100%;
+                            background: {% if item.record.percentage >= 85 %}#16a34a{% elif item.record.percentage >= 75 %}#f59e0b{% else %}#dc2626{% endif %};">
+                </div>
+            </div>
+            <p style="font-size: 12px; color: #64748b;">
+                {{ item.record.attended_classes }} / {{ item.record.total_classes }} classes
+            </p>
+
+            <!-- AI Recovery Plan -->
+            {% if item.plan.needed > 0 %}
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b;
+                        padding: 10px 12px; margin-top: 12px; border-radius: 4px;">
+                <strong style="color: #92400e;">🎯 Recovery Plan:</strong>
+                <p style="margin-top: 4px; color: #78350f; font-size: 14px;">
+                    {{ item.plan.message }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align: right; margin-left: 20px;">
+            <span class="badge {{ item.record.percentage|percentage_color }}"
+                  style="font-size: 16px; padding: 8px 14px;">
+                {{ item.record.percentage }}%
+            </span>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="card" style="text-align: center; color: #64748b;">
+    <p>{% trans "No attendance records yet." %}</p>
+</div>
+{% endfor %}
+
+{% endblock %}

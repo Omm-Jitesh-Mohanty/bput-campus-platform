@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% if is_admin_view %}{% trans "Ticket Queue" %}{% else %}{% trans "My Requests" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>{% if is_admin_view %}🎫 {% trans "Ticket Queue" %}{% else %}📋 {% trans "My Requests" %}{% endif %}</h1>
+    {% if not is_admin_view %}
+        <a href="{% url 'tickets:submit' %}" class="btn">+ {% trans "New Request" %}</a>
+    {% endif %}
+</div>
+
+{% if is_admin_view %}
+<!-- ========== Admin filters ========== -->
+<form method="get" class="card" style="margin-bottom: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Search" %}</label>
+            <input type="text" name="q" value="{{ active.q|default:'' }}"
+                   placeholder="{% trans 'Subject, student…' %}"
+                   style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+        </div>
+
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Status" %}</label>
+            <select name="status" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="">{% trans "All" %}</option>
+                {% for code, name in status_choices %}
+                    <option value="{{ code }}" {% if active.status == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Department" %}</label>
+            <select name="department" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="">{% trans "All" %}</option>
+                {% for code, name in department_choices %}
+                    <option value="{{ code }}" {% if active.department == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Priority" %}</label>
+            <select name="priority" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="">{% trans "All" %}</option>
+                {% for code, name in priority_choices %}
+                    <option value="{{ code }}" {% if active.priority == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Type" %}</label>
+            <select name="type" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="">{% trans "All" %}</option>
+                {% for code, name in type_choices %}
+                    <option value="{{ code }}" {% if active.type == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Ageing" %}</label>
+            <select name="ageing" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                <option value="">{% trans "All" %}</option>
+                <option value="fresh" {% if active.ageing == 'fresh' %}selected{% endif %}>0-24h (fresh)</option>
+                <option value="warning" {% if active.ageing == 'warning' %}selected{% endif %}>24-48h (watch)</option>
+                <option value="critical" {% if active.ageing == 'critical' %}selected{% endif %}>48-72h (critical)</option>
+                <option value="overdue" {% if active.ageing == 'overdue' %}selected{% endif %}>72h+ (overdue)</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 14px;">
+        <button type="submit" class="btn" style="padding: 8px 20px;">{% trans "Apply Filters" %}</button>
+        <a href="{% url 'tickets:my_tickets' %}" class="btn btn-secondary" style="padding: 8px 20px;">{% trans "Reset" %}</a>
+        <span style="margin-left: auto; align-self: center; font-size: 13px; color: #64748b;">
+            {{ tickets|length }} {% trans "ticket(s)" %}
+        </span>
+    </div>
+</form>
+
+<!-- Quick filter chips -->
+<div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+    <a href="?status=pending" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">⏳ {% trans "Pending" %}</a>
+    <a href="?status=in_progress" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">🔄 {% trans "In Progress" %}</a>
+    <a href="?ageing=overdue" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">🔴 {% trans "Overdue" %}</a>
+    <a href="?priority=urgent" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">🚨 {% trans "Urgent" %}</a>
+    <a href="?type=complaint" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">🐛 {% trans "Complaints" %}</a>
+</div>
+
+<!-- Admin queue table -->
+<div class="card" style="padding: 0; overflow-x: auto;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{% trans "Student" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Subject" %}</th>
+                <th>{% trans "Dept" %}</th>
+                <th>{% trans "Priority" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Age" %}</th>
+                <th>{% trans "Actions" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td>
+                    {{ t.student.get_short_name|default:t.student.username }}
+                    <br><span style="font-size: 11px; color: #64748b;">
+                        {{ t.student.department }} · {{ t.student.batch_year }}
+                    </span>
+                </td>
+                <td style="font-size: 12px;">{{ t.get_ticket_type_display }}</td>
+                <td>{{ t.subject|truncatechars:50 }}</td>
+                <td style="font-size: 12px;">{{ t.assigned_department|default:"—" }}</td>
+                <td><span class="badge {{ t.priority|priority_badge }}">{{ t.get_priority_display }}</span></td>
+                <td><span class="badge {{ t.status|status_badge }}">{{ t.get_status_display }}</span></td>
+                <td><span class="badge badge-{{ t.ageing_color }}">{{ t.age_hours }}h</span></td>
+                <td style="white-space: nowrap;">
+                    <a href="{% url 'tickets:detail' t.id %}" class="btn btn-secondary"
+                       style="padding: 4px 10px; font-size: 12px;">{% trans "View" %}</a>
+                    {% if t.status != 'resolved' %}
+                    <a href="{% url 'tickets:admin_resolve' t.id %}" class="btn btn-success"
+                       style="padding: 4px 10px; font-size: 12px;">{% trans "Resolve" %}</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align: center; color: #94a3b8; padding: 32px;">
+                {% trans "No tickets match your filters." %}
+            </td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<!-- ========== Student view — original list ========== -->
+{% for ticket in tickets %}
+<a href="{% url 'tickets:detail' ticket.id %}" style="text-decoration: none; color: inherit;">
+    <div class="card" style="cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                    <span style="font-size: 12px; color: #64748b;">#{{ ticket.id }}</span>
+                    <span class="badge {{ ticket.status|status_badge }}">{{ ticket.get_status_display }}</span>
+                    <span class="badge {{ ticket.priority|priority_badge }}">{{ ticket.get_priority_display }}</span>
+                </div>
+                <h3 style="margin: 0; font-size: 16px;">{{ ticket.subject }}</h3>
+                <p style="color: #64748b; font-size: 13px; margin-top: 4px;">
+                    {{ ticket.get_ticket_type_display }}
+                    {% if ticket.assigned_department %} · {{ ticket.assigned_department|title }}{% endif %}
+                    · {{ ticket.created_at|short_time_ago }}
+                </p>
+            </div>
+            <div style="font-size: 24px;">→</div>
+        </div>
+    </div>
+</a>
+{% empty %}
+<div class="card" style="text-align: center; padding: 48px;">
+    <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+    <h3>{% trans "No requests yet" %}</h3>
+    <a href="{% url 'tickets:submit' %}" class="btn" style="margin-top: 20px;">+ {% trans "Create Request" %}</a>
+</div>
+{% endfor %}
+{% endif %}
+
+{% endblock %}

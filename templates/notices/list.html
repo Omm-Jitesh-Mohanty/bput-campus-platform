@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Notices" %}{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>📢 {% trans "Notices & Announcements" %}</h1>
+    {% if user.is_admin_role %}
+        <a href="{% url 'notices:publish' %}" class="btn">+ {% trans "Publish Notice" %}</a>
+    {% endif %}
+</div>
+
+{% if notices %}
+    {% for notice in notices %}
+    <a href="{% url 'notices:detail' notice.id %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="cursor: pointer;
+            {% if notice.ai_priority == 'high' %}border-left: 4px solid #dc2626;{% elif notice.ai_priority == 'medium' %}border-left: 4px solid #f59e0b;{% else %}border-left: 4px solid #94a3b8;{% endif %}">
+            <div style="display: flex; justify-content: space-between; gap: 12px;">
+                <div style="flex: 1;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                        {% if notice.ai_priority == 'high' %}
+                            <span class="badge badge-red">🔴 {% trans "High priority" %}</span>
+                        {% elif notice.ai_priority == 'medium' %}
+                            <span class="badge badge-yellow">🟡 {% trans "Medium" %}</span>
+                        {% else %}
+                            <span class="badge badge-gray">⚪ {% trans "Low" %}</span>
+                        {% endif %}
+                        <span style="font-size: 12px; color: #64748b;">
+                            {{ notice.created_at|short_time_ago }}
+                        </span>
+                    </div>
+                    <h3 style="margin: 0; font-size: 17px;">{{ notice.title }}</h3>
+
+                    {% if notice.ai_summary %}
+                    <p style="color: #475569; font-size: 14px; margin-top: 6px;">
+                        <strong>Summary:</strong> {{ notice.ai_summary }}
+                    </p>
+                    {% else %}
+                    <p style="color: #64748b; font-size: 14px; margin-top: 6px;">
+                        {{ notice.content|truncatewords:25 }}
+                    </p>
+                    {% endif %}
+
+                    {% if user.is_admin_role %}
+                    <p style="font-size: 12px; color: #64748b; margin-top: 8px;">
+                        📊 {{ notice.read_count }} / {{ notice.total_targeted }} read
+                        ({{ notice.read_percentage }}%)
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+<div class="card" style="text-align: center; padding: 48px;">
+    <div style="font-size: 48px;">📭</div>
+    <h3>{% trans "No notices yet" %}</h3>
+</div>
+{% endif %}
+
+{% endblock %}

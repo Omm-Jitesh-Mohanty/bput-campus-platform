@@ -1,0 +1,838 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-16 12:51+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: .\templates\accounts\login.html:4
+msgid "Login"
+msgstr ""
+
+#: .\templates\accounts\login.html:10
+msgid "Campus Platform"
+msgstr ""
+
+#: .\templates\accounts\login.html:13
+msgid "One platform for attendance, requests, notices & more"
+msgstr ""
+
+#: .\templates\accounts\login.html:21
+msgid "Username"
+msgstr ""
+
+#: .\templates\accounts\login.html:28
+msgid "Password"
+msgstr ""
+
+#: .\templates\accounts\login.html:34
+msgid "Log In"
+msgstr ""
+
+#: .\templates\attendance\list.html:4 .\templates\base.html:50
+#: .\templates\dashboard\student_home.html:36
+msgid "Attendance"
+msgstr ""
+
+#: .\templates\attendance\list.html:8
+msgid "My Attendance"
+msgstr ""
+
+#: .\templates\attendance\list.html:22
+msgid "Safe"
+msgstr ""
+
+#: .\templates\attendance\list.html:26
+#, python-format
+msgid "Below 75%%"
+msgstr ""
+
+#: .\templates\attendance\list.html:34
+msgid "Subject-wise Breakdown"
+msgstr ""
+
+#: .\templates\attendance\list.html:79
+msgid "No attendance records yet."
+msgstr ""
+
+#: .\templates\attendance\not_student.html:4
+msgid "Students Only"
+msgstr ""
+
+#: .\templates\attendance\not_student.html:6
+msgid "This section is available to students."
+msgstr ""
+
+#: .\templates\attendance\not_student.html:9
+msgid "Go Home"
+msgstr ""
+
+#: .\templates\attendance\timetable.html:4 .\templates\base.html:51
+msgid "Timetable"
+msgstr ""
+
+#: .\templates\attendance\timetable.html:8
+msgid "Weekly Timetable"
+msgstr ""
+
+#: .\templates\attendance\timetable.html:49
+msgid "No classes scheduled."
+msgstr ""
+
+#: .\templates\base.html:41
+msgid "Campus"
+msgstr ""
+
+#: .\templates\base.html:47
+msgid "Home"
+msgstr ""
+
+#: .\templates\base.html:52 .\templates\tickets\list.html:4
+#: .\templates\tickets\list.html:9
+msgid "My Requests"
+msgstr ""
+
+#: .\templates\base.html:53 .\templates\base.html:61
+#: .\templates\notices\list.html:4
+msgid "Notices"
+msgstr ""
+
+#: .\templates\base.html:54
+msgid "Feedback"
+msgstr ""
+
+#: .\templates\base.html:58 .\templates\dashboard\student_home.html:4
+msgid "Dashboard"
+msgstr ""
+
+#: .\templates\base.html:59
+msgid "Queue"
+msgstr ""
+
+#: .\templates\base.html:60 .\templates\notices\publish.html:73
+msgid "Publish"
+msgstr ""
+
+#: .\templates\base.html:80
+msgid "Switch to lightweight mode"
+msgstr ""
+
+#: .\templates\base.html:91
+msgid "Logout"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:4
+msgid "Admin Dashboard"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:20
+msgid "Administrator Dashboard"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:29
+msgid "Open Ticket Queue"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:41
+#: .\templates\dashboard\admin_home.html:186 .\templates\tickets\list.html:89
+msgid "Pending"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:43
+msgid "awaiting action"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:47
+#: .\templates\dashboard\admin_home.html:187 .\templates\tickets\list.html:90
+msgid "In Progress"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:49
+msgid "being handled"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:53
+#: .\templates\dashboard\admin_home.html:189 .\templates\tickets\list.html:91
+msgid "Overdue"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:55
+msgid "48h+ open"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:59
+msgid "Avg Age (open)"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:61
+msgid "across open tickets"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:65
+msgid "Avg Resolution"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:67
+msgid "last 30 days"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:71
+#: .\templates\dashboard\admin_home.html:158
+#: .\templates\dashboard\admin_home.html:188
+msgid "Resolved"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:83
+msgid "Ageing Heatmap"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:85
+msgid "How long tickets have been open — earlier is better."
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:107
+msgid "Department-wise Complaints"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:126
+msgid "Ticket Type Distribution"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:149
+msgid "Resolution Trend (last 14 days)"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:157
+msgid "Date"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:159
+msgid "Avg Hours"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:179
+msgid "Department Breakdown"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:184
+#: .\templates\notices\publish.html:42 .\templates\tickets\admin_assign.html:15
+#: .\templates\tickets\list.html:37
+msgid "Department"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:185
+msgid "Total"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:190
+msgid "Avg Age"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:205
+msgid "No data."
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:215
+msgid "Recurring Issues"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:217
+msgid ""
+"Departments with 2+ complaints in the last 30 days — investigate root cause."
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:226
+msgid "complaints in 30 days"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:234
+msgid "Feedback Analysis"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:242
+msgid "AI Recommendations"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:252
+msgid "Based on"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:252
+msgid "recent entries"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:258
+msgid "Regenerate"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:264
+msgid "Summary"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:266
+msgid "Total entries"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:270
+msgid "Average rating"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:283
+msgid "Notice Reach Tracking"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:288
+msgid "Notice"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:289
+#: .\templates\dashboard\admin_home.html:355
+#: .\templates\dashboard\ageing_detail.html:29
+#: .\templates\notices\publish.html:26 .\templates\tickets\admin_assign.html:27
+#: .\templates\tickets\list.html:47 .\templates\tickets\list.html:106
+msgid "Priority"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:290
+msgid "Read / Total"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:291
+msgid "Reach"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:313
+msgid "No notices yet."
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:323
+msgid "Team Workload"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:332
+msgid "open"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:336
+msgid "resolved"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:346
+msgid "Latest Tickets"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:352
+#: .\templates\dashboard\ageing_detail.html:26
+#: .\templates\tickets\list.html:102
+msgid "Student"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:353
+#: .\templates\dashboard\ageing_detail.html:27
+#: .\templates\tickets\list.html:104
+msgid "Subject"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:354
+#: .\templates\dashboard\ageing_detail.html:28
+#: .\templates\tickets\list.html:105
+msgid "Dept"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:356 .\templates\tickets\list.html:27
+#: .\templates\tickets\list.html:107
+msgid "Status"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:357
+#: .\templates\dashboard\ageing_detail.html:30
+#: .\templates\tickets\list.html:108
+msgid "Age"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:371
+msgid "Open"
+msgstr ""
+
+#: .\templates\dashboard\admin_home.html:374
+msgid "No tickets yet."
+msgstr ""
+
+#: .\templates\dashboard\ageing_detail.html:9
+msgid "Back to dashboard"
+msgstr ""
+
+#: .\templates\dashboard\ageing_detail.html:17
+msgid "open ticket(s)"
+msgstr ""
+
+#: .\templates\dashboard\ageing_detail.html:31
+#: .\templates\tickets\list.html:109
+msgid "Actions"
+msgstr ""
+
+#: .\templates\dashboard\ageing_detail.html:55
+msgid "No tickets in this bucket"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:8
+msgid "Hi"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:17
+msgid "Action needed"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:19
+msgid "You have"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:20
+msgid "resolved ticket(s) awaiting your confirmation."
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:43
+msgid "View details"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:49
+msgid "Open Tickets"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:55
+#: .\templates\dashboard\student_home.html:99
+#: .\templates\dashboard\student_home.html:132
+msgid "View all"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:61
+msgid "Fees Pending"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:68
+msgid "All cleared"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:68
+msgid "Due soon"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:75
+msgid "Quick Actions"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:80
+msgid "Report Issue"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:84
+msgid "Apply Leave"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:88
+msgid "Get Document"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:92
+#: .\templates\feedback\my_list.html:10 .\templates\feedback\submit.html:4
+#: .\templates\feedback\submit.html:9
+msgid "Give Feedback"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:98
+msgid "Recent Requests"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:122
+msgid "No requests yet."
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:124
+msgid "Create first request"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:131
+msgid "Latest Notices"
+msgstr ""
+
+#: .\templates\dashboard\student_home.html:145
+msgid "No notices."
+msgstr ""
+
+#: .\templates\feedback\my_list.html:4 .\templates\feedback\my_list.html:9
+msgid "My Feedback"
+msgstr ""
+
+#: .\templates\feedback\my_list.html:20
+msgid "Anonymous"
+msgstr ""
+
+#: .\templates\feedback\my_list.html:40
+msgid "No feedback yet"
+msgstr ""
+
+#: .\templates\feedback\my_list.html:42
+msgid "Give your first feedback"
+msgstr ""
+
+#: .\templates\feedback\submit.html:11
+msgid "Your feedback helps us improve campus facilities."
+msgstr ""
+
+#: .\templates\feedback\submit.html:19
+msgid "What are you reviewing?"
+msgstr ""
+
+#: .\templates\feedback\submit.html:28
+msgid "How would you rate it?"
+msgstr ""
+
+#: .\templates\feedback\submit.html:53
+msgid "Comments (optional)"
+msgstr ""
+
+#: .\templates\feedback\submit.html:55
+msgid "Tell us more…"
+msgstr ""
+
+#: .\templates\feedback\submit.html:60
+msgid "Submit anonymously"
+msgstr ""
+
+#: .\templates\feedback\submit.html:64
+msgid "Submit Feedback"
+msgstr ""
+
+#: .\templates\notices\detail.html:9
+msgid "All notices"
+msgstr ""
+
+#: .\templates\notices\detail.html:15 .\templates\notices\list.html:24
+msgid "High priority"
+msgstr ""
+
+#: .\templates\notices\detail.html:17 .\templates\notices\list.html:26
+#: .\templates\notices\publish.html:29
+msgid "Medium"
+msgstr ""
+
+#: .\templates\notices\detail.html:19 .\templates\notices\list.html:28
+#: .\templates\notices\publish.html:28
+msgid "Low"
+msgstr ""
+
+#: .\templates\notices\detail.html:25
+msgid "Posted by"
+msgstr ""
+
+#: .\templates\notices\detail.html:33
+msgid "AI Summary"
+msgstr ""
+
+#: .\templates\notices\detail.html:44 .\templates\tickets\detail.html:57
+msgid "Attachment"
+msgstr ""
+
+#: .\templates\notices\detail.html:46
+msgid "Download"
+msgstr ""
+
+#: .\templates\notices\detail.html:53
+msgid "Read Analytics"
+msgstr ""
+
+#: .\templates\notices\detail.html:55
+msgid "students read this notice"
+msgstr ""
+
+#: .\templates\notices\list.html:9
+msgid "Notices & Announcements"
+msgstr ""
+
+#: .\templates\notices\list.html:11 .\templates\notices\publish.html:4
+#: .\templates\notices\publish.html:9
+msgid "Publish Notice"
+msgstr ""
+
+#: .\templates\notices\list.html:60
+msgid "No notices yet"
+msgstr ""
+
+#: .\templates\notices\publish.html:16
+msgid "Title"
+msgstr ""
+
+#: .\templates\notices\publish.html:21
+msgid "Content"
+msgstr ""
+
+#: .\templates\notices\publish.html:30
+msgid "High"
+msgstr ""
+
+#: .\templates\notices\publish.html:36
+msgid "Target Audience"
+msgstr ""
+
+#: .\templates\notices\publish.html:38
+msgid "Leave blank to send to everyone."
+msgstr ""
+
+#: .\templates\notices\publish.html:44
+msgid "All departments"
+msgstr ""
+
+#: .\templates\notices\publish.html:52
+msgid "Batch Year"
+msgstr ""
+
+#: .\templates\notices\publish.html:54
+msgid "All batches"
+msgstr ""
+
+#: .\templates\notices\publish.html:62
+msgid "Hostel Block"
+msgstr ""
+
+#: .\templates\notices\publish.html:64
+msgid "All hostels"
+msgstr ""
+
+#: .\templates\tickets\admin_assign.html:4
+#: .\templates\tickets\admin_assign.html:9
+msgid "Assign Ticket"
+msgstr ""
+
+#: .\templates\tickets\admin_assign.html:39 .\templates\tickets\detail.html:27
+msgid "Assign"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:4
+#: .\templates\tickets\admin_resolve.html:13
+msgid "Resolve Ticket"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:10
+msgid "Back to ticket"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:31
+msgid "AI-Suggested Reply"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:45
+msgid "Use this suggestion"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:55
+msgid "Resolution Note"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:57
+msgid "Write what action was taken…"
+msgstr ""
+
+#: .\templates\tickets\admin_resolve.html:60
+msgid "Mark as Resolved"
+msgstr ""
+
+#: .\templates\tickets\detail.html:9
+msgid "Back to requests"
+msgstr ""
+
+#: .\templates\tickets\detail.html:30 .\templates\tickets\list.html:133
+msgid "Resolve"
+msgstr ""
+
+#: .\templates\tickets\detail.html:45
+msgid "Your description"
+msgstr ""
+
+#: .\templates\tickets\detail.html:50
+msgid "AI-Formatted Application"
+msgstr ""
+
+#: .\templates\tickets\detail.html:59
+msgid "View attachment"
+msgstr ""
+
+#: .\templates\tickets\detail.html:64
+msgid "Resolution"
+msgstr ""
+
+#: .\templates\tickets\detail.html:83
+msgid "Is the issue resolved?"
+msgstr ""
+
+#: .\templates\tickets\detail.html:85
+msgid "Your confirmation helps us close this ticket properly."
+msgstr ""
+
+#: .\templates\tickets\detail.html:89
+msgid "Yes, fixed"
+msgstr ""
+
+#: .\templates\tickets\detail.html:90
+msgid "No, still broken"
+msgstr ""
+
+#: .\templates\tickets\detail.html:97
+msgid "Conversation"
+msgstr ""
+
+#: .\templates\tickets\detail.html:108
+msgid "Internal note"
+msgstr ""
+
+#: .\templates\tickets\detail.html:117
+msgid "No comments yet."
+msgstr ""
+
+#: .\templates\tickets\detail.html:125
+msgid "Add a comment"
+msgstr ""
+
+#: .\templates\tickets\detail.html:130
+msgid "Type your message…"
+msgstr ""
+
+#: .\templates\tickets\detail.html:135
+msgid "Mark as internal note (hidden from student)"
+msgstr ""
+
+#: .\templates\tickets\detail.html:138
+msgid "Post Comment"
+msgstr ""
+
+#: .\templates\tickets\list.html:4 .\templates\tickets\list.html:9
+msgid "Ticket Queue"
+msgstr ""
+
+#: .\templates\tickets\list.html:11 .\templates\tickets\submit.html:4
+#: .\templates\tickets\submit.html:10
+msgid "New Request"
+msgstr ""
+
+#: .\templates\tickets\list.html:20
+msgid "Search"
+msgstr ""
+
+#: .\templates\tickets\list.html:22
+msgid "Subject, student…"
+msgstr ""
+
+#: .\templates\tickets\list.html:29 .\templates\tickets\list.html:39
+#: .\templates\tickets\list.html:49 .\templates\tickets\list.html:59
+#: .\templates\tickets\list.html:69
+msgid "All"
+msgstr ""
+
+#: .\templates\tickets\list.html:57 .\templates\tickets\list.html:103
+msgid "Type"
+msgstr ""
+
+#: .\templates\tickets\list.html:67
+msgid "Ageing"
+msgstr ""
+
+#: .\templates\tickets\list.html:79
+msgid "Apply Filters"
+msgstr ""
+
+#: .\templates\tickets\list.html:80
+msgid "Reset"
+msgstr ""
+
+#: .\templates\tickets\list.html:82
+msgid "ticket(s)"
+msgstr ""
+
+#: .\templates\tickets\list.html:92
+msgid "Urgent"
+msgstr ""
+
+#: .\templates\tickets\list.html:93
+msgid "Complaints"
+msgstr ""
+
+#: .\templates\tickets\list.html:130
+msgid "View"
+msgstr ""
+
+#: .\templates\tickets\list.html:139
+msgid "No tickets match your filters."
+msgstr ""
+
+#: .\templates\tickets\list.html:172
+msgid "No requests yet"
+msgstr ""
+
+#: .\templates\tickets\list.html:173
+msgid "Create Request"
+msgstr ""
+
+#: .\templates\tickets\submit.html:12
+msgid ""
+"Describe your issue in your own words. Our AI will format it into a proper "
+"application and route it to the right department."
+msgstr ""
+
+#: .\templates\tickets\submit.html:21
+msgid "What do you need?"
+msgstr ""
+
+#: .\templates\tickets\submit.html:23
+msgid "Complaint / Maintenance Issue"
+msgstr ""
+
+#: .\templates\tickets\submit.html:24
+msgid "Leave Request"
+msgstr ""
+
+#: .\templates\tickets\submit.html:25
+msgid "Document / Certificate"
+msgstr ""
+
+#: .\templates\tickets\submit.html:26
+msgid "Gate Pass"
+msgstr ""
+
+#: .\templates\tickets\submit.html:31
+msgid "Describe in your own words"
+msgstr ""
+
+#: .\templates\tickets\submit.html:35
+msgid ""
+"Tip: mention location, duration, and severity. AI will handle the "
+"formalities."
+msgstr ""
+
+#: .\templates\tickets\submit.html:40
+msgid "Attachment (optional)"
+msgstr ""
+
+#: .\templates\tickets\submit.html:44
+msgid "Max 5 MB · PDF, image, or Word"
+msgstr ""
+
+#: .\templates\tickets\submit.html:52
+msgid ""
+"You are offline. Your request will be saved locally and submitted "
+"automatically when the connection returns."
+msgstr ""
+
+#: .\templates\tickets\submit.html:56
+msgid "Submit Request"
+msgstr ""

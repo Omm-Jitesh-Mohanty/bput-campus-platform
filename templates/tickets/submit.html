@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "New Request" %}{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 720px; margin: 0 auto;">
+
+<h1>✍️ {% trans "New Request" %}</h1>
+<p style="color: #64748b; margin-bottom: 24px;">
+    {% trans "Describe your issue in your own words. Our AI will format it into a proper application and route it to the right department." %}
+</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+```
+<div class="card">
+    <div class="form-group">
+        <label for="ticket_type">{% trans "What do you need?" %}</label>
+        <select name="ticket_type" id="ticket_type" required>
+            <option value="complaint">🐛 {% trans "Complaint / Maintenance Issue" %}</option>
+            <option value="leave">🏠 {% trans "Leave Request" %}</option>
+            <option value="document">📄 {% trans "Document / Certificate" %}</option>
+            <option value="gatepass">🚪 {% trans "Gate Pass" %}</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="raw_input">{% trans "Describe in your own words" %}</label>
+        <textarea name="raw_input" id="raw_input" rows="5" required
+                  placeholder="e.g., water tap in room 302 is leaking since 3 days and it's flooding the bathroom"></textarea>
+        <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
+            💡 {% trans "Tip: mention location, duration, and severity. AI will handle the formalities." %}
+        </p>
+    </div>
+
+    <div class="form-group">
+        <label for="attachment">{% trans "Attachment (optional)" %}</label>
+        <input type="file" name="attachment" id="attachment"
+               accept=".pdf,.png,.jpg,.jpeg,.docx,.doc">
+        <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
+            {% trans "Max 5 MB · PDF, image, or Word" %}
+        </p>
+    </div>
+
+    <!-- Offline indicator -->
+    <div id="offline-indicator" style="display: none; padding: 10px 14px; margin-bottom: 12px;
+         background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;
+         font-size: 14px; color: #78350f;">
+        📴 {% trans "You are offline. Your request will be saved locally and submitted automatically when the connection returns." %}
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%; font-size: 16px; padding: 14px;">
+        🚀 {% trans "Submit Request" %}
+    </button>
+</div>
+```
+
+</form>
+
+</div>
+{% endblock %}
+
+<script>
+// Show offline indicator proactively
+document.addEventListener('DOMContentLoaded', () => {
+    const indicator = document.getElementById('offline-indicator');
+    const update = () => {
+        indicator.style.display = navigator.onLine ? 'none' : 'block';
+    };
+    update();
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+});
+</script>

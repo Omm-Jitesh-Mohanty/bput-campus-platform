@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Timetable" %}{% endblock %}
+
+{% block content %}
+
+<h1>📅 {% trans "Weekly Timetable" %}</h1>
+<p style="color: #64748b; margin-bottom: 24px;">
+    {{ user.department }} · {{ user.batch_year }} Batch
+</p>
+
+{% for day in days %}
+    {% with day_slots=timetable_by_day|get_item:day %}
+    <div class="card" style="{% if day == today_code %}border-left: 4px solid #1e40af;{% endif %}">
+        <h3>
+            {{ day }}
+            {% if day == today_code %}
+                <span class="badge badge-blue">Today</span>
+            {% endif %}
+        </h3>
+
+        {% if day_slots.slots %}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e2e8f0;">
+                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">TIME</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">SUBJECT</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">FACULTY</th>
+                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">ROOM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in day_slots.slots %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 8px; font-weight: 600; font-size: 13px;">{{ slot.time_slot }}</td>
+                        <td style="padding: 10px 8px;">
+                            {{ slot.subject_name }}
+                            <br><span style="font-size: 11px; color: #64748b;">{{ slot.subject_code }}</span>
+                        </td>
+                        <td style="padding: 10px 8px; font-size: 13px;">{{ slot.faculty_name|default:"—" }}</td>
+                        <td style="padding: 10px 8px; font-size: 13px;">{{ slot.room|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="color: #94a3b8; margin-top: 12px; font-size: 14px;">
+                {% trans "No classes scheduled." %}
+            </p>
+        {% endif %}
+    </div>
+    {% endwith %}
+{% endfor %}
+
+{% endblock %}

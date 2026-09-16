@@ -1,0 +1,72 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# ===== Virtual Environment =====
+.venv/
+venv/
+env/
+ENV/
+
+# ===== Django =====
+*.log
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+local_settings.py
+
+# ===== Environment Variables =====
+.env
+.env.local
+.env.*.local
+
+# ===== AI / ML artifacts =====
+ai_engine/vector_store_data/*
+!ai_engine/vector_store_data/.gitkeep
+*.faiss
+*.index
+*.pkl
+*.bin
+*.h5
+*.pt
+*.onnx
+
+# ===== Logs =====
+logs/*.log
+logs/*.txt
+!logs/.gitkeep
+
+# ===== IDE / OS =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ===== Ollama models =====
+ollama_models/
+
+# ===== Temp =====
+*.tmp
+tmp/
+
+# ===== Jupyter =====
+.ipynb_checkpoints/
+
+# ===== Additional OS / IDE files =====
+.vscode/
+.idea/
+*.code-workspace
+
+# ===== Python test/cache =====
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "My Feedback" %}{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>💬 {% trans "My Feedback" %}</h1>
+    <a href="{% url 'feedback:submit' %}" class="btn">+ {% trans "Give Feedback" %}</a>
+</div>
+
+{% if feedbacks %}
+    {% for fb in feedbacks %}
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong>{{ fb.get_category_display }}</strong>
+                {% if fb.is_anonymous %}
+                    <span class="badge badge-gray">{% trans "Anonymous" %}</span>
+                {% endif %}
+                <span style="font-size: 12px; color: #64748b; margin-left: 8px;">
+                    {{ fb.created_at|short_time_ago }}
+                </span>
+            </div>
+            <div style="font-size: 18px;">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= fb.rating %}⭐{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% if fb.comments %}
+        <p style="color: #475569; margin-top: 8px;">{{ fb.comments }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<div class="card" style="text-align: center; padding: 48px;">
+    <div style="font-size: 48px;">💭</div>
+    <h3>{% trans "No feedback yet" %}</h3>
+    <a href="{% url 'feedback:submit' %}" class="btn" style="margin-top: 16px;">
+        {% trans "Give your first feedback" %}
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

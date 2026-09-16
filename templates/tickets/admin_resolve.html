@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Resolve Ticket" %} #{{ ticket.id }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 0 auto;">
+
+<div style="margin-bottom: 16px;">
+    <a href="{% url 'tickets:detail' ticket.id %}" style="font-size: 14px;">← {% trans "Back to ticket" %}</a>
+</div>
+
+<h1>✅ {% trans "Resolve Ticket" %} #{{ ticket.id }}</h1>
+
+<!-- Ticket summary -->
+<div class="card" style="background: #f8fafc;">
+    <strong>{{ ticket.subject }}</strong>
+    <p style="color: #64748b; font-size: 13px; margin-top: 4px;">
+        {{ ticket.get_ticket_type_display }} ·
+        {{ ticket.assigned_department|title }} ·
+        {{ ticket.student.get_full_name|default:ticket.student.username }}
+    </p>
+    <p style="margin-top: 12px; white-space: pre-wrap;">{{ ticket.raw_input }}</p>
+</div>
+
+<!-- AI Suggestion -->
+{% if suggestion %}
+<div class="card"
+     style="border-left: 4px solid {% if suggestion.source == 'llm' %}#1e40af{% else %}#94a3b8{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>🤖 {% trans "AI-Suggested Reply" %}</h3>
+        <span class="badge {% if suggestion.source == 'llm' %}badge-blue{% else %}badge-gray{% endif %}">
+            {% if suggestion.source == 'llm' %}
+                {{ suggestion.latency_ms }}ms · {{ suggestion.similar_count }} similar cases
+            {% else %}
+                fallback
+            {% endif %}
+        </span>
+    </div>
+    <p style="background: #eff6ff; padding: 14px; border-radius: 6px; margin-top: 12px;
+              white-space: pre-wrap;">{{ suggestion.text }}</p>
+    <button type="button" class="btn btn-secondary" style="margin-top: 8px;"
+            onclick="document.getElementById('resolution_note').value = this.dataset.text;"
+            data-text="{{ suggestion.text|escapejs }}">
+        📋 {% trans "Use this suggestion" %}
+    </button>
+</div>
+{% endif %}
+
+<!-- Resolution form -->
+<form method="post">
+    {% csrf_token %}
+    <div class="card">
+        <div class="form-group">
+            <label for="resolution_note">{% trans "Resolution Note" %}</label>
+            <textarea name="resolution_note" id="resolution_note" rows="5" required
+                      placeholder="{% trans 'Write what action was taken…' %}"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success" style="width: 100%;">
+            ✅ {% trans "Mark as Resolved" %}
+        </button>
+    </div>
+</form>
+
+</div>
+{% endblock %}

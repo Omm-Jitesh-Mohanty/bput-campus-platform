@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{{ bucket_label }}{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: 16px;">
+    <a href="{% url 'dashboard:admin_home' %}" style="font-size: 14px;">← {% trans "Back to dashboard" %}</a>
+</div>
+
+<h1>
+    {% if bucket_color == 'green' %}🟢{% elif bucket_color == 'yellow' %}🟡{% elif bucket_color == 'orange' %}🟠{% else %}🔴{% endif %}
+    {{ bucket_label }}
+</h1>
+<p style="color: #64748b; margin-bottom: 24px;">
+    {{ tickets|length }} {% trans "open ticket(s)" %}
+</p>
+
+{% if tickets %}
+<div class="card" style="padding: 0; overflow-x: auto;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{% trans "Student" %}</th>
+                <th>{% trans "Subject" %}</th>
+                <th>{% trans "Dept" %}</th>
+                <th>{% trans "Priority" %}</th>
+                <th>{% trans "Age" %}</th>
+                <th>{% trans "Actions" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td>{{ t.student.get_short_name|default:t.student.username }}</td>
+                <td>{{ t.subject|truncatechars:50 }}</td>
+                <td>{{ t.assigned_department|default:"—" }}</td>
+                <td><span class="badge {{ t.priority|priority_badge }}">{{ t.get_priority_display }}</span></td>
+                <td><span class="badge badge-{{ t.ageing_color }}">{{ t.age_hours }}h</span></td>
+                <td>
+                    <a href="{% url 'tickets:detail' t.id %}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;">View</a>
+                    <a href="{% url 'tickets:admin_resolve' t.id %}" class="btn btn-success" style="padding: 4px 10px; font-size: 12px;">Resolve</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 48px;">
+    <div style="font-size: 48px;">✨</div>
+    <h3>{% trans "No tickets in this bucket" %}</h3>
+</div>
+{% endif %}
+
+{% endblock %}
