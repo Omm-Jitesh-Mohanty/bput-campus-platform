@@ -1,0 +1,211 @@
+{% extends "manage_panel/base_manage.html" %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% if setting %}
+        {% trans "Edit Setting" %}
+    {% else %}
+        {% trans "New Setting" %}
+    {% endif %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% if setting %}
+        {% trans "Edit System Setting" %}
+    {% else %}
+        {% trans "Create System Setting" %}
+    {% endif %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% trans "Configure a system-wide application setting." %}
+{% endblock %}
+
+{% block manage_actions %}
+    <a
+        href="{% url 'manage_panel:settings' %}"
+        class="btn"
+    >
+        ← {% trans "Back to Settings" %}
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card">
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label for="key">
+                    {% trans "Key" %}
+                </label>
+
+                <input
+                    type="text"
+                    id="key"
+                    name="key"
+                    value="{{ setting.key|default:'' }}"
+                    placeholder="site.name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="label">
+                    {% trans "Label" %}
+                </label>
+
+                <input
+                    type="text"
+                    id="label"
+                    name="label"
+                    value="{{ setting.label|default:'' }}"
+                    placeholder="Site Name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="category">
+                    {% trans "Category" %}
+                </label>
+
+                <input
+                    type="text"
+                    id="category"
+                    name="category"
+                    value="{{ setting.category|default:'general' }}"
+                    placeholder="general"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="value_type">
+                    {% trans "Value Type" %}
+                </label>
+
+                <select id="value_type" name="value_type">
+                    <option
+                        value="string"
+                        {% if setting.value_type == "string" %}selected{% endif %}
+                    >
+                        String
+                    </option>
+
+                    <option
+                        value="integer"
+                        {% if setting.value_type == "integer" %}selected{% endif %}
+                    >
+                        Integer
+                    </option>
+
+                    <option
+                        value="float"
+                        {% if setting.value_type == "float" %}selected{% endif %}
+                    >
+                        Float
+                    </option>
+
+                    <option
+                        value="boolean"
+                        {% if setting.value_type == "boolean" %}selected{% endif %}
+                    >
+                        Boolean
+                    </option>
+
+                    <option
+                        value="json"
+                        {% if setting.value_type == "json" %}selected{% endif %}
+                    >
+                        JSON
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group form-group-full">
+                <label for="value">
+                    {% trans "Value" %}
+                </label>
+
+                <textarea
+                    id="value"
+                    name="value"
+                    rows="5"
+                    placeholder="Enter setting value"
+                >{{ setting.value|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group form-group-full">
+                <label for="description">
+                    {% trans "Description" %}
+                </label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    rows="4"
+                    placeholder="Describe what this setting controls"
+                >{{ setting.description|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="editable_by_role">
+                    {% trans "Editable By Role" %}
+                </label>
+
+                <input
+                    type="text"
+                    id="editable_by_role"
+                    name="editable_by_role"
+                    value="{{ setting.editable_by_role|default:'' }}"
+                    placeholder="principal"
+                >
+            </div>
+
+            <div class="form-group checkbox-group">
+
+                <label>
+                    <input
+                        type="checkbox"
+                        name="is_public"
+                        {% if setting.is_public %}checked{% endif %}
+                    >
+
+                    {% trans "Public setting" %}
+                </label>
+
+            </div>
+
+        </div>
+
+        <div class="form-actions">
+
+            <a
+                href="{% url 'manage_panel:settings' %}"
+                class="btn"
+            >
+                {% trans "Cancel" %}
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                {% if setting %}
+                    {% trans "Update Setting" %}
+                {% else %}
+                    {% trans "Create Setting" %}
+                {% endif %}
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

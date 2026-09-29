@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Predictive Analytics" %}{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin: 0;">🧠 {% trans "Predictive Analytics" %}</h1>
+        <p style="color: #64748b; margin-top: 6px;">
+            {% trans "Forecasts, anomaly detection, and actionable recommendations" %}
+        </p>
+    </div>
+
+    <div style="display: flex; gap: var(--sp-2);">
+        <a href="{% url 'dashboard:analytics_refresh' %}" class="btn btn-secondary">
+            🔄 {% trans "Refresh Data" %}
+        </a>
+
+        <a href="{% url 'dashboard:admin_home' %}" class="btn btn-secondary">
+            ← {% trans "Dashboard" %}
+        </a>
+    </div>
+</div>
+
+<!-- ===================== SYSTEM HEALTH ===================== -->
+<div class="card" style="background: {% if system_health.status == 'healthy' %}#f0fdf4{% elif system_health.status == 'watch' %}#fefce8{% elif system_health.status == 'at_risk' %}#fff7ed{% else %}#fef2f2{% endif %};
+     border-left: 6px solid {% if system_health.status == 'healthy' %}#16a34a{% elif system_health.status == 'watch' %}#f59e0b{% elif system_health.status == 'at_risk' %}#ea580c{% else %}#dc2626{% endif %};">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                {% trans "System Health" %}
+            </div>
+
+            <div style="font-size: 42px; font-weight: 800; margin-top: 4px;">
+                {{ system_health.score }}
+                <span style="font-size: 18px; font-weight: 400; color: #64748b;">/100</span>
+            </div>
+
+            <div style="font-size: 14px; color: #475569; margin-top: 4px;">
+                {% if system_health.status == 'healthy' %}
+                    ✅ {% trans "All systems healthy" %}
+                {% elif system_health.status == 'watch' %}
+                    👀 {% trans "Some departments need attention" %}
+                {% elif system_health.status == 'at_risk' %}
+                    ⚠️ {% trans "Multiple issues detected" %}
+                {% else %}
+                    🚨 {% trans "Critical — immediate action needed" %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== ANOMALY ALERTS ===================== -->
+{% if anomalies %}
+
+<h2 style="margin-top: 32px;">🚨 {% trans "Active Alerts" %}</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px;">
+
+    {% for a in anomalies %}
+
+    <div class="card" style="border-left: 4px solid {% if a.severity == 'high' %}#dc2626{% elif a.severity == 'medium' %}#f59e0b{% else %}#94a3b8{% endif %};">
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+
+            <div style="font-size: 28px;">
+                {{ a.icon }}
+            </div>
+
+            <span class="badge badge-{% if a.severity == 'high' %}red{% elif a.severity == 'medium' %}yellow{% else %}gray{% endif %}">
+                {{ a.severity|upper }}
+            </span>
+
+        </div>
+
+        <h3 style="margin-top: 8px; font-size: 16px;">
+            {{ a.title }}
+        </h3>
+
+        <p style="color: #475569; font-size: 13px; margin-top: 6px;">
+            {{ a.description }}
+        </p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="card" style="background: #f0fdf4; border-left: 4px solid #16a34a;">
+    <p style="color: #166534;">
+        ✅ {% trans "No anomalies detected. Everything looks normal." %}
+    </p>
+</div>
+
+{% endif %}
+
+<!-- ===================== FORECAST ===================== -->
+<h2 style="margin-top: 32px;">📈 {% trans "7-Day Forecast" %}</h2>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+
+    <div class="card">
+        <canvas id="forecastChart" height="120"></canvas>
+    </div>
+
+    <div class="card">
+
+        <h3>{% trans "Summary" %}</h3>
+
+        <div style="margin-top: 16px;">
+
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">
+                {% trans "Trend" %}
+            </div>
+
+            <div style="font-size: 22px; font-weight: 700;
+                color: {% if forecast.trend_direction == 'up' %}#dc2626{% elif forecast.trend_direction == 'down' %}#16a34a{% else %}#64748b{% endif %};">
+
+                {% if forecast.trend_direction == 'up' %}
+                    ↗
+                {% elif forecast.trend_direction == 'down' %}
+                    ↘
+                {% else %}
+                    →
+                {% endif %}
+
+                {{ forecast.trend_pct }}%
+
+            </div>
+
+        </div>
+
+        <div style="margin-top: 16px;">
+
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">
+                {% trans "Next 7 days total" %}
+            </div>
+
+            <div style="font-size: 22px; font-weight: 700;">
+                {{ forecast.total_forecast_week|floatformat:0 }}
+            </div>
+
+        </div>
+
+        <div style="margin-top: 16px;">
+
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">
+                {% trans "Model accuracy" %}
+            </div>
+
+            <div style="font-size: 22px; font-weight: 700;">
+                {{ forecast.accuracy|floatformat:2 }}
+            </div>
+
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">
+                {% trans "Based on recent variance" %}
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================== RECOMMENDATIONS ===================== -->
+<h2 style="margin-top: 32px;">💡 {% trans "Recommendations" %}</h2>
+
+<div id="recommendations-container">
+
+    {% if recommendations %}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px;">
+
+            {% for r in recommendations %}
+
+            <div class="card" style="border-left: 4px solid {% if r.priority == 'high' %}#dc2626{% elif r.priority == 'medium' %}#f59e0b{% else %}#94a3b8{% endif %};">
+
+                <div style="font-size: 24px;">
+                    {{ r.icon }}
+                </div>
+
+                <h3 style="margin-top: 8px; font-size: 15px;">
+                    {{ r.title }}
+                </h3>
+
+                <p style="color: #475569; font-size: 13px; margin-top: 6px;">
+                    {{ r.detail }}
+                </p>
+
+                <div style="background: #f8fafc; padding: 8px 12px; border-radius: 6px; margin-top: 12px; font-size: 13px;">
+                    <strong>{% trans "Action" %}:</strong> {{ r.action }}
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        {% include 'partials/_skeleton_card.html' %}
+        {% include 'partials/_skeleton_card.html' %}
+
+    {% endif %}
+
+</div>
+
+<!-- ===================== DEPARTMENT HEALTH ===================== -->
+<h2 style="margin-top: 32px;">🏢 {% trans "Department Health" %}</h2>
+
+<div class="card" style="padding: 0; overflow-x: auto;">
+
+    <table class="data-table">
+
+        <thead>
+            <tr>
+                <th>{% trans "Department" %}</th>
+                <th>{% trans "Score" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Open" %}</th>
+                <th>{% trans "Overdue" %}</th>
+                <th>{% trans "Avg Resolution" %}</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for d in system_health.departments %}
+
+            <tr>
+
+                <td>
+                    <strong>{{ d.icon }} {{ d.display }}</strong>
+                </td>
+
+                <td>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+
+                        <div style="background: #e5e7eb; border-radius: 999px; height: 8px; width: 80px; overflow: hidden;">
+
+                            <div style="width: {{ d.score }}%;
+                                height: 100%;
+                                background: {% if d.score >= 80 %}#16a34a{% elif d.score >= 60 %}#f59e0b{% elif d.score >= 40 %}#ea580c{% else %}#dc2626{% endif %};">
+                            </div>
+
+                        </div>
+
+                        <strong>{{ d.score }}</strong>
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    <span class="badge badge-{% if d.status == 'healthy' %}green{% elif d.status == 'watch' %}yellow{% elif d.status == 'at_risk' %}orange{% else %}red{% endif %}">
+                        {{ d.status|upper }}
+                    </span>
+
+                </td>
+
+                <td>
+                    {{ d.breakdown.open }}
+                </td>
+
+                <td>
+
+                    {% if d.breakdown.red_aging %}
+
+                        <span class="badge badge-red">
+                            {{ d.breakdown.red_aging }}
+                        </span>
+
+                    {% else %}
+
+                        —
+
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ d.breakdown.avg_resolution_hours }}h
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<!-- ===================== SLA BREACH RISK ===================== -->
+{% if sla_risk.count %}
+
+<h2 style="margin-top: 32px;">⏰ {% trans "SLA Breach Risk (24h)" %}</h2>
+
+<div class="card">
+
+    <p style="color: #dc2626; font-size: 18px; font-weight: 700;">
+
+        {{ sla_risk.count }}
+        {% trans "ticket(s) at risk" %}
+
+        <span style="color: #64748b; font-weight: 400; font-size: 14px;">
+            ({{ sla_risk.breached_count }} already breached,
+            {{ sla_risk.at_risk_count }} will breach)
+        </span>
+
+    </p>
+
+    {% if sla_risk.at_risk %}
+
+    <table class="data-table" style="margin-top: 12px;">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{% trans "Subject" %}</th>
+                <th>{% trans "Dept" %}</th>
+                <th>{% trans "Priority" %}</th>
+                <th>{% trans "Hours left" %}</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for r in sla_risk.at_risk %}
+
+            <tr>
+
+                <td>
+                    {{ r.ticket_id }}
+                </td>
+
+                <td>
+                    {{ r.subject|truncatechars:50 }}
+                </td>
+
+                <td>
+                    {{ r.department|default:"—" }}
+                </td>
+
+                <td>
+                    <span class="badge badge-{{ r.priority|priority_badge }}">
+                        {{ r.priority }}
+                    </span>
+                </td>
+
+                <td>
+
+                    <strong style="color: {% if r.hours_remaining < 6 %}#dc2626{% else %}#f59e0b{% endif %};">
+                        {{ r.hours_remaining }}h
+                    </strong>
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+<!-- ===================== KEYWORD CLUSTERS ===================== -->
+{% if keyword_clusters %}
+
+<h2 style="margin-top: 32px;">🔍 {% trans "Common Themes (14 days)" %}</h2>
+
+<div class="card">
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+
+        {% for kw in keyword_clusters %}
+
+        <span style="background: #eff6ff; color: #1e40af; padding: 6px 14px; border-radius: 999px; font-size: 13px;">
+            {{ kw.keyword }} <strong>({{ kw.count }})</strong>
+        </span>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+const forecastData = {{ forecast.forecast|safe }};
+const historyData = {{ forecast.history|safe }};
+
+const labels = [
+    ...historyData.map(h => h[0].slice(5)),
+    ...forecastData.map(f => f[0].slice(5)),
+];
+
+const historyValues = [
+    ...historyData.map(h => h[1]),
+    ...forecastData.map(() => null),
+];
+
+const forecastValues = [
+    ...historyData.map(() => null),
+    ...forecastData.map(f => f[1]),
+];
+
+const upperValues = [
+    ...historyData.map(() => null),
+    ...forecastData.map(f => f[3]),
+];
+
+const lowerValues = [
+    ...historyData.map(() => null),
+    ...forecastData.map(f => f[2]),
+];
+
+new Chart(document.getElementById('forecastChart'), {
+    type: 'line',
+
+    data: {
+        labels,
+
+        datasets: [
+
+            {
+                label: '{% trans "History" %}',
+                data: historyValues,
+                borderColor: '#1e40af',
+                backgroundColor: 'rgba(30,64,175,0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+            },
+
+            {
+                label: '{% trans "Forecast" %}',
+                data: forecastValues,
+                borderColor: '#7c3aed',
+                borderDash: [6, 4],
+                tension: 0.3,
+                pointRadius: 4,
+                pointStyle: 'rectRot',
+            },
+
+            {
+                label: '{% trans "Upper bound" %}',
+                data: upperValues,
+                borderColor: 'rgba(124,58,237,0.3)',
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+            },
+
+            {
+                label: '{% trans "Lower bound" %}',
+                data: lowerValues,
+                borderColor: 'rgba(124,58,237,0.3)',
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false,
+            },
+
+        ]
+    },
+
+    options: {
+
+        responsive: true,
+
+        plugins: {
+
+            legend: {
+                position: 'bottom'
+            },
+
+            tooltip: {
+                mode: 'index',
+                intersect: false
+            },
+
+        },
+
+        scales: {
+
+            y: {
+                beginAtZero: true
+            },
+
+        }
+
+    }
+});
+</script>
+
+{% endblock %}

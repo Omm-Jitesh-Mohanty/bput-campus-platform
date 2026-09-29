@@ -5,7 +5,7 @@ from django.db import models
 from django.conf import settings
 
 from apps.core.models import TimeStampedModel
-from apps.core.constants import DEPARTMENT_CODES, BATCH_YEARS
+# from apps.core.constants import DEPARTMENT_CODES, BATCH_YEARS
 
 
 class AttendanceRecord(TimeStampedModel):
@@ -30,7 +30,8 @@ class AttendanceRecord(TimeStampedModel):
 
     @property
     def is_below_threshold(self):
-        return self.percentage < 75.0
+        from apps.core.services import ConfigService
+        return self.percentage < ConfigService.get_attendance_threshold()
 
     def __str__(self):
         return f"{self.student.username} — {self.subject_name} — {self.percentage}%"
@@ -88,3 +89,5 @@ class ClassCancellation(TimeStampedModel):
 
     def __str__(self):
         return f"{self.timetable} cancelled on {self.date}"
+
+    

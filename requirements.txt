@@ -5,7 +5,7 @@ python-dotenv==1.0.1
 Pillow==10.3.0
 
 # ===== Database =====
-psycopg2-binary==2.9.9
+psycopg[binary]==3.1.18
 
 # ===== AI / LLM / RAG =====
 requests==2.32.3
@@ -23,3 +23,14 @@ opencv-python-headless==4.10.0.82
 
 # ===== Frontend helpers =====
 django-htmx==1.19.0
+
+django-environ==0.11.2
+
+channels==4.1.0
+channels-redis==4.2.0
+daphne==4.1.2
+
+docxtpl==0.18.0
+python-docx==1.1.2
+pypdf==4.2.0
+cryptography==42.0.8

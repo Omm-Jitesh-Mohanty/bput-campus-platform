@@ -1,0 +1,30 @@
+{% comment %}
+Usage:
+  {% include 'partials/_kpi.html' with label="Pending" value=42 color="warning" icon="⏳" subtitle="awaiting action" %}
+{% endcomment %}
+<div class="card" style="
+    padding: var(--sp-4);
+    border-left: 4px solid var(--{{ color|default:'brand' }}-500);
+    background: {% if color == 'danger' %}var(--danger-50){% elif color == 'warning' %}var(--warning-50){% elif color == 'success' %}var(--success-50){% else %}var(--bg-surface){% endif %};
+">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <div style="font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.05em;
+                 color: var(--text-muted); font-weight: var(--fw-semibold);">
+                {{ label }}
+            </div>
+            <div style="font-size: 32px; font-weight: var(--fw-bold); line-height: 1.1;
+                 margin-top: var(--sp-1); color: var(--text-primary);">
+                {{ value }}
+            </div>
+            {% if subtitle %}
+                <div style="font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px;">
+                    {{ subtitle }}
+                </div>
+            {% endif %}
+        </div>
+        {% if icon %}
+            <div style="font-size: 22px;">{{ icon }}</div>
+        {% endif %}
+    </div>
+</div>

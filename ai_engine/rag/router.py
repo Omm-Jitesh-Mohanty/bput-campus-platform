@@ -1,95 +1,84 @@
 """
 Intent classifier + department router.
-Rule-based for speed and reliability; upgradeable to embedding-based later.
+Now backed by config-driven Department.routing_keywords.
 """
-import re
-from apps.core.constants import (
-    ROUTING_DEPARTMENTS, PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_HIGH, PRIORITY_URGENT,
-)
+import logging
 
-# Keyword → department mapping
-ROUTING_KEYWORDS = {
-    'plumbing': ['tap', 'water leak', 'leak', 'pipe', 'toilet', 'flush', 'drain',
-                 'bathroom', 'geyser', 'shower', 'nal', 'pani'],
-    'electrical': ['fan', 'light', 'bulb', 'tube light', 'electricity', 'power',
-                   'socket', 'plug', 'switch', 'wire', 'shock', 'spark', 'meter',
-                   'bijli', 'current'],
-    'civil': ['wall', 'ceiling', 'floor', 'door', 'window', 'bench', 'chair',
-              'table', 'furniture', 'broken', 'crack', 'roof'],
-    'mess': ['mess', 'food', 'meal', 'canteen', 'khana', 'lunch', 'dinner',
-             'breakfast', 'quality of food', 'stale', 'taste'],
-    'housekeeping': ['clean', 'garbage', 'dustbin', 'sweep', 'stink', 'smell',
-                     'dirty', 'washroom clean', 'gandagi'],
-    'it': ['wifi', 'internet', 'network', 'lan', 'computer', 'printer', 'router',
-           'slow net', 'connection'],
-    'hostel': ['room', 'warden', 'hostel', 'bed', 'mattress', 'locker', 'wardrobe',
-               'roommate', 'allotment'],
-    'accounts': ['fee', 'fees', 'refund', 'payment', 'dues', 'receipt', 'challan'],
-    'academic': ['certificate', 'bonafide', 'marksheet', 'transcript', 'exam',
-                 'marks', 'attendance sheet', 'result'],
-}
-
-# Priority signals
-URGENT_KW = ['fire', 'spark', 'shock', 'flood', 'emergency', 'bleeding', 'injur',
-             'gas leak', 'collapse', 'urgent']
-HIGH_KW = ['3 days', '4 days', '5 days', 'one week', 'two weeks', 'repeated',
-           'again', 'still not', 'no response', 'very bad', 'severe']
+logger = logging.getLogger('ai_engine')
 
 
 def classify_department(text):
     """
-    Return the best-matching department code for a complaint.
-    Defaults to 'general' if no match.
+    Return the best-matching department CODE for a complaint.
+    Reads keywords from Department.routing_keywords (config-driven).
+    Falls back to 'general' if no match.
     """
-    text_l = text.lower()
-    scores = {}
-    for dept, kws in ROUTING_KEYWORDS.items():
-        score = sum(1 for kw in kws if kw in text_l)
-        if score > 0:
-            scores[dept] = score
-
-    if not scores:
+    if not text:
         return 'general'
 
-    # Highest score wins; tie broken by dict order (Python 3.7+ preserves)
-    return max(scores, key=scores.get)
+    from apps.core.services import ConfigService
+
+    dept = ConfigService.route_to_department(text)
+    if dept:
+        return dept.code
+
+    # Fallback: if a 'general' department exists, use it
+    fallback = ConfigService.department_by_code('general')
+    if fallback:
+        return fallback.code
+
+    # Last resort
+    return 'general'
 
 
 def classify_priority(text, ticket_type=None):
-    """Return 'low' | 'medium' | 'high' | 'urgent'."""
-    text_l = text.lower()
+    """
+    Return priority CODE ('low' | 'medium' | 'high' | 'urgent').
 
-    if any(kw in text_l for kw in URGENT_KW):
-        return PRIORITY_URGENT
+    Uses keyword heuristics + optional LLM refinement later.
+    """
+    from apps.core.services import ConfigService
 
-    if any(kw in text_l for kw in HIGH_KW):
-        return PRIORITY_HIGH
+    # Fetch active priority codes in descending urgency
+    priorities = ConfigService.priority_levels()  # ordered by -weight
+    priority_codes = [p.code for p in priorities]
 
-    # Complaints about safety = high
-    if ticket_type == 'complaint' and any(
-        kw in text_l for kw in ['fire', 'electric', 'shock', 'spark', 'gas']
-    ):
-        return PRIORITY_HIGH
+    text_l = (text or '').lower()
 
+    # Urgent signals
+    urgent_kw = ['fire', 'spark', 'shock', 'flood', 'emergency', 'bleeding',
+                 'injur', 'gas leak', 'collapse', 'urgent', 'immediately']
+    if any(kw in text_l for kw in urgent_kw):
+        return 'urgent' if 'urgent' in priority_codes else priority_codes[0]
+
+    # High signals
+    high_kw = ['3 days', '4 days', '5 days', 'one week', 'two weeks',
+               'repeated', 'again', 'still not', 'no response', 'very bad',
+               'severe', 'dangerous']
+    if any(kw in text_l for kw in high_kw):
+        return 'high' if 'high' in priority_codes else priority_codes[0]
+
+    # Ticket-type defaults
     if ticket_type in ('leave', 'gatepass'):
-        return PRIORITY_MEDIUM
+        return 'medium' if 'medium' in priority_codes else priority_codes[0]
 
-    return PRIORITY_MEDIUM
+    return 'medium' if 'medium' in priority_codes else priority_codes[0]
 
 
 def extract_meta(text):
-    """Return dict with detected department, priority, and matched keywords."""
-    dept = classify_department(text)
+    """Return dict with department, priority, and matched keywords."""
+    from apps.core.services import ConfigService
+
+    dept = ConfigService.route_to_department(text or '')
     priority = classify_priority(text)
 
-    text_l = text.lower()
-    matched = [
-        kw for kws in ROUTING_KEYWORDS.values() for kw in kws if kw in text_l
-    ]
+    dept_keywords = dept.all_keywords() if dept else []
+    text_l = (text or '').lower()
+    matched = [kw for kw in dept_keywords if kw and kw.lower() in text_l]
 
     return {
-        'department': dept,
+        'department': dept.code if dept else 'general',
         'priority': priority,
-        'matched_keywords': list(set(matched))[:10],
-        'classifier': 'rule-based-v1',
+        'matched_keywords': matched[:10],
+        'classifier': 'config-driven-v2',
     }

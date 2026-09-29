@@ -4,7 +4,7 @@
 {% block title %}{% trans "Resolve Ticket" %} #{{ ticket.id }}{% endblock %}
 
 {% block content %}
-<div style="max-width: 720px; margin: 0 auto;">
+<div style="max-width: 760px; margin: 0 auto;">
 
 <div style="margin-bottom: 16px;">
     <a href="{% url 'tickets:detail' ticket.id %}" style="font-size: 14px;">← {% trans "Back to ticket" %}</a>
@@ -21,20 +21,93 @@
         {{ ticket.student.get_full_name|default:ticket.student.username }}
     </p>
     <p style="margin-top: 12px; white-space: pre-wrap;">{{ ticket.raw_input }}</p>
+
+    {% if ticket.dynamic_data %}
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 6px;">{% trans "Structured data:" %}</p>
+        <table style="font-size: 13px;">
+            {% for k, v in ticket.dynamic_data.items %}
+            <tr>
+                <td style="padding: 2px 12px 2px 0; color: #64748b;">{{ k }}</td>
+                <td style="font-weight: 500;">{{ v }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
 </div>
+
+<!-- Workflow progress -->
+{% if all_steps %}
+<div class="card">
+    <h3 style="margin-bottom: 16px;">🔄 {% trans "Approval Workflow" %}</h3>
+    <div style="display: flex; gap: 0; flex-direction: column;">
+        {% for step_exec in all_steps %}
+        <div style="display: flex; gap: 12px; padding: 12px;
+             {% if step_exec.status == 'pending' %}background: #eff6ff; border-left: 4px solid #1e40af;
+             {% elif step_exec.status == 'approved' %}background: #f0fdf4; border-left: 4px solid #16a34a;
+             {% elif step_exec.status == 'rejected' %}background: #fef2f2; border-left: 4px solid #dc2626;
+             {% elif step_exec.status == 'skipped' %}background: #f8fafc; border-left: 4px solid #94a3b8;
+             {% endif %}
+             border-radius: 6px; margin-bottom: 8px;">
+            <div style="font-size: 22px;">
+                {% if step_exec.status == 'pending' %}⏳
+                {% elif step_exec.status == 'approved' %}✅
+                {% elif step_exec.status == 'rejected' %}❌
+                {% elif step_exec.status == 'skipped' %}⏭
+                {% endif %}
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; justify-content: space-between;">
+                    <strong>{{ step_exec.workflow_step.order }}. {{ step_exec.workflow_step.name }}</strong>
+                    <span style="font-size: 12px; color: #64748b;">
+                        {{ step_exec.get_status_display }}
+                    </span>
+                </div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                    {% if step_exec.workflow_step.specific_user %}
+                        {% trans "Assigned to" %}: {{ step_exec.workflow_step.specific_user.get_full_name }}
+                    {% elif step_exec.workflow_step.role_required %}
+                        {% trans "Role" %}: {{ step_exec.workflow_step.role_required|title }}
+                    {% else %}
+                        {% trans "Any admin" %}
+                    {% endif %}
+                    ·
+                    {{ step_exec.workflow_step.get_action_type_display }}
+                </div>
+                {% if step_exec.workflow_step.instructions %}
+                <p style="font-size: 13px; color: #475569; margin-top: 6px;">
+                    💡 {{ step_exec.workflow_step.instructions }}
+                </p>
+                {% endif %}
+                {% if step_exec.actor %}
+                <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
+                    {% if step_exec.status == 'approved' %}✅{% else %}❌{% endif %}
+                    {{ step_exec.actor.get_full_name|default:step_exec.actor.username }}
+                    · {{ step_exec.acted_at|date:"d M Y H:i" }}
+                </p>
+                {% if step_exec.comment %}
+                <p style="font-size: 12px; margin-top: 4px; font-style: italic;">
+                    "{{ step_exec.comment }}"
+                </p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 
 <!-- AI Suggestion -->
 {% if suggestion %}
-<div class="card"
-     style="border-left: 4px solid {% if suggestion.source == 'llm' %}#1e40af{% else %}#94a3b8{% endif %};">
+<div class="card" style="border-left: 4px solid {% if suggestion.source == 'llm' %}#1e40af{% else %}#94a3b8{% endif %};">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h3>🤖 {% trans "AI-Suggested Reply" %}</h3>
         <span class="badge {% if suggestion.source == 'llm' %}badge-blue{% else %}badge-gray{% endif %}">
             {% if suggestion.source == 'llm' %}
-                {{ suggestion.latency_ms }}ms · {{ suggestion.similar_count }} similar cases
-            {% else %}
-                fallback
-            {% endif %}
+                {{ suggestion.latency_ms }}ms · {{ suggestion.similar_count }} similar
+            {% else %}fallback{% endif %}
         </span>
     </div>
     <p style="background: #eff6ff; padding: 14px; border-radius: 6px; margin-top: 12px;
@@ -47,20 +120,65 @@
 </div>
 {% endif %}
 
-<!-- Resolution form -->
+<!-- Action form -->
+{% if can_act %}
 <form method="post">
     {% csrf_token %}
     <div class="card">
+        {% if current_step %}
+        <h3 style="margin-bottom: 12px;">
+            ⚡ {% trans "Action on step" %}: {{ current_step.workflow_step.name }}
+        </h3>
+        {% endif %}
+
         <div class="form-group">
-            <label for="resolution_note">{% trans "Resolution Note" %}</label>
-            <textarea name="resolution_note" id="resolution_note" rows="5" required
-                      placeholder="{% trans 'Write what action was taken…' %}"></textarea>
+            <label for="resolution_note">
+                {% trans "Comment / Note" %} <span style="color: #dc2626;">*</span>
+            </label>
+            <textarea name="resolution_note" id="resolution_note" rows="4" required
+                      placeholder="{% trans 'Add your observations or instructions…' %}"></textarea>
         </div>
-        <button type="submit" class="btn btn-success" style="width: 100%;">
-            ✅ {% trans "Mark as Resolved" %}
-        </button>
+
+        <div style="display: flex; gap: 12px;">
+            {% if current_step %}
+                <button type="submit" name="workflow_action" value="approve"
+                        class="btn btn-success" style="flex: 1;">
+                    ✅ {% trans "Approve" %}
+                </button>
+                <button type="submit" name="workflow_action" value="reject"
+                        class="btn btn-danger" style="flex: 1;"
+                        onclick="return confirm('{% trans "Reject this ticket? This ends the workflow." %}')">
+                    ❌ {% trans "Reject" %}
+                </button>
+                {% if current_step.workflow_step.can_skip %}
+                    <button type="submit" name="workflow_action" value="skip"
+                            class="btn btn-secondary" style="flex: 0 0 auto;">
+                        ⏭ {% trans "Skip" %}
+                    </button>
+                {% endif %}
+            {% else %}
+                <button type="submit" class="btn btn-success" style="flex: 1;">
+                    ✅ {% trans "Mark as Resolved" %}
+                </button>
+            {% endif %}
+        </div>
     </div>
 </form>
+{% else %}
+<div class="card" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+    <p style="color: #78350f;">
+        ⚠️ {% trans "You are not authorized to act on the current step." %}
+        {% trans "Waiting for:" %}
+        <strong>
+            {% if current_step.workflow_step.specific_user %}
+                {{ current_step.workflow_step.specific_user.get_full_name }}
+            {% else %}
+                {{ current_step.workflow_step.role_required|title }}
+            {% endif %}
+        </strong>
+    </p>
+</div>
+{% endif %}
 
 </div>
 {% endblock %}

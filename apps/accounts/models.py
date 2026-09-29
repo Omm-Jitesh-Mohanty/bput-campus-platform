@@ -34,7 +34,7 @@ from decimal import Decimal
 
 from apps.core.constants import (
     ROLE_CHOICES, ROLE_STUDENT, ADMIN_ROLES,
-    DEPARTMENT_CODES, BATCH_YEARS, HOSTEL_BLOCKS,
+    # DEPARTMENT_CODES, BATCH_YEARS, HOSTEL_BLOCKS,
 )
 
 

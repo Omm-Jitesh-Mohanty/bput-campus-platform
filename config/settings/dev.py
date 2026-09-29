@@ -9,12 +9,12 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # SQLite for quick dev
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Show emails in console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

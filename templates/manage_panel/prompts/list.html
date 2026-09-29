@@ -1,0 +1,153 @@
+{% extends "manage_panel/base_manage.html" %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% trans "AI Prompts" %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% trans "AI Prompt Templates" %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% trans "Manage reusable AI prompts used throughout the campus platform." %}
+{% endblock %}
+
+{% block manage_actions %}
+    <a
+        href="{% url 'manage_panel:prompt_create' %}"
+        class="btn btn-primary"
+    >
+        + {% trans "Add Prompt" %}
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card">
+
+    {% if prompts %}
+
+        <div class="table-responsive">
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>{% trans "Key" %}</th>
+                        <th>{% trans "Version" %}</th>
+                        <th>{% trans "Model" %}</th>
+                        <th>{% trans "Temperature" %}</th>
+                        <th>{% trans "Max Tokens" %}</th>
+                        <th>{% trans "Usage" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for prompt in prompts %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ prompt.key }}</strong>
+                            </td>
+
+                            <td>
+                                v{{ prompt.version }}
+                            </td>
+
+                            <td>
+                                {{ prompt.model_name|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ prompt.temperature }}
+                            </td>
+
+                            <td>
+                                {{ prompt.max_tokens }}
+                            </td>
+
+                            <td>
+                                {{ prompt.times_used }}
+                            </td>
+
+                            <td>
+                                {% if prompt.is_active %}
+                                    <span class="chip chip-success">
+                                        {% trans "Active" %}
+                                    </span>
+                                {% else %}
+                                    <span class="chip">
+                                        {% trans "Inactive" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'manage_panel:prompt_edit' prompt.pk %}"
+                                    class="btn btn-sm"
+                                >
+                                    {% trans "Edit" %}
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'manage_panel:prompt_delete' prompt.pk %}"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Delete this AI prompt?');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-danger"
+                                    >
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">🤖</div>
+
+            <h3>
+                {% trans "No AI prompts found" %}
+            </h3>
+
+            <p>
+                {% trans "Create your first AI prompt template." %}
+            </p>
+
+            <a
+                href="{% url 'manage_panel:prompt_create' %}"
+                class="btn btn-primary"
+            >
+                + {% trans "Add Prompt" %}
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+

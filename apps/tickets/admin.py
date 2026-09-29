@@ -59,9 +59,10 @@ class AgeingColorFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('green', 'Green'),
-            ('yellow', 'Yellow'),
-            ('red', 'Red'),
+            ('green', 'Green (fresh)'),
+            ('yellow', 'Yellow (watch)'),
+            ('orange', 'Orange (critical)'),
+            ('red', 'Red (overdue)'),
         )
 
     def queryset(self, request, queryset):
@@ -78,12 +79,17 @@ class AgeingColorFilter(admin.SimpleListFilter):
             end = ticket.resolved_at or now
             hours = (end - ticket.created_at).total_seconds() / 3600
 
+            from apps.core.services import ConfigService
+            sla = ConfigService.sla_hours_for(ticket.ticket_type, ticket.priority)
+
             if ticket.status == 'resolved':
                 color = 'green'
-            elif hours < 24:
+            elif hours < sla['green']:
                 color = 'green'
-            elif hours < 48:
+            elif hours < sla['yellow']:
                 color = 'yellow'
+            elif hours < sla['red']:
+                color = 'orange'
             else:
                 color = 'red'
 

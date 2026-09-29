@@ -1,0 +1,210 @@
+{% extends "manage_panel/base_manage.html" %}
+
+{% block manage_title %}
+    {% if priority %}Edit Priority{% else %}Add Priority{% endif %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% if priority %}
+        Edit Priority
+    {% else %}
+        Add Priority
+    {% endif %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    Configure the priority level and its SLA behavior.
+{% endblock %}
+
+{% block manage_actions %}
+    <a
+        href="{% url 'manage_panel:priorities' %}"
+        class="btn"
+    >
+        ← Back to Priorities
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="manage-card">
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label for="code">
+                    Code
+                </label>
+
+                <input
+                    type="text"
+                    id="code"
+                    name="code"
+                    value="{{ priority.code|default:'' }}"
+                    placeholder="high"
+                    required
+                >
+
+                <small>
+                    Unique internal code, for example:
+                    low, medium, high, critical
+                </small>
+            </div>
+
+
+            <div class="form-group">
+                <label for="name">
+                    Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ priority.name|default:'' }}"
+                    placeholder="High"
+                    required
+                >
+            </div>
+
+
+            <div class="form-group">
+                <label for="icon">
+                    Icon
+                </label>
+
+                <input
+                    type="text"
+                    id="icon"
+                    name="icon"
+                    value="{{ priority.icon|default:'🟡' }}"
+                    maxlength="10"
+                >
+            </div>
+
+
+            <div class="form-group">
+                <label for="color">
+                    Color
+                </label>
+
+                <input
+                    type="text"
+                    id="color"
+                    name="color"
+                    value="{{ priority.color|default:'#64748b' }}"
+                    placeholder="#64748b"
+                    maxlength="7"
+                >
+            </div>
+
+
+            <div class="form-group">
+                <label for="weight">
+                    Weight
+                </label>
+
+                <input
+                    type="number"
+                    id="weight"
+                    name="weight"
+                    value="{{ priority.weight|default:50 }}"
+                    min="1"
+                    max="100"
+                    required
+                >
+
+                <small>
+                    Higher weight means greater priority.
+                </small>
+            </div>
+
+
+            <div class="form-group">
+                <label for="sla_multiplier">
+                    SLA Multiplier
+                </label>
+
+                <input
+                    type="number"
+                    id="sla_multiplier"
+                    name="sla_multiplier"
+                    value="{{ priority.sla_multiplier|default:'1.00' }}"
+                    min="0.01"
+                    max="99.99"
+                    step="0.01"
+                    required
+                >
+
+                <small>
+                    Example: 0.50, 1.00, 1.50, 2.00
+                </small>
+            </div>
+
+
+            <div class="form-group">
+                <label for="sort_order">
+                    Sort Order
+                </label>
+
+                <input
+                    type="number"
+                    id="sort_order"
+                    name="sort_order"
+                    value="{{ priority.sort_order|default:100 }}"
+                    min="0"
+                    required
+                >
+            </div>
+
+        </div>
+
+
+        <div class="form-group checkbox-group">
+
+            <label>
+                <input
+                    type="checkbox"
+                    name="is_active"
+                    {% if not priority or priority.is_active %}
+                        checked
+                    {% endif %}
+                >
+
+                Active
+            </label>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a
+                href="{% url 'manage_panel:priorities' %}"
+                class="btn"
+            >
+                Cancel
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                {% if priority %}
+                    Save Changes
+                {% else %}
+                    Create Priority
+                {% endif %}
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

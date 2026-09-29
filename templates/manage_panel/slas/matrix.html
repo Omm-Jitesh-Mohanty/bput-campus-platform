@@ -1,0 +1,170 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_title %}{% trans "SLA Policies" %}{% endblock %}
+{% block manage_heading %}⏱ {% trans "SLA Matrix" %}{% endblock %}
+{% block manage_subtitle %}
+    {% trans "Green / Yellow / Red thresholds (in hours). Click any cell to edit." %}
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card" style="overflow-x: auto; padding: 0;">
+    <table class="sla-matrix" style="padding: 16px;">
+        <thead>
+            <tr>
+                <th style="text-align: left; padding-left: 16px;">{% trans "Ticket Type" %}</th>
+                {% for p in priorities %}
+                    <th>
+                        <span style="font-size: 16px;">{{ p.icon }}</span>
+                        {{ p.name }}
+                        <div style="font-size: 10px; font-weight: 400; opacity: 0.7;">
+                            ×{{ p.sla_multiplier }}
+                        </div>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in matrix %}
+            <tr>
+                <td style="text-align: left; padding: 12px 16px; background: #f8fafc;">
+                    <div style="font-weight: 600;">
+                        {{ row.ticket_type.icon }} {{ row.ticket_type.name }}
+                    </div>
+                    <div style="font-size: 12px; color: #64748b;">
+                        {{ row.ticket_type.code }} · {% trans "base" %} {{ row.ticket_type.sla_hours }}h
+                    </div>
+                </td>
+                {% for cell in row.cells %}
+                <td class="sla-cell"
+                    data-tt="{{ row.ticket_type.code }}"
+                    data-prio="{{ cell.priority.code }}"
+                    data-green="{{ cell.green }}"
+                    data-yellow="{{ cell.yellow }}"
+                    data-red="{{ cell.red }}"
+                    title="{% trans 'Click to edit' %}">
+                    {% if cell.policy %}
+                        <div style="font-size: 11px; color: #64748b;">G / Y / R</div>
+                        <div class="hours">
+                            <span style="color: #16a34a;">{{ cell.green }}</span>
+                            <span style="color: #94a3b8; font-size: 14px;">/</span>
+                            <span style="color: #f59e0b;">{{ cell.yellow }}</span>
+                            <span style="color: #94a3b8; font-size: 14px;">/</span>
+                            <span style="color: #dc2626;">{{ cell.red }}</span>
+                        </div>
+                    {% else %}
+                        <div style="color: #94a3b8; font-size: 12px;">
+                            {% trans "not set" %}<br>
+                            <span style="font-size: 11px;">{% trans "click to add" %}</span>
+                        </div>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Inline edit modal -->
+<div id="sla-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%;">
+        <h3 id="sla-modal-title" style="margin-bottom: 16px;"></h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div>
+                <label style="font-size: 12px; color: #16a34a; font-weight: 600;">🟢 {% trans "Green (h)" %}</label>
+                <input type="number" id="sla-green" min="1" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #f59e0b; font-weight: 600;">🟡 {% trans "Yellow (h)" %}</label>
+                <input type="number" id="sla-yellow" min="1" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+            </div>
+            <div>
+                <label style="font-size: 12px; color: #dc2626; font-weight: 600;">🔴 {% trans "Red (h)" %}</label>
+                <input type="number" id="sla-red" min="1" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+            </div>
+        </div>
+
+        <div id="sla-error" style="display: none; padding: 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 13px; margin-bottom: 12px;"></div>
+
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button onclick="closeSlaModal()" class="btn btn-secondary">{% trans "Cancel" %}</button>
+            <button onclick="saveSla()" class="btn">{% trans "Save" %}</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCell = null;
+
+document.querySelectorAll('.sla-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+        currentCell = cell;
+        const ttCode = cell.dataset.tt;
+        const prioCode = cell.dataset.prio;
+        document.getElementById('sla-modal-title').textContent =
+            `${ttCode.toUpperCase()} — ${prioCode}`;
+
+        const green = parseInt(cell.dataset.green) || 24;
+        const yellow = parseInt(cell.dataset.yellow) || 48;
+        const red = parseInt(cell.dataset.red) || 72;
+
+        document.getElementById('sla-green').value = green;
+        document.getElementById('sla-yellow').value = yellow;
+        document.getElementById('sla-red').value = red;
+        document.getElementById('sla-error').style.display = 'none';
+
+        const modal = document.getElementById('sla-modal');
+        modal.style.display = 'flex';
+    });
+});
+
+function closeSlaModal() {
+    document.getElementById('sla-modal').style.display = 'none';
+    currentCell = null;
+}
+
+function saveSla() {
+    if (!currentCell) return;
+
+    const green = parseInt(document.getElementById('sla-green').value);
+    const yellow = parseInt(document.getElementById('sla-yellow').value);
+    const red = parseInt(document.getElementById('sla-red').value);
+
+    if (green > yellow || yellow > red) {
+        document.getElementById('sla-error').textContent = '{% trans "Green ≤ Yellow ≤ Red required" %}';
+        document.getElementById('sla-error').style.display = 'block';
+        return;
+    }
+
+    fetch('{% url "manage_panel:sla_update_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({
+            ticket_type: currentCell.dataset.tt,
+            priority: currentCell.dataset.prio,
+            green, yellow, red,
+        }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            location.reload();
+        } else {
+            document.getElementById('sla-error').textContent = data.error || 'Error';
+            document.getElementById('sla-error').style.display = 'block';
+        }
+    })
+    .catch(err => {
+        document.getElementById('sla-error').textContent = 'Network error';
+        document.getElementById('sla-error').style.display = 'block';
+    });
+}
+</script>
+
+{% endblock %}

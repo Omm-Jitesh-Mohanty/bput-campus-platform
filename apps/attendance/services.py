@@ -10,15 +10,15 @@ def compute_attendance_percentage(attended, total):
     return round((attended / total) * 100, 2)
 
 
-def recovery_plan(attended, total, target_pct=75.0):
+def recovery_plan(attended, total, target_pct=None):
     """
     How many consecutive classes must the student attend to hit target_pct?
-
-    Math: (attended + X) / (total + X) >= target/100
-          => 100*(attended + X) >= target*(total + X)
-          => X*(100 - target) >= target*total - 100*attended
-          => X >= (target*total - 100*attended) / (100 - target)
+    Target reads from SystemSetting 'attendance.threshold_pct' if not provided.
     """
+    if target_pct is None:
+        from apps.core.services import ConfigService
+        target_pct = ConfigService.get_attendance_threshold()
+
     current = compute_attendance_percentage(attended, total)
     if current >= target_pct:
         return {
@@ -40,13 +40,15 @@ def recovery_plan(attended, total, target_pct=75.0):
         'needed': needed,
         'current': current,
         'target': target_pct,
-        'message': f"Attend the next {needed} classes consecutively to reach {target_pct}%.",
+        'message': f"Attend the next {needed} classes consecutively to reach {target_pct:.0f}%.",
     }
 
 
 def get_student_attendance_summary(student):
     """Return per-subject attendance + overall percentage."""
     from .models import AttendanceRecord
+    from apps.core.services import ConfigService
+
     records = AttendanceRecord.objects.filter(student=student)
     total_attended = sum(r.attended_classes for r in records)
     total_held = sum(r.total_classes for r in records)
@@ -56,5 +58,5 @@ def get_student_attendance_summary(student):
         'overall_percentage': overall,
         'total_attended': total_attended,
         'total_held': total_held,
-        'is_safe': overall >= 75.0,
+        'is_safe': overall >= ConfigService.get_attendance_threshold(),
     }

@@ -1,0 +1,109 @@
+{% extends "manage_panel/base_manage.html" %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% trans "Audit Trail" %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% trans "Audit Trail" %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% trans "Review system and configuration activity." %}
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card">
+
+    {% if audit_logs %}
+
+        <div class="table-responsive">
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>{% trans "Time" %}</th>
+                        <th>{% trans "User" %}</th>
+                        <th>{% trans "Action" %}</th>
+                        <th>{% trans "Object" %}</th>
+                        <th>{% trans "Description" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for log in audit_logs %}
+
+                        <tr>
+
+                            <td>
+                                {{ log.timestamp|date:"Y-m-d H:i:s" }}
+                            </td>
+
+                            <td>
+                                {% if log.user %}
+                                    {{ log.user.get_full_name|default:log.user.username }}
+                                {% else %}
+                                    {% trans "System" %}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="chip">
+                                    {{ log.action }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if log.object_type %}
+                                    {{ log.object_type }}
+
+                                    {% if log.object_id %}
+                                        #{{ log.object_id }}
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if log.description %}
+                                    {{ log.description }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">📋</div>
+
+            <h3>
+                {% trans "No audit records found" %}
+            </h3>
+
+            <p>
+                {% trans "System activity will appear here when audit events are recorded." %}
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+

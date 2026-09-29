@@ -1,0 +1,190 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Document Templates" %}{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>📄 {% trans "Document Templates" %}</h1>
+        <p>{% trans "Manage DOCX templates used to generate official student documents." %}</p>
+    </div>
+
+    <div>
+        <a href="{% url 'manage_panel:document_template_create' %}" class="btn">
+            + {% trans "New Template" %}
+        </a>
+    </div>
+</div>
+
+
+<div class="card">
+
+    {% if templates %}
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Template" %}</th>
+                        <th>{% trans "Version" %}</th>
+                        <th>{% trans "Placeholders" %}</th>
+                        <th>{% trans "Requirements" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for template in templates %}
+
+                    <tr>
+
+                        <td>
+                            <span class="badge badge-blue">
+                                {{ template.get_doc_type_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <strong>{{ template.name }}</strong>
+
+                            {% if template.description %}
+                                <div style="
+                                    font-size: var(--fs-xs);
+                                    color: var(--text-muted);
+                                    margin-top: 3px;
+                                ">
+                                    {{ template.description|truncatechars:80 }}
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            v{{ template.version }}
+                        </td>
+
+                        <td>
+                            {% if template.detected_placeholders %}
+
+                                <div style="
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 4px;
+                                ">
+
+                                    {% for placeholder in template.detected_placeholders %}
+                                        <code style="
+                                            font-size: 11px;
+                                            padding: 2px 5px;
+                                            background: var(--bg-subtle);
+                                            border-radius: 4px;
+                                        ">
+                                            {{ placeholder }}
+                                        </code>
+                                    {% endfor %}
+
+                                </div>
+
+                            {% else %}
+
+                                <span style="color: var(--text-muted);">
+                                    {% trans "None detected" %}
+                                </span>
+
+                            {% endif %}
+                        </td>
+
+                        <td>
+
+                            {% if template.requires_fee_clearance %}
+                                <div style="font-size: var(--fs-xs);">
+                                    💰 {% trans "Fee clearance" %}
+                                </div>
+                            {% endif %}
+
+                            {% if template.requires_attendance_75 %}
+                                <div style="font-size: var(--fs-xs);">
+                                    📊 {% trans "75% attendance" %}
+                                </div>
+                            {% endif %}
+
+                            {% if not template.requires_fee_clearance and not template.requires_attendance_75 %}
+                                <span style="color: var(--text-muted);">
+                                    {% trans "None" %}
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if template.is_active %}
+                                <span class="badge badge-green">
+                                    {% trans "Active" %}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-gray">
+                                    {% trans "Inactive" %}
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td style="white-space: nowrap;">
+
+                            <a
+                                href="{% url 'manage_panel:document_template_edit' template.id %}"
+                                class="btn btn-secondary btn-sm"
+                            >
+                                ✏️ {% trans "Edit" %}
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    {% else %}
+
+        <div style="
+            text-align: center;
+            padding: var(--sp-8);
+            color: var(--text-muted);
+        ">
+
+            <div style="font-size: 48px; margin-bottom: var(--sp-3);">
+                📄
+            </div>
+
+            <h3>
+                {% trans "No document templates yet" %}
+            </h3>
+
+            <p>
+                {% trans "Upload your first DOCX template to start generating official documents." %}
+            </p>
+
+            <a
+                href="{% url 'manage_panel:document_template_create' %}"
+                class="btn"
+            >
+                + {% trans "Create Document Template" %}
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

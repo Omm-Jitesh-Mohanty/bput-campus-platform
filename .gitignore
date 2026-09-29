@@ -70,3 +70,5 @@ tmp/
 .pytest_cache/
 .coverage
 htmlcov/
+backups/
+*.sqlite3.backup

@@ -22,13 +22,12 @@ def build_reply_prompt(ticket, similar_resolutions):
     return (
         f"Similar resolved cases:\n{context}\n\n"
         f"New ticket:\n"
-        f"- Type: {ticket.get_ticket_type_display()}\n"
+        f"- Type: {ticket.ticket_type}\n"
         f"- Department: {ticket.assigned_department or 'unassigned'}\n"
         f"- Subject: {ticket.subject}\n"
         f"- Student's words: {ticket.raw_input[:300]}\n\n"
         f"Write a short resolution note:"
     )
-
 
 def fallback_reply(ticket):
     """Templated fallback reply."""

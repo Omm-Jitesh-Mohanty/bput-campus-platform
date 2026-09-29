@@ -7,12 +7,10 @@ from django.utils import timezone
 
 from apps.core.models import TimeStampedModel, SoftDeleteModel
 from apps.core.constants import (
-    TICKET_TYPE_CHOICES, TICKET_STATUS_CHOICES, PRIORITY_CHOICES,
+    TICKET_STATUS_CHOICES,
     TICKET_TYPE_LEAVE, TICKET_TYPE_GATEPASS, TICKET_TYPE_DOCUMENT, TICKET_TYPE_COMPLAINT,
     TICKET_STATUS_PENDING, TICKET_STATUS_RESOLVED, TICKET_STATUS_REOPENED,
     PRIORITY_MEDIUM, PRIORITY_HIGH,
-    AGEING_GREEN_HOURS, AGEING_YELLOW_HOURS,
-    ROUTING_DEPARTMENTS,
 )
 from apps.core.utils import ticket_attachment_path
 from .validators import validate_upload_size, validate_upload_extension
@@ -30,8 +28,7 @@ class CampusTicket(TimeStampedModel, SoftDeleteModel):
     # ---------- Core ----------
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                 related_name='tickets')
-    ticket_type = models.CharField(max_length=20, choices=TICKET_TYPE_CHOICES,
-                                   db_index=True)
+    ticket_type = models.CharField(max_length=20, db_index=True)
 
     # ---------- Content ----------
     subject = models.CharField(max_length=200)
@@ -40,11 +37,10 @@ class CampusTicket(TimeStampedModel, SoftDeleteModel):
                                       help_text="AI-formatted formal application text.")
 
     # ---------- Routing & Priority ----------
-    assigned_department = models.CharField(max_length=30, blank=True,
-                                           choices=ROUTING_DEPARTMENTS, db_index=True)
+    assigned_department = models.CharField(max_length=30, blank=True, db_index=True)
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                     on_delete=models.SET_NULL, related_name='assigned_tickets')
-    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES,
+    priority = models.CharField(max_length=10,
                                 default=PRIORITY_MEDIUM, db_index=True)
 
     # ---------- Lifecycle ----------
@@ -68,6 +64,11 @@ class CampusTicket(TimeStampedModel, SoftDeleteModel):
     ai_metadata = models.JSONField(default=dict, blank=True,
                                    help_text="Classifier scores, LLM responses, etc.")
 
+    dynamic_data = models.JSONField(
+        default=dict, blank=True,
+        help_text="Structured data from dynamic form fields (per TicketType.dynamic_schema)."
+    )
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -85,14 +86,30 @@ class CampusTicket(TimeStampedModel, SoftDeleteModel):
 
     @property
     def ageing_color(self):
-        """Green / yellow / red based on age + status."""
+        """
+        Green / yellow / red / orange based on age + status.
+        Thresholds come from the SLAPolicy for this (ticket_type, priority).
+        """
+        from apps.core.services import ConfigService
+
         if self.status in (TICKET_STATUS_RESOLVED,):
             return 'green'
+
         hours = self.age_hours
-        if hours < AGEING_GREEN_HOURS:
+
+        # Read SLA from config
+        sla = ConfigService.sla_hours_for(self.ticket_type, self.priority)
+
+        green = sla.get('green', 4)
+        yellow = sla.get('yellow', 8)
+        red = sla.get('red', 72)
+
+        if hours < green:
             return 'green'
-        if hours < AGEING_YELLOW_HOURS:
+        if hours < yellow:
             return 'yellow'
+        if hours < red:
+            return 'orange'
         return 'red'
 
     @property
@@ -114,7 +131,7 @@ class CampusTicket(TimeStampedModel, SoftDeleteModel):
         return self.ticket_type == TICKET_TYPE_GATEPASS
 
     def __str__(self):
-        return f"#{self.id} {self.get_ticket_type_display()} — {self.subject[:40]}"
+        return f"#{self.id} {self.ticket_type} — {self.subject[:40]}"
 
 
 class TicketComment(TimeStampedModel):

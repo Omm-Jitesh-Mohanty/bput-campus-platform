@@ -1,0 +1,397 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block title %}
+    {% if template %}
+        {% trans "Edit Document Template" %}
+    {% else %}
+        {% trans "Create Document Template" %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>
+            {% if template %}
+                ✏️ {% trans "Edit Document Template" %}
+            {% else %}
+                📄 {% trans "Create Document Template" %}
+            {% endif %}
+        </h1>
+
+        <p>
+            {% trans "Configure the DOCX template, placeholders, and data mapping." %}
+        </p>
+    </div>
+
+    <div>
+        <a
+            href="{% url 'manage_panel:document_templates' %}"
+            class="btn btn-secondary"
+        >
+            ← {% trans "Back" %}
+        </a>
+    </div>
+</div>
+
+
+<form method="post" enctype="multipart/form-data">
+
+    {% csrf_token %}
+
+    <div class="card">
+
+        <h3>{% trans "Basic Information" %}</h3>
+
+        <div class="form-group">
+
+            <label for="doc_type">
+                {% trans "Document type" %} *
+            </label>
+
+            <select name="doc_type" id="doc_type" required>
+
+                <option value="">
+                    — {% trans "Select document type" %} —
+                </option>
+
+                {% for code, name in doc_types %}
+
+                    <option
+                        value="{{ code }}"
+                        {% if template and template.doc_type == code %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="name">
+                {% trans "Template name" %} *
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                id="name"
+                value="{% if template %}{{ template.name }}{% endif %}"
+                placeholder="e.g. Bonafide Certificate"
+                required
+            >
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="description">
+                {% trans "Description" %}
+            </label>
+
+            <textarea
+                name="description"
+                id="description"
+                rows="3"
+                placeholder="Describe this document template..."
+            >{% if template %}{{ template.description }}{% endif %}</textarea>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label for="template_file">
+                {% trans "DOCX template file" %}
+            </label>
+
+            <input
+                type="file"
+                name="template_file"
+                id="template_file"
+                accept=".docx"
+            >
+
+            {% if template and template.template_file %}
+
+                <p class="help-text">
+                    {% trans "Current file:" %}
+                    <strong>{{ template.template_file.name }}</strong>
+                </p>
+
+            {% else %}
+
+                <p class="help-text">
+                    {% trans "Upload a DOCX file containing {{ placeholder }} fields." %}
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>{% trans "Version & Requirements" %}</h3>
+
+        <div
+            style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: var(--sp-4);
+            "
+        >
+
+            <div class="form-group">
+
+                <label for="version">
+                    {% trans "Version" %}
+                </label>
+
+                <input
+                    type="number"
+                    name="version"
+                    id="version"
+                    min="1"
+                    value="{% if template %}{{ template.version }}{% else %}1{% endif %}"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    {% trans "Requirements" %}
+                </label>
+
+                <div>
+
+                    <label style="display: block; margin-bottom: 8px;">
+
+                        <input
+                            type="checkbox"
+                            name="requires_fee_clearance"
+                            {% if template and template.requires_fee_clearance %}
+                                checked
+                            {% elif not template %}
+                                checked
+                            {% endif %}
+                        >
+
+                        💰 {% trans "Require fee clearance" %}
+
+                    </label>
+
+
+                    <label style="display: block;">
+
+                        <input
+                            type="checkbox"
+                            name="requires_attendance_75"
+                            {% if template and template.requires_attendance_75 %}
+                                checked
+                            {% endif %}
+                        >
+
+                        📊 {% trans "Require 75% attendance" %}
+
+                    </label>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+
+                <input
+                    type="checkbox"
+                    name="is_active"
+                    {% if template %}
+                        {% if template.is_active %}checked{% endif %}
+                    {% else %}
+                        checked
+                    {% endif %}
+                >
+
+                {% trans "Make this template active" %}
+
+            </label>
+
+            <p class="help-text">
+                {% trans "Only one active template can exist for each document type." %}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>🔗 {% trans "Placeholder Mapping" %}</h3>
+
+        <p style="color: var(--text-muted);">
+            {% trans "Map each placeholder in your DOCX template to a student, ticket, automatic, or system data source." %}
+        </p>
+
+
+        {% if data_sources %}
+
+            <div
+                style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: var(--sp-2);
+                    margin: var(--sp-4) 0;
+                "
+            >
+
+                {% for source in data_sources %}
+
+                    <div
+                        style="
+                            padding: 8px;
+                            border: 1px solid var(--border-subtle);
+                            border-radius: 6px;
+                        "
+                    >
+
+                        <code style="font-size: 12px;">
+                            {{ source.key }}
+                        </code>
+
+                        <div
+                            style="
+                                font-size: var(--fs-xs);
+                                color: var(--text-muted);
+                                margin-top: 2px;
+                            "
+                        >
+                            {{ source.label }}
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="form-group">
+
+            <label for="field_mapping">
+                {% trans "Field mapping JSON" %}
+            </label>
+
+            <textarea
+                name="field_mapping"
+                id="field_mapping"
+                rows="14"
+                style="
+                    width: 100%;
+                    font-family: monospace;
+                    font-size: 13px;
+                "
+                placeholder='{
+  "student_name": {
+    "source": "student.full_name"
+  },
+  "roll_no": {
+    "source": "student.username"
+  }
+}'
+            >{{ mapping_json }}</textarea>
+
+            <p class="help-text">
+                {% trans "Example: placeholder → source. The placeholder name must match the DOCX variable." %}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {% if template and template.detected_placeholders %}
+
+        <div class="card">
+
+            <h3>🔎 {% trans "Detected Placeholders" %}</h3>
+
+            <div
+                style="
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                "
+            >
+
+                {% for placeholder in template.detected_placeholders %}
+
+                    <code
+                        style="
+                            padding: 5px 8px;
+                            background: var(--bg-subtle);
+                            border-radius: 5px;
+                        "
+                    >
+                        {{ placeholder }}
+                    </code>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+    <div
+        style="
+            display: flex;
+            gap: var(--sp-2);
+            justify-content: flex-end;
+            margin-top: var(--sp-4);
+        "
+    >
+
+        <a
+            href="{% url 'manage_panel:document_templates' %}"
+            class="btn btn-secondary"
+        >
+            {% trans "Cancel" %}
+        </a>
+
+        <button type="submit" class="btn">
+            {% if template %}
+                💾 {% trans "Save Changes" %}
+            {% else %}
+                ✨ {% trans "Create Template" %}
+            {% endif %}
+        </button>
+
+    </div>
+
+</form>
+
+{% endblock %}

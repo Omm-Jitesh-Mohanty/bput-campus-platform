@@ -14,8 +14,8 @@ from apps.accounts.models import User
 from apps.core.constants import (
     TICKET_STATUS_PENDING, TICKET_STATUS_IN_PROGRESS,
     TICKET_STATUS_RESOLVED, TICKET_STATUS_REOPENED,
-    AGEING_GREEN_HOURS, AGEING_YELLOW_HOURS,
 )
+# AGEING_* no longer needed — SLA is queried per ticket
 
 
 # =====================================================================
@@ -55,7 +55,7 @@ def get_ticket_kpis():
     # Overdue (red-ageing) open tickets
     overdue = sum(
         1 for t in open_tickets
-        if t.age_hours >= AGEING_YELLOW_HOURS
+        if t.ageing_color == 'red'
     )
 
     return {
@@ -99,7 +99,7 @@ def get_department_breakdown():
         open_tickets = tickets.filter(
             status__in=[TICKET_STATUS_PENDING, TICKET_STATUS_IN_PROGRESS]
         )
-        overdue = sum(1 for t in open_tickets if t.age_hours >= AGEING_YELLOW_HOURS)
+        overdue = sum(1 for t in open_tickets if t.ageing_color == 'red')
         avg_age = 0.0
         if open_tickets.exists():
             avg_age = round(sum(t.age_hours for t in open_tickets) / open_tickets.count(), 1)
@@ -136,7 +136,7 @@ def get_type_breakdown():
 def get_ageing_buckets():
     """
     Return counts by age bucket for OPEN tickets.
-    Buckets: 0-24h, 24-48h, 48-72h, 72h+
+    Buckets are determined per-ticket via SLAPolicy, then aggregated.
     """
     open_qs = CampusTicket.objects.filter(
         is_deleted=False,
@@ -144,26 +144,22 @@ def get_ageing_buckets():
     )
 
     buckets = {
-        'fresh': {'label': '0-24h (fresh)', 'count': 0, 'color': 'green', 'tickets': []},
-        'warning': {'label': '24-48h (watch)', 'count': 0, 'color': 'yellow', 'tickets': []},
-        'critical': {'label': '48-72h (critical)', 'count': 0, 'color': 'orange', 'tickets': []},
-        'overdue': {'label': '72h+ (overdue)', 'count': 0, 'color': 'red', 'tickets': []},
+        'fresh': {'label': 'Fresh', 'count': 0, 'color': 'green', 'tickets': []},
+        'warning': {'label': 'Watch', 'count': 0, 'color': 'yellow', 'tickets': []},
+        'critical': {'label': 'Critical', 'count': 0, 'color': 'orange', 'tickets': []},
+        'overdue': {'label': 'Overdue', 'count': 0, 'color': 'red', 'tickets': []},
     }
 
     for t in open_qs:
-        h = t.age_hours
-        if h < AGEING_GREEN_HOURS:
-            buckets['fresh']['count'] += 1
-            buckets['fresh']['tickets'].append(t)
-        elif h < AGEING_YELLOW_HOURS:
-            buckets['warning']['count'] += 1
-            buckets['warning']['tickets'].append(t)
-        elif h < 72:
-            buckets['critical']['count'] += 1
-            buckets['critical']['tickets'].append(t)
-        else:
-            buckets['overdue']['count'] += 1
-            buckets['overdue']['tickets'].append(t)
+        color = t.ageing_color
+        key = {
+            'green': 'fresh',
+            'yellow': 'warning',
+            'orange': 'critical',
+            'red': 'overdue',
+        }.get(color, 'fresh')
+        buckets[key]['count'] += 1
+        buckets[key]['tickets'].append(t)
 
     return buckets
 
@@ -319,3 +315,16 @@ def get_workload_distribution():
             })
     rows.sort(key=lambda r: r['open'], reverse=True)
     return rows
+
+
+# =====================================================================
+# 10. RECENT AUDIT ACTIVITY
+# =====================================================================
+def get_recent_audit_activity(limit=10):
+    """Return the last N audit events for the dashboard widget."""
+    from apps.core.models import AuditLog
+    return (
+        AuditLog.objects
+        .select_related('user')
+        .order_by('-timestamp')[:limit]
+    )

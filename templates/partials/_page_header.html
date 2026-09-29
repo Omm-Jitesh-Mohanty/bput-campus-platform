@@ -1,0 +1,20 @@
+{% comment %}
+Usage:
+  {% include 'partials/_page_header.html' with title="My Requests" subtitle="..." %}
+{% endcomment %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start;
+     margin-bottom: var(--sp-6); gap: var(--sp-4); flex-wrap: wrap;">
+    <div>
+        <h1 style="margin: 0; font-size: var(--fs-2xl);">{{ title }}</h1>
+        {% if subtitle %}
+            <p style="color: var(--text-muted); margin: var(--sp-1) 0 0 0; font-size: var(--fs-sm);">
+                {{ subtitle }}
+            </p>
+        {% endif %}
+    </div>
+    {% if action_url %}
+        <a href="{{ action_url }}" class="btn">
+            {% if action_icon %}{{ action_icon }} {% endif %}{{ action_label }}
+        </a>
+    {% endif %}
+</div>

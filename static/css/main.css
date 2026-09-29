@@ -453,3 +453,8 @@ a:hover {
 .btn-lite:hover {
     background: #e2e8f0;
 }
+
+.badge-orange {
+    background: #ffedd5;
+    color: #9a3412;
+}

@@ -6,138 +6,431 @@
 {% block content %}
 
 <div style="margin-bottom: 16px;">
-    <a href="{% url 'tickets:my_tickets' %}" style="font-size: 14px;">← {% trans "Back to requests" %}</a>
+    <a href="{% url 'tickets:my_tickets' %}" style="font-size: 14px;">
+        ← {% trans "Back to requests" %}
+    </a>
 </div>
 
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
         <div style="flex: 1;">
+
             <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                <span style="font-size: 12px; color: #64748b;">#{{ ticket.id }}</span>
-                <span class="badge {{ ticket.status|status_badge }}">{{ ticket.get_status_display }}</span>
-                <span class="badge {{ ticket.priority|priority_badge }}">{{ ticket.get_priority_display }}</span>
-                <span class="badge badge-{{ ticket.ageing_color }}">{{ ticket.age_hours }}h old</span>
+                <span style="font-size: 12px; color: #64748b;">
+                    #{{ ticket.id }}
+                </span>
+
+                <span class="badge {{ ticket.status|status_badge }} ticket-status-badge">
+                    {{ ticket.get_status_display }}
+                </span>
+
+                <span class="badge {{ ticket.priority|priority_badge }}">
+                    {{ ticket.get_priority_display }}
+                </span>
+
+                <span class="badge badge-{{ ticket.ageing_color }}">
+                    {{ ticket.age_hours }}h old
+                </span>
             </div>
-            <h1 style="margin: 0; font-size: 22px;">{{ ticket.subject }}</h1>
 
-```
-        {% if user.is_admin_role and ticket.status != 'resolved' %}
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
-            <a href="{% url 'tickets:admin_assign' ticket.id %}" class="btn btn-secondary">
-                🎯 {% trans "Assign" %}
-            </a>
-            <a href="{% url 'tickets:admin_resolve' ticket.id %}" class="btn btn-success">
-                ✅ {% trans "Resolve" %}
-            </a>
+            <h1 style="margin: 0; font-size: 22px;">
+                {{ ticket.subject }}
+            </h1>
+
+            {% if user.is_admin_role and ticket.status != 'resolved' %}
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+
+                <a href="{% url 'tickets:admin_assign' ticket.id %}" class="btn btn-secondary">
+                    🎯 {% trans "Assign" %}
+                </a>
+
+                <a href="{% url 'tickets:admin_resolve' ticket.id %}" class="btn btn-success">
+                    ✅ {% trans "Resolve" %}
+                </a>
+
+            </div>
+            {% endif %}
+
+            <p style="color: #64748b; font-size: 13px; margin-top: 6px;">
+                {{ ticket.get_ticket_type_display }}
+
+                {% if ticket.assigned_department %}
+                    · {{ ticket.assigned_department|title }} Dept
+                {% endif %}
+
+                · {{ ticket.created_at|date:"d M Y, H:i" }}
+            </p>
+
         </div>
-        {% endif %}
-
-        <p style="color: #64748b; font-size: 13px; margin-top: 6px;">
-            {{ ticket.get_ticket_type_display }}
-            {% if ticket.assigned_department %} · {{ ticket.assigned_department|title }} Dept{% endif %}
-            · {{ ticket.created_at|date:"d M Y, H:i" }}
-        </p>
     </div>
 </div>
 
 <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
 
-<h4 style="margin-bottom: 8px;">{% trans "Your description" %}</h4>
-<p style="background: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap;">{{ ticket.raw_input }}</p>
+<h4 style="margin-bottom: 8px;">
+    {% trans "Your description" %}
+</h4>
+
+<p style="background: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap;">
+    {{ ticket.raw_input }}
+</p>
 
 {% if ticket.formatted_body %}
     <h4 style="margin-top: 20px; margin-bottom: 8px;">
         ✨ {% trans "AI-Formatted Application" %}
     </h4>
+
     <p style="background: #eff6ff; padding: 12px; border-radius: 6px;
-              border-left: 4px solid #1e40af; white-space: pre-wrap;">{{ ticket.formatted_body }}</p>
+              border-left: 4px solid #1e40af; white-space: pre-wrap;">
+        {{ ticket.formatted_body }}
+    </p>
 {% endif %}
 
 {% if ticket.attachment %}
-    <h4 style="margin-top: 20px; margin-bottom: 8px;">📎 {% trans "Attachment" %}</h4>
+    <h4 style="margin-top: 20px; margin-bottom: 8px;">
+        📎 {% trans "Attachment" %}
+    </h4>
+
     <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-secondary">
         {% trans "View attachment" %}
     </a>
 {% endif %}
 
 {% if ticket.resolution_note %}
-    <h4 style="margin-top: 20px; margin-bottom: 8px;">✅ {% trans "Resolution" %}</h4>
+    <h4 style="margin-top: 20px; margin-bottom: 8px;">
+        ✅ {% trans "Resolution" %}
+    </h4>
+
     <p style="background: #f0fdf4; padding: 12px; border-radius: 6px;
-              border-left: 4px solid #16a34a; white-space: pre-wrap;">{{ ticket.resolution_note }}</p>
+              border-left: 4px solid #16a34a; white-space: pre-wrap;">
+        {{ ticket.resolution_note }}
+    </p>
+
     {% if ticket.resolved_by %}
         <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
-            Resolved by {{ ticket.resolved_by.get_full_name|default:ticket.resolved_by.username }}
+            Resolved by
+            {{ ticket.resolved_by.get_full_name|default:ticket.resolved_by.username }}
             on {{ ticket.resolved_at|date:"d M Y, H:i" }}
         </p>
     {% endif %}
 {% endif %}
-```
+
+<!-- ===== Approval Progress ===== -->
+
+{% if ticket.step_executions.exists %}
+<div class="card">
+
+    <h3 style="margin-bottom: 12px;">
+        🔄 {% trans "Approval Progress" %}
+    </h3>
+
+    {% for step_exec in ticket.step_executions.all %}
+
+    <div style="display: flex; gap: 12px; padding: 8px 12px; border-radius: 6px;
+         {% if step_exec.status == 'pending' %}background: #eff6ff;
+         {% elif step_exec.status == 'approved' %}background: #f0fdf4;
+         {% elif step_exec.status == 'rejected' %}background: #fef2f2;
+         {% else %}background: #f8fafc;{% endif %}
+         margin-bottom: 6px;">
+
+        <div>
+            {% if step_exec.status == 'pending' %}
+                ⏳
+            {% elif step_exec.status == 'approved' %}
+                ✅
+            {% elif step_exec.status == 'rejected' %}
+                ❌
+            {% elif step_exec.status == 'skipped' %}
+                ⏭
+            {% endif %}
+        </div>
+
+        <div style="flex: 1;">
+
+            <strong>
+                {{ step_exec.workflow_step.order }}.
+                {{ step_exec.workflow_step.name }}
+            </strong>
+
+            <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+
+                {{ step_exec.get_status_display }}
+
+                {% if step_exec.actor %}
+                    · {{ step_exec.actor.get_full_name|default:step_exec.actor.username }}
+                    · {{ step_exec.acted_at|date:"d M H:i" }}
+                {% endif %}
+
+            </p>
+
+        </div>
+    </div>
+
+    {% endfor %}
 
 </div>
+{% endif %}
 
 <!-- ===== Confirmation prompt (if awaiting) ===== -->
 
 {% if ticket.is_awaiting_confirmation and user.is_student %}
 
 <div class="card" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
-    <h3>❓ {% trans "Is the issue resolved?" %}</h3>
+
+    <h3>
+        ❓ {% trans "Is the issue resolved?" %}
+    </h3>
+
     <p style="color: #78350f; margin: 8px 0 16px 0;">
         {% trans "Your confirmation helps us close this ticket properly." %}
     </p>
-    <form method="post" action="{% url 'tickets:confirm' ticket.id %}" style="display: flex; gap: 12px;">
+
+    <form method="post"
+          action="{% url 'tickets:confirm' ticket.id %}"
+          style="display: flex; gap: 12px;">
+
         {% csrf_token %}
-        <button type="submit" name="fixed" value="yes" class="btn btn-success">✅ {% trans "Yes, fixed" %}</button>
-        <button type="submit" name="fixed" value="no" class="btn btn-danger">❌ {% trans "No, still broken" %}</button>
+
+        <button type="submit" name="fixed" value="yes" class="btn btn-success"
+                onclick="setTimeout(() => window.burstConfetti(60), 100);">
+            ✅ {% trans "Yes, fixed" %}
+        </button>
+
+        <button type="submit"
+                name="fixed"
+                value="no"
+                class="btn btn-danger">
+            ❌ {% trans "No, still broken" %}
+        </button>
+
     </form>
+
 </div>
+
 {% endif %}
 
 <!-- ===== Conversation ===== -->
 
-<h2 style="margin-top: 32px;">💬 {% trans "Conversation" %}</h2>
+<h2 style="margin-top: 32px;">
+    💬 {% trans "Conversation" %}
+</h2>
 
-{% for comment in comments %}
+<div id="comments-container">
 
-<div class="card" style="{% if comment.is_internal %}background: #fef3c7;{% endif %}">
-    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
-        <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
-        {% if comment.author.is_admin_role %}
-            <span class="badge badge-blue">{{ comment.author.get_role_display }}</span>
-        {% endif %}
-        {% if comment.is_internal %}
-            <span class="badge badge-yellow">{% trans "Internal note" %}</span>
-        {% endif %}
-        <span style="font-size: 12px; color: #64748b; margin-left: auto;">
-            {{ comment.created_at|short_time_ago }}
-        </span>
+    {% for comment in comments %}
+
+    <div class="card" style="{% if comment.is_internal %}background: #fef3c7;{% endif %}">
+
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+
+            <strong>
+                {{ comment.author.get_full_name|default:comment.author.username }}
+            </strong>
+
+            {% if comment.author.is_admin_role %}
+                <span class="badge badge-blue">
+                    {{ comment.author.get_role_display }}
+                </span>
+            {% endif %}
+
+            {% if comment.is_internal %}
+                <span class="badge badge-yellow">
+                    {% trans "Internal note" %}
+                </span>
+            {% endif %}
+
+            <span style="font-size: 12px; color: #64748b; margin-left: auto;">
+                {{ comment.created_at|short_time_ago }}
+            </span>
+
+        </div>
+
+        <p style="white-space: pre-wrap;">
+            {{ comment.body }}
+        </p>
+
     </div>
-    <p style="white-space: pre-wrap;">{{ comment.body }}</p>
+
+    {% empty %}
+
+    <p style="color: #94a3b8; font-size: 14px;">
+        {% trans "No comments yet." %}
+    </p>
+
+    {% endfor %}
+
 </div>
-{% empty %}
-<p style="color: #94a3b8; font-size: 14px;">{% trans "No comments yet." %}</p>
-{% endfor %}
 
 <!-- ===== Add comment ===== -->
 
 {% if ticket.status != 'resolved' or user.is_admin_role %}
 
 <div class="card">
-    <h3>{% trans "Add a comment" %}</h3>
-    <form method="post" action="{% url 'tickets:add_comment' ticket.id %}">
+
+    <h3>
+        {% trans "Add a comment" %}
+    </h3>
+
+    <form method="post"
+          action="{% url 'tickets:add_comment' ticket.id %}">
+
         {% csrf_token %}
+
         <div class="form-group">
-            <textarea name="body" rows="3" required
+
+            <textarea name="body"
+                      rows="3"
+                      required
                       placeholder="{% trans 'Type your message…' %}"></textarea>
+
         </div>
+
         {% if user.is_admin_role %}
+
         <label style="font-size: 13px; display: flex; gap: 6px; align-items: center;">
+
             <input type="checkbox" name="is_internal">
+
             {% trans "Mark as internal note (hidden from student)" %}
+
         </label>
+
         {% endif %}
-        <button type="submit" class="btn" style="margin-top: 12px;">{% trans "Post Comment" %}</button>
+
+        <button type="submit"
+                class="btn"
+                style="margin-top: 12px;">
+            {% trans "Post Comment" %}
+        </button>
+
     </form>
+
 </div>
+
 {% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+function initTicketDetailWS() {
+    if (!window.CampusWS) {
+        setTimeout(initTicketDetailWS, 100);
+        return;
+    }
+
+    const ws = new CampusWS(`/ws/tickets/{{ ticket.id }}/`);
+
+    ws.on('ticket_status_change', (data) => {
+
+        // Update status badge
+        const statusBadge = document.querySelector('.ticket-status-badge');
+
+        if (statusBadge) {
+            statusBadge.textContent = data.status_display;
+
+            statusBadge.className =
+                `badge ticket-status-badge badge-${statusClass(data.status)}`;
+        }
+
+        // Show toast
+        showToast(
+            `Status changed to: ${data.status_display}` +
+            (data.step_name ? ` (${data.step_name})` : '')
+        );
+
+        // Reload if resolved (to show confirm prompt)
+        if (data.status === 'resolved') {
+            setTimeout(() => location.reload(), 1500);
+        }
+    });
+
+    ws.on('new_comment', (data) => {
+
+        // Append to comments list
+        const container = document.getElementById('comments-container');
+
+        if (!container) {
+            return;
+        }
+
+        const div = document.createElement('div');
+
+        div.className = 'card';
+        div.style.borderLeft = '3px solid #1e40af';
+
+        div.innerHTML = `
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                <strong>${escapeHtml(data.author)}</strong>
+                <span style="font-size: 12px; color: #64748b; margin-left: auto;">
+                    just now
+                </span>
+            </div>
+
+            <p style="white-space: pre-wrap;">
+                ${escapeHtml(data.body)}
+            </p>
+        `;
+
+        container.appendChild(div);
+    });
+
+    ws.connect();
+}
+
+function statusClass(s) {
+    return {
+        pending: 'yellow',
+        in_progress: 'blue',
+        resolved: 'green',
+        reopened: 'red',
+        rejected: 'gray'
+    }[s] || 'gray';
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(
+        /[&<>"']/g,
+        c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[c]
+    );
+}
+
+function showToast(msg) {
+    let t = document.getElementById('ws-toast');
+
+    if (!t) {
+        t = document.createElement('div');
+
+        t.id = 'ws-toast';
+
+        t.style.cssText =
+            'position: fixed; bottom: 20px; right: 20px; ' +
+            'background: #1e40af; color: white; ' +
+            'padding: 12px 20px; border-radius: 8px; ' +
+            'font-size: 14px; z-index: 9999; ' +
+            'box-shadow: 0 4px 12px rgba(0,0,0,0.2); ' +
+            'transition: opacity 0.3s;';
+
+        document.body.appendChild(t);
+    }
+
+    t.textContent = msg;
+    t.style.opacity = '1';
+
+    setTimeout(() => {
+        t.style.opacity = '0';
+    }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', initTicketDetailWS);
+</script>
 
 {% endblock %}

@@ -1,0 +1,118 @@
+{% load i18n %}
+{% comment %}
+Renders a list of dynamic form fields from TicketType.dynamic_schema.
+Context:
+  - dynamic_fields: list of prepared field dicts
+  - posted_data (optional): the failed POST data to preserve values
+{% endcomment %}
+
+{% for field in dynamic_fields %}
+<div class="form-group">
+    <label for="{{ field.id }}">
+        {{ field.label }}
+        {% if field.required %}<span style="color: #dc2626;">*</span>{% endif %}
+    </label>
+
+    {% if field.type == 'text' %}
+        <input type="text" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ posted_data|default_if_none:''|default:field.value|default:'' }}"
+               {% if field.required %}required{% endif %}
+               placeholder="{{ field.placeholder|default:'' }}"
+               maxlength="{{ field.validation.max_length|default:200 }}">
+
+    {% elif field.type == 'textarea' %}
+        <textarea id="{{ field.id }}" name="{{ field.name }}" rows="{{ field.rows|default:3 }}"
+                  {% if field.required %}required{% endif %}
+                  placeholder="{{ field.placeholder|default:'' }}">{{ field.value|default:'' }}</textarea>
+
+    {% elif field.type == 'number' %}
+        <input type="number" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               {% if field.required %}required{% endif %}
+               {% if field.validation.min %}min="{{ field.validation.min }}"{% endif %}
+               {% if field.validation.max %}max="{{ field.validation.max }}"{% endif %}>
+
+    {% elif field.type == 'date' %}
+        <input type="date" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               {% if field.required %}required{% endif %}>
+
+    {% elif field.type == 'datetime' %}
+        <input type="datetime-local" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               {% if field.required %}required{% endif %}>
+
+    {% elif field.type == 'email' %}
+        <input type="email" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               {% if field.required %}required{% endif %}
+               placeholder="{{ field.placeholder|default:'you@example.com' }}">
+
+    {% elif field.type == 'phone' %}
+        <input type="tel" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               {% if field.required %}required{% endif %}
+               pattern="[0-9+\-\s]{6,15}"
+               placeholder="{{ field.placeholder|default:'+91 98765 43210' }}">
+
+    {% elif field.type == 'select' %}
+        <select id="{{ field.id }}" name="{{ field.name }}"
+                {% if field.required %}required{% endif %}>
+            <option value="">— {% trans "Select" %} —</option>
+            {% for opt in field.options %}
+                <option value="{{ opt.value }}"
+                    {% if field.value == opt.value %}selected{% endif %}>
+                    {{ opt.label }}
+                </option>
+            {% endfor %}
+        </select>
+
+    {% elif field.type == 'multiselect' %}
+        <select id="{{ field.id }}" name="{{ field.name }}" multiple
+                {% if field.required %}required{% endif %}
+                style="height: 120px;">
+            {% for opt in field.options %}
+                <option value="{{ opt.value }}"
+                    {% if opt.value in field.value %}selected{% endif %}>
+                    {{ opt.label }}
+                </option>
+            {% endfor %}
+        </select>
+
+    {% elif field.type == 'radio' %}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            {% for opt in field.options %}
+            <label style="display: flex; gap: 8px; align-items: center; font-weight: normal;">
+                <input type="radio" name="{{ field.name }}" value="{{ opt.value }}"
+                       {% if field.value == opt.value %}checked{% endif %}
+                       {% if field.required and forloop.first %}required{% endif %}>
+                {{ opt.label }}
+            </label>
+            {% endfor %}
+        </div>
+
+    {% elif field.type == 'checkbox' %}
+        <label style="display: flex; gap: 8px; align-items: center; font-weight: normal;">
+            <input type="checkbox" id="{{ field.id }}" name="{{ field.name }}"
+                   {% if field.value %}checked{% endif %}>
+            {{ field.checkbox_label|default:field.label }}
+        </label>
+
+    {% elif field.type == 'file' %}
+        <input type="file" id="{{ field.id }}" name="{{ field.name }}"
+               {% if field.required %}required{% endif %}
+               accept="{{ field.accept|default:'.pdf,.jpg,.jpeg,.png,.doc,.docx' }}">
+
+    {% else %}
+        {# Unknown type — render as text as fallback #}
+        <input type="text" id="{{ field.id }}" name="{{ field.name }}"
+               value="{{ field.value|default:'' }}">
+    {% endif %}
+
+    {% if field.help_text %}
+        <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+            {{ field.help_text }}
+        </p>
+    {% endif %}
+</div>
+{% endfor %}

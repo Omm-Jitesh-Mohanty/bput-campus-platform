@@ -57,6 +57,12 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/accounts/', permanent=False)),
 ]
 
+from apps.documents import views as doc_views
+
+urlpatterns += [
+    path('verify/<uuid:uuid>/', doc_views.verify_document, name='verify_document'),
+]
+
 # i18n-prefixed URLs (auto adds /en/, /hi/, /or/)
 urlpatterns += i18n_patterns(
     path('accounts/', include('apps.accounts.urls')),     # ← accounts prefix
@@ -65,9 +71,14 @@ urlpatterns += i18n_patterns(
     path('tickets/', include('apps.tickets.urls')),
     path('notices/', include('apps.notices.urls')),
     path('feedback/', include('apps.feedback.urls')),
+    path('manage/', include('apps.manage_panel.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('documents/', include('apps.documents.urls')),
     # path('', include(('apps.accounts.urls', 'accounts_root'), namespace='root')),
     prefix_default_language=False,
 )
+
+
 
 # Media & static in dev
 if settings.DEBUG:

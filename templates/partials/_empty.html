@@ -1,0 +1,18 @@
+{% comment %}
+Usage:
+  {% include 'partials/_empty.html' with icon="📭" title="No items" message="Nothing here yet" action_url="/tickets/new/" action_label="Create" %}
+{% endcomment %}
+<div class="card" style="text-align: center; padding: var(--sp-16) var(--sp-6);">
+    <div style="font-size: 56px; margin-bottom: var(--sp-4);">{{ icon|default:"📭" }}</div>
+    <h3 style="margin-bottom: var(--sp-2);">{{ title|default:"Nothing here" }}</h3>
+    {% if message %}
+        <p style="color: var(--text-muted); max-width: 400px; margin: 0 auto var(--sp-6);">
+            {{ message }}
+        </p>
+    {% endif %}
+    {% if action_url %}
+        <a href="{{ action_url }}" class="btn">
+            {{ action_label|default:"Get Started" }}
+        </a>
+    {% endif %}
+</div>

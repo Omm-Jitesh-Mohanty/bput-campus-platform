@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load i18n campus_extras %}
 
+
+{% comment %} {% extends 'base.html' %}
+{% load i18n campus_extras %}
+
 {% block title %}{% if is_admin_view %}{% trans "Ticket Queue" %}{% else %}{% trans "My Requests" %}{% endif %}{% endblock %}
 
 {% block content %}
@@ -173,6 +177,82 @@
     <a href="{% url 'tickets:submit' %}" class="btn" style="margin-top: 20px;">+ {% trans "Create Request" %}</a>
 </div>
 {% endfor %}
+{% endif %}
+
+{% endblock %} {% endcomment %}
+
+
+{% block title %}{% if is_admin_view %}{% trans "Ticket Queue" %}{% else %}{% trans "My Requests" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+{% if is_admin_view %}
+    {% include 'partials/_page_header.html' with title="🎫 Ticket Queue" subtitle="All open requests across departments" %}
+{% else %}
+    {% include 'partials/_page_header.html' with title="📋 My Requests" subtitle="Your submitted requests" action_url="/tickets/new/" action_label="New Request" action_icon="+" %}
+{% endif %}
+
+{% if is_admin_view %}
+<form method="get" class="card" style="margin-bottom: var(--sp-4);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--sp-3);">
+        <!-- ... keep your existing filter fields ... -->
+    </div>
+    <div style="display: flex; gap: var(--sp-2); margin-top: var(--sp-4);">
+        <button type="submit" class="btn btn-sm">{% trans "Apply Filters" %}</button>
+        <a href="{% url 'tickets:my_tickets' %}" class="btn btn-secondary btn-sm">{% trans "Reset" %}</a>
+        <span style="margin-left: auto; align-self: center; font-size: var(--fs-sm); color: var(--text-muted);">
+            {{ tickets|length }} {% trans "ticket(s)" %}
+        </span>
+    </div>
+</form>
+
+<div style="display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); flex-wrap: wrap;">
+    <a href="?status=pending" class="btn btn-secondary btn-sm">⏳ {% trans "Pending" %}</a>
+    <a href="?status=in_progress" class="btn btn-secondary btn-sm">🔄 {% trans "In Progress" %}</a>
+    <a href="?ageing=overdue" class="btn btn-secondary btn-sm">🔴 {% trans "Overdue" %}</a>
+    <a href="?priority=urgent" class="btn btn-secondary btn-sm">🚨 {% trans "Urgent" %}</a>
+</div>
+
+<div class="card card-flush">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th><th>{% trans "Student" %}</th><th>{% trans "Subject" %}</th>
+                <th>{% trans "Dept" %}</th><th>{% trans "Priority" %}</th>
+                <th>{% trans "Status" %}</th><th>{% trans "Age" %}</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td><span style="color: var(--text-muted);">#{{ t.id }}</span></td>
+                <td>
+                    <div style="font-weight: 500;">{{ t.student.get_short_name|default:t.student.username }}</div>
+                    <div style="font-size: var(--fs-xs); color: var(--text-muted);">
+                        {{ t.student.department }} · {{ t.student.batch_year }}
+                    </div>
+                </td>
+                <td>{{ t.subject|truncatechars:50 }}</td>
+                <td>{{ t.assigned_department|default:"—" }}</td>
+                <td><span class="badge {{ t.priority|priority_badge }}">{{ t.get_priority_display }}</span></td>
+                <td><span class="badge {{ t.status|status_badge }}">{{ t.get_status_display }}</span></td>
+                <td><span class="badge badge-{{ t.ageing_color }}">{{ t.age_hours }}h</span></td>
+                <td style="white-space: nowrap;">
+                    <a href="{% url 'tickets:detail' t.id %}" class="btn btn-secondary btn-sm">{% trans "Open" %}</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: var(--sp-10); color: var(--text-muted);">
+                    {% trans "No tickets match your filters." %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    {# student view — similar card-list style #}
 {% endif %}
 
 {% endblock %}

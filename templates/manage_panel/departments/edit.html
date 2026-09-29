@@ -1,0 +1,255 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% if dept %}{{ dept.name }}{% else %}{% trans "New Department" %}{% endif %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% if dept %}
+        {{ dept.icon }} {{ dept.name }}
+    {% else %}
+        🏢 {% trans "New Department" %}
+    {% endif %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% if dept %}{{ dept.code }} — {% trans "edit details below" %}{% else %}
+        {% trans "Create a new department with routing keywords" %}
+    {% endif %}
+{% endblock %}
+
+{% block manage_actions %}
+<a href="{% url 'manage_panel:departments' %}" class="btn btn-secondary">
+    ← {% trans "All Departments" %}
+</a>
+{% endblock %}
+
+{% block manage_content %}
+
+<form method="post" id="dept-form">
+    {% csrf_token %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <!-- Left column -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">{% trans "Identity" %}</h3>
+
+            <div class="form-group">
+                <label>{% trans "Code" %} *</label>
+                <input type="text" name="code" value="{{ dept.code|default:'' }}"
+                       placeholder="e.g., plumbing" required
+                       {% if dept %}readonly style="background: #f1f5f9;"{% endif %}>
+                <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                    {% trans "Lowercase, no spaces. Used in URLs and APIs." %}
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Name" %} *</label>
+                <input type="text" name="name" value="{{ dept.name|default:'' }}"
+                       placeholder="e.g., Plumbing" required>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Description" %}</label>
+                <textarea name="description" rows="2">{{ dept.description|default:'' }}</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 100px 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label>{% trans "Icon" %}</label>
+                    <input type="text" name="icon" value="{{ dept.icon|default:'🏢' }}"
+                           maxlength="4" style="font-size: 24px; text-align: center;">
+                </div>
+                <div class="form-group">
+                    <label>{% trans "Color" %}</label>
+                    <input type="color" name="color" value="{{ dept.color|default:'#1e40af' }}"
+                           style="width: 100%; height: 44px;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="card">
+            <h3 style="margin-bottom: 16px;">{% trans "Hierarchy & Contact" %}</h3>
+
+            <div class="form-group">
+                <label>{% trans "Parent Department" %}</label>
+                <select name="parent">
+                    <option value="">— {% trans "None (top-level)" %} —</option>
+                    {% for d in all_departments %}
+                        <option value="{{ d.pk }}"
+                            {% if dept.parent_id == d.pk %}selected{% endif %}>
+                            {{ d.icon }} {{ d.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Department Head" %}</label>
+                <select name="head">
+                    <option value="">— {% trans "None" %} —</option>
+                    {% for u in all_admins %}
+                        <option value="{{ u.pk }}"
+                            {% if dept.head_id == u.pk %}selected{% endif %}>
+                            {{ u.get_full_name|default:u.username }} ({{ u.get_role_display }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Contact Email" %}</label>
+                <input type="email" name="contact_email" value="{{ dept.contact_email|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Contact Phone" %}</label>
+                <input type="text" name="contact_phone" value="{{ dept.contact_phone|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Office Location" %}</label>
+                <input type="text" name="office_location" value="{{ dept.office_location|default:'' }}"
+                       placeholder="e.g., Block A, Room 12">
+            </div>
+        </div>
+    </div>
+
+    <!-- Full width: SLA & Keywords -->
+    <div class="card">
+        <h3 style="margin-bottom: 16px;">{% trans "SLA & AI Routing" %}</h3>
+
+        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 24px;">
+            <div>
+                <div class="form-group">
+                    <label>{% trans "Default SLA (hours)" %}</label>
+                    <input type="number" name="default_sla_hours"
+                           value="{{ dept.default_sla_hours|default:48 }}"
+                           min="1" max="720">
+                </div>
+
+                <div class="form-group">
+                    <label>{% trans "Sort Order" %}</label>
+                    <input type="number" name="sort_order"
+                           value="{{ dept.sort_order|default:100 }}" min="0">
+                    <p style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                        {% trans "Lower numbers appear first." %}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px;">
+                    {% trans "Routing Keywords" %}
+                </label>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 8px;">
+                    {% trans "Type a keyword and press Enter. AI will route tickets containing any of these words to this department." %}
+                </p>
+
+                <!-- Chip input -->
+                <div class="chip-input" id="chip-input" onclick="document.getElementById('chip-text').focus()">
+                    <!-- Chips will be inserted here by JS -->
+                    <input type="text" id="chip-text" placeholder="{% trans 'Add keyword…' %}" autocomplete="off">
+                </div>
+                <input type="hidden" name="routing_keywords" id="keywords-hidden"
+                       value="{{ keywords_json|default:'[]' }}">
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 20px;">
+            <label style="display: flex; gap: 8px; align-items: center;">
+                <input type="checkbox" name="auto_route_enabled"
+                       {% if dept.auto_route_enabled %}checked{% endif %}>
+                {% trans "Enable AI auto-routing" %}
+            </label>
+
+            <label style="display: flex; gap: 8px; align-items: center;">
+                <input type="checkbox" name="is_active"
+                       {% if dept.is_active or not dept %}checked{% endif %}>
+                {% trans "Active" %}
+            </label>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+        <a href="{% url 'manage_panel:departments' %}" class="btn btn-secondary">
+            {% trans "Cancel" %}
+        </a>
+        <button type="submit" class="btn" style="padding: 12px 32px;">
+            {% if dept %}💾 {% trans "Save Changes" %}{% else %}✨ {% trans "Create Department" %}{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+(function () {
+    const chipInput = document.getElementById('chip-input');
+    const textInput = document.getElementById('chip-text');
+    const hidden = document.getElementById('keywords-hidden');
+
+    let keywords = [];
+    try {
+        keywords = JSON.parse(hidden.value || '[]');
+        if (!Array.isArray(keywords)) keywords = [];
+    } catch (e) { keywords = []; }
+
+    function renderChips() {
+        // Remove existing chips
+        chipInput.querySelectorAll('.chip').forEach(el => el.remove());
+
+        // Insert chips before textInput
+        keywords.forEach((kw, idx) => {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.innerHTML = `
+                ${kw}
+                <button type="button" title="Remove" aria-label="Remove">&times;</button>
+            `;
+            chip.querySelector('button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                keywords.splice(idx, 1);
+                renderChips();
+            });
+            chipInput.insertBefore(chip, textInput);
+        });
+
+        hidden.value = JSON.stringify(keywords);
+    }
+
+    function addKeyword() {
+        const raw = textInput.value.trim().toLowerCase();
+        if (!raw) return;
+        if (keywords.includes(raw)) {
+            textInput.value = '';
+            return;
+        }
+        keywords.push(raw);
+        textInput.value = '';
+        renderChips();
+    }
+
+    textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addKeyword();
+        }
+        if (e.key === 'Backspace' && !textInput.value && keywords.length) {
+            keywords.pop();
+            renderChips();
+        }
+    });
+
+    textInput.addEventListener('blur', () => {
+        if (textInput.value.trim()) addKeyword();
+    });
+
+    // Initial render
+    renderChips();
+})();
+</script>
+
+{% endblock %}

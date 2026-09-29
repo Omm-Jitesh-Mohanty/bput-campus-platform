@@ -1,4 +1,4 @@
-{% load i18n static %}
+{% comment %} {% load i18n static %}
 
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
@@ -26,7 +26,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="{% if request.session.lite_mode %}lite{% endif %}">
+<body>
 
     <!-- ===== Skip to content (accessibility) ===== -->
     <a href="#main-content" class="skip-link">Skip to content</a>
@@ -41,11 +41,13 @@
 
         {% if user.is_authenticated %}
             <nav class="navbar-links">
+
                 <a href="{% url 'accounts:home' %}">
                     {% trans "Home" %}
                 </a>
 
                 {% if user.is_student %}
+
                     <a href="{% url 'attendance:list' %}">
                         {% trans "Attendance" %}
                     </a>
@@ -65,11 +67,22 @@
                     <a href="{% url 'feedback:submit' %}">
                         {% trans "Feedback" %}
                     </a>
+
                 {% endif %}
 
                 {% if user.is_admin_role %}
+
                     <a href="{% url 'dashboard:admin_home' %}">
                         {% trans "Dashboard" %}
+                    </a>
+
+                    <a href="{% url 'dashboard:analytics' %}">
+                        🧠 {% trans "Analytics" %}
+                    </a>
+
+                    <!-- Manage -->
+                    <a href="{% url 'manage_panel:home' %}">
+                        ⚙️ {% trans "Manage" %}
                     </a>
 
                     <a href="{% url 'tickets:my_tickets' %}">
@@ -87,7 +100,9 @@
                     <a href="{% url 'tickets:kiosk_new' %}">
                         🏪 {% trans "Kiosk" %}
                     </a>
+
                 {% endif %}
+
             </nav>
 
             <div class="navbar-right">
@@ -154,12 +169,18 @@
                     </button>
                 </form>
 
+                <!-- Notification bell -->
+                {% if user.is_authenticated %}
+                    {% include 'partials/_notification_bell.html' %}
+                {% endif %}
+
                 <!-- User info -->
                 <span
                     class="user-chip"
                     title="{{ user.get_full_name }}"
                 >
                     {{ user.get_short_name|default:user.username }}
+
                     <small>
                         ({{ user.get_role_display }})
                     </small>
@@ -171,19 +192,28 @@
                 >
                     {% trans "Logout" %}
                 </a>
+
             </div>
+
         {% endif %}
+
     </header>
 
     <!-- ===== Flash messages ===== -->
     {% if messages %}
+
         <div class="messages">
+
             {% for message in messages %}
+
                 <div class="message message-{{ message.tags }}">
                     {{ message }}
                 </div>
+
             {% endfor %}
+
         </div>
+
     {% endif %}
 
     <!-- ===== Main content ===== -->
@@ -198,7 +228,282 @@
         </p>
     </footer>
 
+    <script src="{% static 'js/ws_client.js' %}" defer></script>
     <script src="{% static 'js/main.js' %}" defer></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html> {% endcomment %}
+
+{% load i18n static campus_extras %}
+{% load icons %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" data-theme="{{ request.session.theme|default:'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="BPUT Campus Platform — unified student & admin portal">
+
+    <title>{% block title %}Campus Platform{% endblock %}</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+    {% if request.session.lite_mode %}
+        <link rel="stylesheet" href="{% static 'css/lite.css' %}">
+    {% endif %}
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+
+    <!-- Anti-FOUC: apply theme before first paint -->
+    <script>
+        (function() {
+            const stored = localStorage.getItem('theme');
+            if (stored === 'dark' || stored === 'light') {
+                document.documentElement.setAttribute('data-theme', stored);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="{% if request.session.lite_mode %}lite{% endif %}">
+
+    <!-- Skip to content -->
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="navbar-inner">
+
+            <a href="{% url 'accounts:home' %}" class="navbar-brand">
+                <span style="font-size: 22px;">🏛</span>
+                <span>{% trans "Campus" %}</span>
+            </a>
+
+            {% if user.is_authenticated %}
+
+            <nav class="navbar-links">
+
+                <a href="{% url 'dashboard:student_home' %}">
+                    {% if user.is_student %}📊{% else %}🎛{% endif %}
+                    {% trans "Dashboard" %}
+                </a>
+
+                {% if user.is_student %}
+
+                    <a href="{% url 'attendance:list' %}">
+                        📈 {% trans "Attendance" %}
+                    </a>
+
+                    <a href="{% url 'attendance:timetable' %}">
+                        📅 {% trans "Timetable" %}
+                    </a>
+
+                    <a href="{% url 'tickets:my_tickets' %}">
+                        🎫 {% trans "Requests" %}
+                    </a>
+
+                    <a href="{% url 'notices:list' %}">
+                        📢 {% trans "Notices" %}
+                    </a>
+
+                    <a href="{% url 'feedback:submit' %}">
+                        💬 {% trans "Feedback" %}
+                    </a>
+
+                    <a href="{% url 'documents:my_documents' %}">
+                        📄 {% trans "Documents" %}
+                    </a>
+
+                {% endif %}
+
+                {% if user.is_admin_role %}
+
+                    <a href="{% url 'tickets:my_tickets' %}">
+                        🎫 {% trans "Queue" %}
+                    </a>
+
+                    <a href="{% url 'dashboard:analytics' %}">
+                        🧠 {% trans "Analytics" %}
+                    </a>
+
+                    <a href="{% url 'notices:publish' %}">
+                        📢 {% trans "Publish" %}
+                    </a>
+
+                    <a href="{% url 'documents:admin_list' %}">
+                        📄 {% trans "Docs" %}
+                    </a>
+
+                    <a href="{% url 'manage_panel:home' %}">
+                        ⚙️ {% trans "Manage" %}
+                    </a>
+
+                {% endif %}
+
+            </nav>
+
+            <div class="navbar-right">
+
+                <!-- Notification bell -->
+                {% include 'partials/_notification_bell.html' %}
+
+                <!-- Language -->
+                <form action="{% url 'set_language' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+
+                    <input name="next" type="hidden" value="{{ request.path }}">
+
+                    <select name="language"
+                            onchange="this.form.submit()"
+                            style="padding: 6px 8px;
+                                   border-radius: 6px;
+                                   border: 1px solid var(--border-default);
+                                   background: var(--bg-surface);
+                                   color: var(--text-primary);
+                                   font-size: 12px;">
+
+                        <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>
+                            EN
+                        </option>
+
+                        <option value="hi" {% if LANGUAGE_CODE == 'hi' %}selected{% endif %}>
+                            हिं
+                        </option>
+
+                        <option value="or" {% if LANGUAGE_CODE == 'or' %}selected{% endif %}>
+                            ଓଡ଼
+                        </option>
+
+                    </select>
+                </form>
+
+                <!-- Theme toggle -->
+                <button type="button"
+                        class="btn btn-ghost btn-sm"
+                        onclick="toggleTheme()"
+                        title="{% trans 'Toggle theme' %}"
+                        id="theme-toggle">
+
+                    <span id="theme-icon">🌙</span>
+
+                </button>
+
+                <!-- User chip -->
+                <div class="user-chip">
+
+                    <div class="avatar">
+                        {{ user|get_initials|default:"U" }}
+                    </div>
+
+                    <div>
+                        <div style="font-weight: 500;">
+                            {{ user.get_short_name|default:user.username }}
+                        </div>
+
+                        <div style="font-size: 10px; color: var(--text-muted);">
+                            {{ user.get_role_display }}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Logout -->
+                <form method="post"
+                      action="{% url 'accounts:logout' %}"
+                      style="display: inline;">
+
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="btn btn-ghost btn-sm"
+                            title="{% trans 'Logout' %}">
+                        ⏻
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+
+    <div class="container" style="padding-bottom: 0;">
+
+        {% for message in messages %}
+
+            <div class="alert alert-{{ message.tags|default:'info' }} fade-in">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+    <!-- Main -->
+    <main id="main-content" class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>
+            © {% now "Y" %} BPUT Campus Platform ·
+            <a href="/admin/">Admin</a> · v1.0
+        </p>
+    </footer>
+
+    <script src="{% static 'js/confetti.js' %}" defer></script>
+
+    <script src="{% static 'js/ws_client.js' %}" defer></script>
+
+    <script src="{% static 'js/main.js' %}" defer></script>
+
+    <script>
+        // ===== Theme toggle =====
+        function toggleTheme() {
+            const current =
+                document.documentElement.getAttribute('data-theme') || 'light';
+
+            const next =
+                current === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', next);
+
+            localStorage.setItem('theme', next);
+
+            document.getElementById('theme-icon').textContent =
+                next === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Set initial icon
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const current =
+                document.documentElement.getAttribute('data-theme');
+
+            document.getElementById('theme-icon').textContent =
+                current === 'dark' ? '☀️' : '🌙';
+
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 

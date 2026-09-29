@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Document" %}{% endblock %}
+
+{% block content %}
+<div class="container-narrow" style="max-width: 600px; margin: 40px auto;">
+
+<div style="text-align: center; margin-bottom: var(--sp-6);">
+    <div style="font-size: 56px;">{% if valid %}✅{% else %}❌{% endif %}</div>
+    <h1 style="margin-top: var(--sp-3);">
+        {% if valid %}{% trans "Verified" %}{% else %}{% trans "Verification Failed" %}{% endif %}
+    </h1>
+</div>
+
+<div class="card">
+    {% if valid %}
+        <div class="alert alert-success" style="margin-bottom: var(--sp-4);">
+            {% trans "This is an authentic document issued by the campus platform." %}
+        </div>
+
+        <table style="width: 100%; font-size: var(--fs-sm);">
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Title" %}</td>
+                <td><strong>{{ document.title }}</strong></td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Type" %}</td>
+                <td>{{ document.get_doc_type_display }}</td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Issued to" %}</td>
+                <td>{{ document.student.get_full_name|default:document.student.username }}</td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Issued on" %}</td>
+                <td>{{ document.issued_at|date:"d M Y, H:i" }}</td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Issued by" %}</td>
+                <td>{{ document.issued_by.get_full_name|default:document.issued_by.username }}</td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Reference" %}</td>
+                <td><code>{{ document.verification_uuid }}</code></td></tr>
+            <tr><td style="padding: 6px 0; color: var(--text-muted);">{% trans "Signature" %}</td>
+                <td><code style="font-size: 11px;">{{ document.signature_hash|slice:":24" }}…</code></td></tr>
+        </table>
+
+        <div style="margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border-subtle);">
+            <div style="font-size: var(--fs-xs); color: var(--text-muted);">
+                {% if signature_ok %}
+                    ✅ {% trans "Signature verified — the PDF has not been tampered with." %}
+                {% else %}
+                    ⚠️ {% trans "Signature mismatch — document may have been altered." %}
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-error">
+            {{ reason }}
+        </div>
+    {% endif %}
+</div>
+
+<p style="text-align: center; margin-top: var(--sp-6); font-size: var(--fs-xs); color: var(--text-muted);">
+    <a href="{% url 'accounts:login' %}">{% trans "Go to login" %}</a>
+</p>
+
+</div>
+{% endblock %}

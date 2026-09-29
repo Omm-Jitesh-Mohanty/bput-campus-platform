@@ -26,4 +26,5 @@ urlpatterns = [
     path('<int:pk>/comment/', views.add_comment, name='add_comment'),
     path('<int:pk>/resolve/', views.admin_resolve_ticket, name='admin_resolve'),
     path('<int:pk>/assign/', views.admin_assign_ticket, name='admin_assign'),
+    path('type/<slug:code>/fields/', views.ticket_type_fields, name='type_fields'),
 ]

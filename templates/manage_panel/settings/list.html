@@ -1,0 +1,123 @@
+{% extends "manage_panel/base_manage.html" %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% trans "System Settings" %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% trans "System Settings" %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% trans "Configure system-wide settings for the campus platform." %}
+{% endblock %}
+
+{% block manage_actions %}
+    <a href="{% url 'manage_panel:setting_create' %}" class="btn btn-primary">
+        + {% trans "Add Setting" %}
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card">
+
+    {% if settings %}
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Key" %}</th>
+                        <th>{% trans "Label" %}</th>
+                        <th>{% trans "Category" %}</th>
+                        <th>{% trans "Type" %}</th>
+                        <th>{% trans "Value" %}</th>
+                        <th>{% trans "Public" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for setting in settings %}
+                        <tr>
+                            <td>
+                                <strong>{{ setting.key }}</strong>
+                            </td>
+
+                            <td>
+                                {{ setting.label|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ setting.category|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ setting.value_type }}
+                            </td>
+
+                            <td>
+                                <code>{{ setting.value }}</code>
+                            </td>
+
+                            <td>
+                                {% if setting.is_public %}
+                                    ✓
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a
+                                    href="{% url 'manage_panel:setting_edit' setting.pk %}"
+                                    class="btn btn-sm"
+                                >
+                                    {% trans "Edit" %}
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'manage_panel:setting_delete' setting.pk %}"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Delete this setting?');"
+                                >
+                                    {% csrf_token %}
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-danger"
+                                    >
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+            <div class="empty-icon">⚙️</div>
+            <h3>{% trans "No settings found" %}</h3>
+            <p>
+                {% trans "Create your first system setting." %}
+            </p>
+
+            <a
+                href="{% url 'manage_panel:setting_create' %}"
+                class="btn btn-primary"
+            >
+                + {% trans "Add Setting" %}
+            </a>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

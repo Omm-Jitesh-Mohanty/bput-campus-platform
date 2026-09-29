@@ -1,0 +1,145 @@
+{% extends "manage_panel/base_manage.html" %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% trans "Notifications" %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% trans "Notification Templates" %}
+{% endblock %}
+
+{% block manage_subtitle %}
+    {% trans "Manage notification messages used by the campus platform." %}
+{% endblock %}
+
+{% block manage_actions %}
+    <a
+        href="{% url 'manage_panel:notification_create' %}"
+        class="btn btn-primary"
+    >
+        + {% trans "Add Template" %}
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card">
+
+    {% if notifications %}
+
+        <div class="table-responsive">
+            <table class="data-table">
+
+                <thead>
+                    <tr>
+                        <th>{% trans "Event" %}</th>
+                        <th>{% trans "Channel" %}</th>
+                        <th>{% trans "Language" %}</th>
+                        <th>{% trans "Subject" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for notification in notifications %}
+
+                        <tr>
+
+                            <td>
+                                <strong>
+                                    {{ notification.event_code }}
+                                </strong>
+                            </td>
+
+                            <td>
+                                {{ notification.channel }}
+                            </td>
+
+                            <td>
+                                {{ notification.language }}
+                            </td>
+
+                            <td>
+                                {{ notification.subject|default:"—" }}
+                            </td>
+
+                            <td>
+                                {% if notification.is_active %}
+                                    <span class="chip chip-success">
+                                        {% trans "Active" %}
+                                    </span>
+                                {% else %}
+                                    <span class="chip">
+                                        {% trans "Inactive" %}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'manage_panel:notification_edit' notification.pk %}"
+                                    class="btn btn-sm"
+                                >
+                                    {% trans "Edit" %}
+                                </a>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'manage_panel:notification_delete' notification.pk %}"
+                                    style="display:inline;"
+                                    onsubmit="return confirm('Delete this notification template?');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-sm btn-danger"
+                                    >
+                                        {% trans "Delete" %}
+                                    </button>
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">🔔</div>
+
+            <h3>
+                {% trans "No notification templates found" %}
+            </h3>
+
+            <p>
+                {% trans "Create your first notification template." %}
+            </p>
+
+            <a
+                href="{% url 'manage_panel:notification_create' %}"
+                class="btn btn-primary"
+            >
+                + {% trans "Add Template" %}
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+

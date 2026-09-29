@@ -8,17 +8,13 @@ DEBUG = False
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h.strip()]
 
-# Postgres in production
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', 'campus'),
-        'USER': os.getenv('DB_USER', 'campus'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,
-    }
+# DATABASES comes from base.py (uses .env variables)
+# Add production-specific connection pooling:
+DATABASES['default']['CONN_MAX_AGE'] = 600
+DATABASES['default']['OPTIONS'] = {
+    'connect_timeout': 10,
+    'keepalives': 1,
+    'keepalives_idle': 30,
 }
 
 # Security hardening

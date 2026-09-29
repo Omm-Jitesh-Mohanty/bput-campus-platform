@@ -1,0 +1,77 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_title %}{% trans "Ticket Types" %}{% endblock %}
+{% block manage_heading %}📄 {% trans "Ticket Types" %}{% endblock %}
+{% block manage_subtitle %}
+    {% trans "Configure request types and their custom forms" %}
+{% endblock %}
+
+{% block manage_actions %}
+<a href="{% url 'manage_panel:ticket_type_create' %}" class="btn">
+    + {% trans "Add Ticket Type" %}
+</a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="card" style="padding: 0; overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <th style="text-align: left; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Type" %}</th>
+                <th style="text-align: left; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Default Dept" %}</th>
+                <th style="text-align: left; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "SLA" %}</th>
+                <th style="text-align: left; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Form Fields" %}</th>
+                <th style="text-align: left; padding: 12px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Status" %}</th>
+                <th style="width: 100px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in ticket_types %}
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 20px;">{{ t.icon }}</span>
+                        <div>
+                            <div style="font-weight: 600;">{{ t.name }}</div>
+                            <div style="font-size: 12px; color: #64748b;">{{ t.code }}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 12px; font-size: 13px;">
+                    {{ t.default_department.name|default:"—" }}
+                </td>
+                <td style="padding: 12px; font-size: 13px;">
+                    <strong>{{ t.sla_hours }}h</strong>
+                </td>
+                <td style="padding: 12px; font-size: 13px;">
+                    {{ t.dynamic_schema.fields|length }} field{{ t.dynamic_schema.fields|length|pluralize }}
+                </td>
+                <td style="padding: 12px;">
+                    {% if t.is_active %}
+                        <span class="badge badge-green">{% trans "Active" %}</span>
+                    {% else %}
+                        <span class="badge badge-gray">{% trans "Inactive" %}</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 12px; text-align: right;">
+                    <a href="{% url 'manage_panel:ticket_type_edit' t.pk %}"
+                       class="btn btn-secondary"
+                       style="padding: 4px 10px; font-size: 12px;">
+                        {% trans "Edit" %}
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #94a3b8;">
+                    {% trans "No ticket types yet." %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

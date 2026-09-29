@@ -4,44 +4,49 @@
 {% block title %}{% trans "Login" %} — Campus Platform{% endblock %}
 
 {% block content %}
-<div style="max-width: 420px; margin: 60px auto;">
-    <div class="card">
-        <h2 style="text-align: center; margin-bottom: 8px;">
-            🏛 {% trans "Campus Platform" %}
-        </h2>
-        <p style="text-align: center; color: #64748b; margin-bottom: 24px; font-size: 14px;">
-            {% trans "One platform for attendance, requests, notices & more" %}
+<div style="max-width: 420px; margin: 60px auto; padding: 0 var(--sp-4);">
+    <div style="text-align: center; margin-bottom: var(--sp-8);">
+        <div style="font-size: 56px; margin-bottom: var(--sp-2);">🏛</div>
+        <h1 style="margin: 0; font-size: var(--fs-2xl);">{% trans "Campus Platform" %}</h1>
+        <p style="color: var(--text-muted); font-size: var(--fs-sm); margin-top: var(--sp-2);">
+            {% trans "One login for attendance, requests, notices & more" %}
         </p>
+    </div>
 
+    <div class="card" style="padding: var(--sp-6);">
         <form method="post" action="{% url 'accounts:login' %}">
             {% csrf_token %}
 
             <div class="form-group">
-                <label for="{{ form.username.id_for_label }}">
-                    {% trans "Username" %}
-                </label>
-                {{ form.username }}
+                <label for="{{ form.username.id_for_label }}">{% trans "Username" %}</label>
+                <input type="text" name="username" id="{{ form.username.id_for_label }}"
+                       placeholder="aditya" required autofocus autocomplete="username">
             </div>
 
             <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">
-                    {% trans "Password" %}
-                </label>
-                {{ form.password }}
+                <label for="{{ form.password.id_for_label }}">{% trans "Password" %}</label>
+                <input type="password" name="password" id="{{ form.password.id_for_label }}"
+                       placeholder="••••••••" required autocomplete="current-password">
             </div>
 
-            <button type="submit" class="btn" style="width: 100%;">
-                {% trans "Log In" %}
+            <button type="submit" class="btn btn-lg" style="width: 100%;">
+                {% trans "Sign In" %} →
             </button>
         </form>
 
-        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+        <hr style="margin: var(--sp-5) 0; border: none; border-top: 1px solid var(--border-subtle);">
 
-        <p style="font-size: 13px; color: #64748b; text-align: center;">
-            <strong>Demo credentials:</strong><br>
-            Student → <code>aditya</code> / <code>demo1234</code><br>
-            Admin → <code>warden_a</code> / <code>demo1234</code>
-        </p>
+        <details style="font-size: var(--fs-xs); color: var(--text-muted);">
+            <summary style="cursor: pointer; font-weight: var(--fw-medium);">
+                🔐 {% trans "Demo credentials" %}
+            </summary>
+            <div style="margin-top: var(--sp-3); padding: var(--sp-3); background: var(--bg-muted); border-radius: var(--radius);">
+                <div><strong>{% trans "Student" %}:</strong> <code>aditya</code> / <code>demo1234</code></div>
+                <div><strong>{% trans "Warden" %}:</strong> <code>warden_a</code> / <code>demo1234</code></div>
+                <div><strong>{% trans "HOD" %}:</strong> <code>hod_cse</code> / <code>demo1234</code></div>
+                <div><strong>{% trans "Principal" %}:</strong> <code>principal</code> / <code>demo1234</code></div>
+            </div>
+        </details>
     </div>
 </div>
 {% endblock %}

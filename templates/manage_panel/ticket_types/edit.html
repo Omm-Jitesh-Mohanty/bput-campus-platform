@@ -1,0 +1,394 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_title %}
+    {% if tt %}{{ tt.name }}{% else %}{% trans "New Ticket Type" %}{% endif %}
+{% endblock %}
+
+{% block manage_heading %}
+    {% if tt %}{{ tt.icon }} {{ tt.name }}{% else %}📄 {% trans "New Ticket Type" %}{% endif %}
+{% endblock %}
+
+{% block manage_actions %}
+<a href="{% url 'manage_panel:ticket_types' %}" class="btn btn-secondary">
+    ← {% trans "All Types" %}
+</a>
+{% endblock %}
+
+{% block manage_content %}
+
+<form method="post" id="tt-form">
+    {% csrf_token %}
+
+    <!-- Basic info -->
+    <div class="card">
+        <h3 style="margin-bottom: 16px;">{% trans "Basic Information" %}</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>{% trans "Code" %} *</label>
+                <input type="text" name="code" value="{{ tt.code|default:'' }}"
+                       placeholder="e.g., bonafide" required
+                       {% if tt %}readonly style="background: #f1f5f9;"{% endif %}>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Name" %} *</label>
+                <input type="text" name="name" value="{{ tt.name|default:'' }}" required>
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+                <label>{% trans "Description" %}</label>
+                <textarea name="description" rows="2">{{ tt.description|default:'' }}</textarea>
+            </div>
+
+            <div class="form-group" style="max-width: 120px;">
+                <label>{% trans "Icon" %}</label>
+                <input type="text" name="icon" value="{{ tt.icon|default:'📄' }}"
+                       maxlength="4" style="text-align: center; font-size: 22px;">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Default Department" %}</label>
+                <select name="default_department">
+                    <option value="">— {% trans "None" %} —</option>
+                    {% for d in all_departments %}
+                        <option value="{{ d.pk }}"
+                            {% if tt.default_department_id == d.pk %}selected{% endif %}>
+                            {{ d.icon }} {{ d.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Base SLA (hours)" %}</label>
+                <input type="number" name="sla_hours" value="{{ tt.sla_hours|default:48 }}" min="1">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Sort Order" %}</label>
+                <input type="number" name="sort_order" value="{{ tt.sort_order|default:100 }}" min="0">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; margin-top: 12px;">
+            <label style="display: flex; gap: 8px; align-items: center;">
+                <input type="checkbox" name="requires_attachment"
+                       {% if tt.requires_attachment %}checked{% endif %}>
+                {% trans "Requires attachment" %}
+            </label>
+            <label style="display: flex; gap: 8px; align-items: center;">
+                <input type="checkbox" name="is_active"
+                       {% if tt.is_active or not tt %}checked{% endif %}>
+                {% trans "Active" %}
+            </label>
+        </div>
+    </div>
+
+    <!-- Form builder -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+                <h3 style="margin: 0;">🎨 {% trans "Custom Form Fields" %}</h3>
+                <p style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                    {% trans "Add extra fields students fill when submitting this request type." %}
+                </p>
+            </div>
+            <button type="button" class="btn" onclick="addField()">
+                + {% trans "Add Field" %}
+            </button>
+        </div>
+
+        <div id="fields-container"></div>
+        <div id="empty-state" style="text-align: center; padding: 40px; color: #94a3b8;">
+            {% trans "No custom fields yet. Click 'Add Field' to start." %}
+        </div>
+
+        <input type="hidden" name="dynamic_schema" id="schema-hidden" value="{{ schema_json }}">
+    </div>
+
+    <!-- Submit -->
+    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+        <a href="{% url 'manage_panel:ticket_types' %}" class="btn btn-secondary">
+            {% trans "Cancel" %}
+        </a>
+        <button type="submit" class="btn" style="padding: 12px 32px;">
+            {% if tt %}💾 {% trans "Save Changes" %}{% else %}✨ {% trans "Create Ticket Type" %}{% endif %}
+        </button>
+    </div>
+</form>
+
+<!-- Field editor modal -->
+<div id="field-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; padding: 40px 20px;">
+    <div style="background: white; border-radius: 12px; padding: 24px; max-width: 640px; margin: 0 auto;">
+        <h3 id="field-modal-title" style="margin-bottom: 20px;">{% trans "Add Field" %}</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label>{% trans "Field Name (key)" %} *</label>
+                <input type="text" id="fld-name" placeholder="e.g., location"
+                       pattern="[a-z0-9_]+" oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Label (shown to student)" %} *</label>
+                <input type="text" id="fld-label" placeholder="e.g., Location">
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Type" %} *</label>
+                <select id="fld-type" onchange="onTypeChange()">
+                    {% for code, label in field_types %}
+                        <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{% trans "Required" %}</label>
+                <label style="display: flex; gap: 8px; align-items: center; padding-top: 8px;">
+                    <input type="checkbox" id="fld-required">
+                    {% trans "Yes" %}
+                </label>
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+                <label>{% trans "Placeholder (optional)" %}</label>
+                <input type="text" id="fld-placeholder">
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+                <label>{% trans "Help text (optional)" %}</label>
+                <input type="text" id="fld-help" placeholder="{% trans 'Explain what the student should enter' %}">
+            </div>
+        </div>
+
+        <!-- Options (only for select/radio/multiselect) -->
+        <div id="options-section" style="display: none;">
+            <label style="display: block; margin-top: 12px; margin-bottom: 8px; font-weight: 500;">
+                {% trans "Options" %}
+            </label>
+            <div id="options-list"></div>
+            <button type="button" class="btn btn-secondary" onclick="addOption()" style="margin-top: 8px; font-size: 13px;">
+                + {% trans "Add Option" %}
+            </button>
+        </div>
+
+        <div id="field-error" style="display: none; padding: 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; margin-top: 16px;"></div>
+
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
+            <button type="button" class="btn btn-secondary" onclick="closeFieldModal()">{% trans "Cancel" %}</button>
+            <button type="button" class="btn" onclick="saveField()" id="save-field-btn">{% trans "Save Field" %}</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// Form Builder State
+// ============================================================
+let schema = {fields: []};
+try {
+    schema = JSON.parse(document.getElementById('schema-hidden').value || '{"fields": []}');
+    if (!Array.isArray(schema.fields)) schema.fields = [];
+} catch(e) { schema = {fields: []}; }
+
+let editingIndex = null;
+
+// ============================================================
+// Rendering
+// ============================================================
+function renderFields() {
+    const container = document.getElementById('fields-container');
+    const emptyState = document.getElementById('empty-state');
+
+    if (schema.fields.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        updateHidden();
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    container.innerHTML = '';
+
+    schema.fields.forEach((f, idx) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 12px;';
+        div.innerHTML = `
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <strong>${escapeHtml(f.label || f.name)}</strong>
+                    <span style="font-size: 11px; padding: 2px 8px; background: #e2e8f0; border-radius: 999px;">${escapeHtml(f.type)}</span>
+                    ${f.required ? '<span style="font-size: 11px; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 999px;">required</span>' : ''}
+                </div>
+                <div style="font-size: 12px; color: #64748b;">name: <code>${escapeHtml(f.name)}</code>${f.help_text ? ' · ' + escapeHtml(f.help_text) : ''}</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="editField(${idx})">Edit</button>
+                <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="moveField(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity: 0.3; padding: 4px 10px; font-size: 12px;"' : ''}>↑</button>
+                <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="moveField(${idx}, 1)" ${idx === schema.fields.length - 1 ? 'disabled style="opacity: 0.3; padding: 4px 10px; font-size: 12px;"' : ''}>↓</button>
+                <button type="button" class="btn" style="padding: 4px 10px; font-size: 12px; background: #dc2626;" onclick="deleteField(${idx})">×</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    updateHidden();
+}
+
+function updateHidden() {
+    document.getElementById('schema-hidden').value = JSON.stringify(schema);
+}
+
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+}
+
+// ============================================================
+// Add / Edit
+// ============================================================
+function addField() {
+    editingIndex = null;
+    document.getElementById('field-modal-title').textContent = '{% trans "Add Field" %}';
+    document.getElementById('fld-name').value = '';
+    document.getElementById('fld-name').disabled = false;
+    document.getElementById('fld-label').value = '';
+    document.getElementById('fld-type').value = 'text';
+    document.getElementById('fld-required').checked = false;
+    document.getElementById('fld-placeholder').value = '';
+    document.getElementById('fld-help').value = '';
+    document.getElementById('options-list').innerHTML = '';
+    document.getElementById('field-error').style.display = 'none';
+    onTypeChange();
+    document.getElementById('field-modal').style.display = 'block';
+}
+
+function editField(idx) {
+    editingIndex = idx;
+    const f = schema.fields[idx];
+
+    document.getElementById('field-modal-title').textContent = '{% trans "Edit Field" %}';
+    document.getElementById('fld-name').value = f.name;
+    document.getElementById('fld-name').disabled = true;
+    document.getElementById('fld-label').value = f.label || '';
+    document.getElementById('fld-type').value = f.type || 'text';
+    document.getElementById('fld-required').checked = !!f.required;
+    document.getElementById('fld-placeholder').value = f.placeholder || '';
+    document.getElementById('fld-help').value = f.help_text || '';
+
+    document.getElementById('options-list').innerHTML = '';
+    (f.options || []).forEach(opt => addOption(opt.value, opt.label));
+
+    document.getElementById('field-error').style.display = 'none';
+    onTypeChange();
+    document.getElementById('field-modal').style.display = 'block';
+}
+
+function closeFieldModal() {
+    document.getElementById('field-modal').style.display = 'none';
+}
+
+function saveField() {
+    const name = document.getElementById('fld-name').value.trim();
+    const label = document.getElementById('fld-label').value.trim();
+    const type = document.getElementById('fld-type').value;
+    const required = document.getElementById('fld-required').checked;
+    const placeholder = document.getElementById('fld-placeholder').value.trim();
+    const help_text = document.getElementById('fld-help').value.trim();
+
+    const err = document.getElementById('field-error');
+    err.style.display = 'none';
+
+    if (!name) { err.textContent = 'Field name is required.'; err.style.display = 'block'; return; }
+    if (!label) { err.textContent = 'Label is required.'; err.style.display = 'block'; return; }
+    if (!/^[a-z0-9_]+$/.test(name)) { err.textContent = 'Name must be lowercase letters, digits, underscores only.'; err.style.display = 'block'; return; }
+
+    // Duplicate check
+    if (editingIndex === null) {
+        if (schema.fields.some(f => f.name === name)) {
+            err.textContent = 'A field with this name already exists.';
+            err.style.display = 'block'; return;
+        }
+    }
+
+    const field = { name, label, type, required };
+    if (placeholder) field.placeholder = placeholder;
+    if (help_text) field.help_text = help_text;
+
+    // Options for select/radio/multiselect
+    if (['select', 'radio', 'multiselect'].includes(type)) {
+        const options = [];
+        document.querySelectorAll('#options-list .option-row').forEach(row => {
+            const v = row.querySelector('.opt-value').value.trim();
+            const l = row.querySelector('.opt-label').value.trim();
+            if (v && l) options.push({value: v, label: l});
+        });
+        if (options.length === 0) { err.textContent = 'At least one option is required for this field type.'; err.style.display = 'block'; return; }
+        field.options = options;
+    }
+
+    if (editingIndex === null) {
+        schema.fields.push(field);
+    } else {
+        schema.fields[editingIndex] = field;
+    }
+
+    renderFields();
+    closeFieldModal();
+}
+
+function deleteField(idx) {
+    if (!confirm('Delete this field?')) return;
+    schema.fields.splice(idx, 1);
+    renderFields();
+}
+
+function moveField(idx, direction) {
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= schema.fields.length) return;
+    const [f] = schema.fields.splice(idx, 1);
+    schema.fields.splice(newIdx, 0, f);
+    renderFields();
+}
+
+// ============================================================
+// Type-dependent UI
+// ============================================================
+function onTypeChange() {
+    const type = document.getElementById('fld-type').value;
+    const showOptions = ['select', 'radio', 'multiselect'].includes(type);
+    document.getElementById('options-section').style.display = showOptions ? 'block' : 'none';
+    if (showOptions && document.getElementById('options-list').children.length === 0) {
+        addOption();
+    }
+}
+
+function addOption(value = '', label = '') {
+    const list = document.getElementById('options-list');
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.style.cssText = 'display: flex; gap: 8px; margin-bottom: 8px;';
+    row.innerHTML = `
+        <input class="opt-value" type="text" placeholder="value" value="${escapeHtml(value)}"
+               style="flex: 1; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+        <input class="opt-label" type="text" placeholder="label" value="${escapeHtml(label)}"
+               style="flex: 2; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px;">
+        <button type="button" onclick="this.parentElement.remove()"
+                style="padding: 6px 10px; background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; cursor: pointer;">
+            ×
+        </button>
+    `;
+    list.appendChild(row);
+}
+
+// ============================================================
+// Initial render
+// ============================================================
+renderFields();
+</script>
+
+{% endblock %}

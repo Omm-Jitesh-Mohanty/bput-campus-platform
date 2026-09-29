@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Request Document" %}{% endblock %}
+
+{% block content %}
+<div class="container-narrow" style="max-width: 640px; margin: 0 auto;">
+
+{% include 'partials/_page_header.html' with title="📄 Request a Document" subtitle="Choose a document type. We'll generate and sign it instantly." %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="form-group">
+            <label>{% trans "Document type" %} *</label>
+            <select name="doc_type" required>
+                <option value="">— {% trans "Select" %} —</option>
+                {% for t in available_types %}
+                    <option value="{{ t.doc_type }}">{{ t.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>{% trans "Purpose (optional)" %}</label>
+            <input type="text" name="purpose" placeholder="e.g., Bank loan application">
+            <p class="help-text">
+                {% trans "Will appear in the document. Leave blank for generic." %}
+            </p>
+        </div>
+    </div>
+
+    <div class="alert alert-warning">
+        ⏱ {% trans "Documents with pending fees or attendance below 75% may be blocked." %}
+    </div>
+
+    <button type="submit" class="btn btn-lg" style="width: 100%;"
+            onclick="setTimeout(() => window.burstConfetti(30), 100);">
+        ✨ {% trans "Generate Document" %}
+    </button>
+</form>
+
+</div>
+{% endblock %}

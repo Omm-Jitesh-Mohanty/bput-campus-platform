@@ -1,0 +1,143 @@
+{% extends "manage_panel/base_manage.html" %}
+
+{% block manage_title %}Priorities{% endblock %}
+
+{% block manage_heading %}
+    Priority Levels
+{% endblock %}
+
+{% block manage_subtitle %}
+    Configure ticket priority levels, weights, SLA multipliers, and routing behavior.
+{% endblock %}
+
+{% block manage_actions %}
+    <a href="{% url 'manage_panel:priority_create' %}" class="btn btn-primary">
+        + Add Priority
+    </a>
+{% endblock %}
+
+{% block manage_content %}
+
+<div class="manage-card">
+
+    <div class="table-wrap">
+        <table class="manage-table">
+
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Code</th>
+                    <th>Weight</th>
+                    <th>SLA Multiplier</th>
+                    <th>Color</th>
+                    <th>Status</th>
+                    <th>Order</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for priority in priorities %}
+
+                <tr>
+
+                    <td>
+                        <div class="table-primary">
+                            <span style="font-size: 1.3rem;">
+                                {{ priority.icon }}
+                            </span>
+
+                            {{ priority.name }}
+                        </div>
+                    </td>
+
+                    <td>
+                        <code>{{ priority.code }}</code>
+                    </td>
+
+                    <td>
+                        <strong>{{ priority.weight }}</strong>
+                    </td>
+
+                    <td>
+                        {{ priority.sla_multiplier }}×
+                    </td>
+
+                    <td>
+                        <span
+                            style="
+                                display:inline-block;
+                                width:18px;
+                                height:18px;
+                                border-radius:50%;
+                                background:{{ priority.color }};
+                                border:1px solid #cbd5e1;
+                                vertical-align:middle;
+                            "
+                        ></span>
+
+                        {{ priority.color }}
+                    </td>
+
+                    <td>
+                        {% if priority.is_active %}
+                            <span class="chip chip-success">
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="chip">
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ priority.sort_order }}
+                    </td>
+
+                    <td>
+                        <a
+                            href="{% url 'manage_panel:priority_edit' priority.pk %}"
+                            class="btn btn-sm"
+                        >
+                            Edit
+                        </a>
+
+                        <form
+                            method="post"
+                            action="{% url 'manage_panel:priority_delete' priority.pk %}"
+                            style="display:inline;"
+                            onsubmit="return confirm('Delete this priority?');"
+                        >
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="btn btn-sm btn-danger"
+                            >
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="8">
+                        No priority levels found.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -8,6 +8,7 @@ from django.utils.translation import activate
 from django.contrib import messages
 
 from .forms import LoginForm
+from apps.core.audit import AuditService
 
 
 def login_view(request):
@@ -26,9 +27,21 @@ def login_view(request):
                 # Activate user's preferred language
                 if user.language_pref:
                     activate(user.language_pref)
+
+                # Audit successful login
+                AuditService.log_login(user, success=True)
+
                 messages.success(request, f"Welcome back, {user.get_short_name() or user.username}!")
                 return redirect('accounts:home')
             else:
+                # Audit failed attempt (with username in metadata)
+                AuditService.record(
+                    action='login',
+                    metadata={
+                        'success': False,
+                        'attempted_username': username,
+                    },
+                )
                 messages.error(request, "Invalid username or password.")
     else:
         form = LoginForm()
@@ -38,6 +51,8 @@ def login_view(request):
 
 def logout_view(request):
     """Log out and return to login page."""
+    if request.user.is_authenticated:
+        AuditService.log_logout(request.user)
     logout(request)
     messages.info(request, "You have been logged out.")
     return redirect('accounts:login')

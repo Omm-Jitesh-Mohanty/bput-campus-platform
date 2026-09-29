@@ -3,8 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from apps.core.decorators import admin_required
+from apps.core.services import ConfigService
 from .models import Notice, NoticeReadStatus
 from .services import get_notices_for_student, mark_as_read
+from apps.core.constants import BATCH_YEARS, HOSTEL_BLOCKS
 
 
 @login_required
@@ -70,6 +72,44 @@ def publish_notice(request):
                 save=True
             )
 
+            # Notify targeted students
+            try:
+                from apps.accounts.models import User
+                from apps.notifications.services import NotificationService
+
+                targeted = User.objects.filter(
+                    role='student',
+                    is_active=True,
+                )
+
+                aud = notice.target_audience or {}
+
+                if aud.get('department'):
+                    targeted = targeted.filter(
+                        department=aud['department']
+                    )
+
+                if aud.get('batch_year'):
+                    targeted = targeted.filter(
+                        batch_year=aud['batch_year']
+                    )
+
+                if aud.get('hostel_block'):
+                    targeted = targeted.filter(
+                        hostel_block=aud['hostel_block']
+                    )
+
+                NotificationService.notify_notice_published(
+                    notice,
+                    list(targeted),
+                )
+
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).exception(
+                    f"Notice notify failed: {e}"
+                )
+
             messages.success(
                 request,
                 f"Notice published (ID: {notice.id}) — AI tagged it as "
@@ -78,10 +118,10 @@ def publish_notice(request):
 
             return redirect('notices:detail', pk=notice.id)
 
-    from apps.core.constants import DEPARTMENTS, BATCH_YEARS, HOSTEL_BLOCKS
+    from apps.core.constants import BATCH_YEARS, HOSTEL_BLOCKS
 
     return render(request, 'notices/publish.html', {
-        'departments': DEPARTMENTS,
+        'departments': ConfigService.department_choices(),
         'batch_years': BATCH_YEARS,
         'hostel_blocks': HOSTEL_BLOCKS,
     })

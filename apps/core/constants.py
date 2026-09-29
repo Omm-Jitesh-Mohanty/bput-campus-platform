@@ -2,6 +2,28 @@
 Shared constants across all apps.
 Single source of truth — never hardcode these elsewhere.
 """
+"""
+⚠️  DEPRECATED — Read from ConfigService instead.
+
+This module now serves two purposes:
+  1. As a fallback if the DB config tables are empty (e.g., fresh install)
+  2. As a reference for the initial seed data
+
+New code should NOT import from here. Use:
+
+    from apps.core.services import ConfigService
+
+    departments = ConfigService.departments()
+    priorities = ConfigService.priority_levels()
+    sla = ConfigService.sla_hours_for('complaint', 'urgent')
+    threshold = ConfigService.get_attendance_threshold()
+
+If you find yourself importing from constants in new code, pause and
+ask: "Can ConfigService provide this?" Almost always, yes.
+
+Existing imports are being migrated gradually. Everything works
+either way — no breaking changes.
+"""
 
 # ===== Departments =====
 DEPARTMENTS = [
@@ -168,3 +190,23 @@ LEAVE_TYPES = [
     ('event', 'Event / Competition'),
     ('other', 'Other'),
 ]
+
+# =====================================================================
+# DEPRECATION TRACKER
+# =====================================================================
+# The following constants have been migrated to DB config and should NOT
+# be used in new code. They remain here only as fallbacks.
+#
+#   DEPARTMENTS               → ConfigService.departments()
+#   ROUTING_DEPARTMENTS       → ConfigService.departments()
+#   PRIORITY_CHOICES          → ConfigService.priority_levels()
+#   TICKET_TYPE_CHOICES       → ConfigService.ticket_types()
+#   AGEING_GREEN_HOURS        → ConfigService.sla_hours_for(...)['green']
+#   AGEING_YELLOW_HOURS       → ConfigService.sla_hours_for(...)['yellow']
+#   ATTENDANCE_THRESHOLD_PCT  → ConfigService.get_attendance_threshold()
+#
+# Structural constants still in active use:
+#   TICKET_STATUS_*           (state machine, not config)
+#   TICKET_TYPE_COMPLAINT etc (slugs, referenced by code)
+#   BATCH_YEARS, HOSTEL_BLOCKS (academic structure, not runtime config)
+# =====================================================================

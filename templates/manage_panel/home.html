@@ -1,0 +1,120 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_title %}{% trans "Manage Panel" %}{% endblock %}
+{% block manage_heading %}⚙️ {% trans "Management Panel" %}{% endblock %}
+{% block manage_subtitle %}
+    {% trans "Configure your campus platform without touching code" %}
+{% endblock %}
+
+{% block manage_content %}
+
+<!-- Quick stats grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 32px;">
+    <a href="{% url 'manage_panel:departments' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #1e40af;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "Departments" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.active_departments }}
+                <span style="font-size: 14px; color: #64748b; font-weight: 400;">
+                    / {{ counts.departments }} total
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <a href="{% url 'manage_panel:ticket_types' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #16a34a;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "Ticket Types" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.ticket_types }}
+            </div>
+        </div>
+    </a>
+
+    <a href="{% url 'manage_panel:priorities' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #f59e0b;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "Priorities" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.priorities }}
+            </div>
+        </div>
+    </a>
+
+    <a href="{% url 'manage_panel:slas' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #dc2626;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "SLA Policies" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.sla_policies }}
+            </div>
+        </div>
+    </a>
+
+    <a href="{% url 'manage_panel:settings' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #7c3aed;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "Settings" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.settings }}
+            </div>
+        </div>
+    </a>
+
+    <a href="{% url 'manage_panel:prompts' %}" style="text-decoration: none; color: inherit;">
+        <div class="card" style="border-left: 4px solid #0891b2;">
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">
+                {% trans "AI Prompts" %}
+            </div>
+            <div style="font-size: 28px; font-weight: 800; margin-top: 4px;">
+                {{ counts.prompts }}
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Recent config changes -->
+<h2>🕒 {% trans "Recent Config Changes" %}</h2>
+<div class="card" style="padding: 0;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <th style="text-align: left; padding: 10px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "When" %}</th>
+                <th style="text-align: left; padding: 10px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "Who" %}</th>
+                <th style="text-align: left; padding: 10px; font-size: 11px; color: #64748b; text-transform: uppercase;">{% trans "What" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_config_changes %}
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 10px; font-size: 13px; color: #64748b;">
+                    {{ log.timestamp|date:"d M H:i" }}
+                </td>
+                <td style="padding: 10px; font-size: 13px;">
+                    {{ log.user.username|default:"system" }}
+                </td>
+                <td style="padding: 10px; font-size: 13px;">
+                    <span class="badge badge-blue">{{ log.get_action_display }}</span>
+                    {{ log.target_repr|truncatechars:60 }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 30px; color: #94a3b8;">
+                    {% trans "No changes yet." %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

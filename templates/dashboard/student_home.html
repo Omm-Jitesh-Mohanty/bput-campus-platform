@@ -5,144 +5,214 @@
 
 {% block content %}
 
-<h1>👋 {% trans "Hi" %}, {{ user.get_short_name|default:user.username }}</h1>
-<p style="color: #64748b; margin-bottom: 24px;">
-    {{ user.department }} · {{ user.batch_year }} ·
-    {% if user.hostel_block != 'DAY' %}Hostel {{ user.hostel_block }}-{{ user.room_number }}{% else %}Day Scholar{% endif %}
-</p>
-
-<!-- ===== Awaiting confirmation alert ===== -->
-{% if awaiting_confirmation %}
-<div class="card" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
-    <h3>❓ {% trans "Action needed" %}</h3>
-    <p style="color: #78350f; margin: 8px 0;">
-        {% trans "You have" %} {{ awaiting_confirmation|length }}
-        {% trans "resolved ticket(s) awaiting your confirmation." %}
+<div style="margin-bottom: var(--sp-8);">
+    <h1 style="margin: 0;">👋 {% trans "Hi" %}, {{ user.get_short_name|default:user.username }}</h1>
+    <p style="color: var(--text-muted); margin-top: var(--sp-1); font-size: var(--fs-sm);">
+        {{ user.department }} · {{ user.batch_year }} ·
+        {% if user.hostel_block != 'DAY' %}
+            {% trans "Hostel" %} {{ user.hostel_block }}-{{ user.room_number }}
+        {% else %}
+            {% trans "Day Scholar" %}
+        {% endif %}
     </p>
+</div>
+
+{% if awaiting_confirmation %}
+<div class="alert alert-warning fade-in">
+    <strong>❓ {% trans "Action needed" %}</strong><br>
+    {% trans "You have" %} {{ awaiting_confirmation|length }}
+    {% trans "resolved ticket(s) awaiting your confirmation." %}
+
     {% for t in awaiting_confirmation %}
-        <a href="{% url 'tickets:detail' t.id %}" class="btn btn-secondary" style="margin-top: 8px;">
-            #{{ t.id }} — {{ t.subject|truncatechars:40 }}
-        </a>
+        <div style="margin-top: var(--sp-2);">
+            <a href="{% url 'tickets:detail' t.id %}" class="btn btn-sm btn-secondary">
+                #{{ t.id }} — {{ t.subject|truncatechars:50 }}
+            </a>
+        </div>
     {% endfor %}
 </div>
 {% endif %}
 
-<!-- ===== Quick stats grid ===== -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+<!-- ===== Quick stats ===== -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-8);">
 
-    <div class="card" style="text-align: center;
-        background: {% if attendance.is_safe %}#f0fdf4{% else %}#fef2f2{% endif %};">
-        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-            {% trans "Attendance" %}
-        </div>
-        <div style="font-size: 32px; font-weight: 700; margin: 8px 0;
-            color: {% if attendance.is_safe %}#16a34a{% else %}#dc2626{% endif %};">
-            {{ attendance.overall_percentage }}%
-        </div>
-        <a href="{% url 'attendance:list' %}" style="font-size: 13px;">
-            {% trans "View details" %} →
-        </a>
-    </div>
+    {% include 'partials/_kpi.html' with label="Attendance" value=attendance.overall_percentage|stringformat:"s"|add:"%" icon="📈" subtitle="overall" color="success" %}
 
-    <div class="card" style="text-align: center;">
-        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-            {% trans "Open Tickets" %}
-        </div>
-        <div style="font-size: 32px; font-weight: 700; margin: 8px 0; color: #1e40af;">
-            {{ recent_tickets|length }}
-        </div>
-        <a href="{% url 'tickets:my_tickets' %}" style="font-size: 13px;">
-            {% trans "View all" %} →
-        </a>
-    </div>
+    {% include 'partials/_kpi.html' with label="Open Tickets" value=recent_tickets|length icon="🎫" subtitle="need attention" color="brand" %}
 
-    <div class="card" style="text-align: center;">
-        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-            {% trans "Fees Pending" %}
-        </div>
-        <div style="font-size: 24px; font-weight: 700; margin: 8px 0;
-            color: {% if total_pending > 0 %}#dc2626{% else %}#16a34a{% endif %};">
-            ₹{{ total_pending|floatformat:0 }}
-        </div>
-        <span style="font-size: 12px; color: #64748b;">
-            {% if total_pending == 0 %}{% trans "All cleared" %}{% else %}{% trans "Due soon" %}{% endif %}
-        </span>
-    </div>
+    {% include 'partials/_kpi.html' with label="Fees Pending" value=total_pending icon="💰" subtitle="current semester" color="warning" %}
 
 </div>
 
 <!-- ===== Quick actions ===== -->
-<h2>⚡ {% trans "Quick Actions" %}</h2>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px; margin-bottom: 24px;">
-    <a href="{% url 'tickets:submit' %}" class="btn"
-       style="padding: 20px; text-align: center; background: #1e40af;">
-        🐛<br>{% trans "Report Issue" %}
+<h2 style="margin-top: var(--sp-8);">⚡ {% trans "Quick Actions" %}</h2>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-3);">
+
+    <a href="{% url 'tickets:submit' %}?type=complaint"
+       class="card card-interactive"
+       style="text-align: center; padding: var(--sp-5);">
+
+        <div style="font-size: 32px; margin-bottom: var(--sp-2);">
+            🐛
+        </div>
+
+        <strong>{% trans "Report Issue" %}</strong>
+
     </a>
-    <a href="{% url 'tickets:submit' %}?type=leave" class="btn"
-       style="padding: 20px; text-align: center; background: #16a34a;">
-        📝<br>{% trans "Apply Leave" %}
+
+    <a href="{% url 'tickets:submit' %}?type=leave"
+       class="card card-interactive"
+       style="text-align: center; padding: var(--sp-5);">
+
+        <div style="font-size: 32px; margin-bottom: var(--sp-2);">
+            📝
+        </div>
+
+        <strong>{% trans "Apply Leave" %}</strong>
+
     </a>
-    <a href="{% url 'tickets:submit' %}?type=document" class="btn"
-       style="padding: 20px; text-align: center; background: #7c3aed;">
-        📄<br>{% trans "Get Document" %}
+
+    <a href="{% url 'tickets:submit' %}?type=document"
+       class="card card-interactive"
+       style="text-align: center; padding: var(--sp-5);">
+
+        <div style="font-size: 32px; margin-bottom: var(--sp-2);">
+            📄
+        </div>
+
+        <strong>{% trans "Get Document" %}</strong>
+
     </a>
-    <a href="{% url 'feedback:submit' %}" class="btn"
-       style="padding: 20px; text-align: center; background: #f59e0b;">
-        💬<br>{% trans "Give Feedback" %}
+
+    <a href="{% url 'feedback:submit' %}"
+       class="card card-interactive"
+       style="text-align: center; padding: var(--sp-5);">
+
+        <div style="font-size: 32px; margin-bottom: var(--sp-2);">
+            💬
+        </div>
+
+        <strong>{% trans "Give Feedback" %}</strong>
+
     </a>
+
 </div>
 
 <!-- ===== Recent tickets ===== -->
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h2>🎫 {% trans "Recent Requests" %}</h2>
-    <a href="{% url 'tickets:my_tickets' %}" style="font-size: 13px;">{% trans "View all" %} →</a>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--sp-8);">
+
+    <h2 style="margin: 0;">
+        🎫 {% trans "Recent Requests" %}
+    </h2>
+
+    <a href="{% url 'tickets:my_tickets' %}" style="font-size: var(--fs-sm);">
+        {% trans "View all" %} →
+    </a>
+
 </div>
 
 {% if recent_tickets %}
+
     {% for ticket in recent_tickets %}
-    <a href="{% url 'tickets:detail' ticket.id %}" style="text-decoration: none; color: inherit;">
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="display: flex; gap: 6px; margin-bottom: 4px;">
-                    <span class="badge {{ ticket.status|status_badge }}">{{ ticket.get_status_display }}</span>
-                    <span class="badge {{ ticket.priority|priority_badge }}">{{ ticket.get_priority_display }}</span>
-                </div>
-                <strong>{{ ticket.subject|truncatechars:60 }}</strong>
-                <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
-                    #{{ ticket.id }} · {{ ticket.created_at|short_time_ago }}
-                </p>
+
+    <a href="{% url 'tickets:detail' ticket.id %}"
+       class="card card-interactive fade-in"
+       style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; color: inherit;">
+
+        <div style="flex: 1;">
+
+            <div style="display: flex; gap: var(--sp-2); margin-bottom: var(--sp-1); flex-wrap: wrap;">
+
+                <span class="badge {{ ticket.status|status_badge }}">
+                    {{ ticket.get_status_display }}
+                </span>
+
+                <span class="badge {{ ticket.priority|priority_badge }}">
+                    {{ ticket.get_priority_display }}
+                </span>
+
             </div>
-            <span>→</span>
+
+            <strong>
+                {{ ticket.subject|truncatechars:70 }}
+            </strong>
+
+            <div style="font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px;">
+                #{{ ticket.id }} · {{ ticket.created_at|short_time_ago }}
+            </div>
+
         </div>
+
+        <div style="color: var(--text-muted); font-size: 20px;">
+            →
+        </div>
+
     </a>
+
     {% endfor %}
+
 {% else %}
-<div class="card" style="text-align: center; padding: 32px;">
-    <p style="color: #64748b;">{% trans "No requests yet." %}</p>
-    <a href="{% url 'tickets:submit' %}" class="btn" style="margin-top: 12px;">
-        + {% trans "Create first request" %}
-    </a>
-</div>
+
+    {% include 'partials/_empty.html' with icon="📭" title="No requests yet" message="Create your first request and we'll route it to the right department." action_url="/tickets/new/" action_label="Create Request" %}
+
 {% endif %}
 
 <!-- ===== Recent notices ===== -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
-    <h2>📢 {% trans "Latest Notices" %}</h2>
-    <a href="{% url 'notices:list' %}" style="font-size: 13px;">{% trans "View all" %} →</a>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--sp-8);">
+
+    <h2 style="margin: 0;">
+        📢 {% trans "Latest Notices" %}
+    </h2>
+
+    <a href="{% url 'notices:list' %}" style="font-size: var(--fs-sm);">
+        {% trans "View all" %} →
+    </a>
+
 </div>
 
 {% for notice in recent_notices %}
-<a href="{% url 'notices:detail' notice.id %}" style="text-decoration: none; color: inherit;">
-    <div class="card" style="border-left: 4px solid {% if notice.ai_priority == 'high' %}#dc2626{% elif notice.ai_priority == 'medium' %}#f59e0b{% else %}#94a3b8{% endif %};">
-        <strong>{{ notice.title }}</strong>
-        {% if notice.ai_summary %}
-            <p style="color: #64748b; font-size: 13px; margin-top: 4px;">{{ notice.ai_summary }}</p>
-        {% endif %}
-    </div>
+
+<a href="{% url 'notices:detail' notice.id %}"
+   class="card card-interactive fade-in notice-card"
+   style="
+       display: block;
+       text-decoration: none;
+       color: inherit;
+       border-left: 4px solid
+       {% if notice.ai_priority == 'high' %}
+           var(--danger-500)
+       {% elif notice.ai_priority == 'medium' %}
+           var(--warning-500)
+       {% else %}
+           var(--gray-400)
+       {% endif %};
+   ">
+
+    <strong style="display: block; margin-bottom: var(--sp-1);">
+        {{ notice.title }}
+    </strong>
+
+    {% if notice.ai_summary %}
+
+        <p style="
+            color: var(--text-muted);
+            font-size: var(--fs-sm);
+            margin: 0;
+        ">
+            {{ notice.ai_summary }}
+        </p>
+
+    {% endif %}
+
 </a>
+
 {% empty %}
-<p style="color: #94a3b8; font-size: 14px;">{% trans "No notices." %}</p>
+
+<p style="color: var(--text-muted); font-size: var(--fs-sm);">
+    {% trans "No notices." %}
+</p>
+
 {% endfor %}
 
 {% endblock %}
