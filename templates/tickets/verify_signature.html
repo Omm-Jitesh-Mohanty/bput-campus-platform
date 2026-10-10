@@ -1,0 +1,80 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% trans "Signature Verification" %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background: var(--bg-app);">
+
+<div style="max-width: 500px; margin: 60px auto; padding: var(--sp-4);">
+
+    {% if valid %}
+    <div style="text-align: center; margin-bottom: var(--sp-6);">
+        <div style="font-size: 64px;">✓</div>
+        <h1 style="font-family: var(--font-serif); color: var(--success-600); margin-top: var(--sp-3);">
+            {% trans "Signature Verified" %}
+        </h1>
+        <p class="text-muted">{% trans "This is an authentic signature from BPUT Campus Platform." %}</p>
+    </div>
+
+    <div class="card" style="padding: var(--sp-5);">
+        <table style="width: 100%; font-size: var(--fs-sm); border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Ticket" %}</td>
+                <td style="text-align: right;"><strong>#{{ ticket.id }} — {{ ticket.subject|truncatechars:40 }}</strong></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Step" %}</td>
+                <td style="text-align: right;">{{ signature.step_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Signed by" %}</td>
+                <td style="text-align: right;">{{ signature.signed_by_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Role" %}</td>
+                <td style="text-align: right;">{{ signature.signed_by_role }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Signed at" %}</td>
+                <td style="text-align: right;">{{ signature.signed_at|slice:":19" }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: var(--text-muted);">{% trans "Signature" %}</td>
+                <td style="text-align: right; font-family: var(--font-mono); font-size: 11px;">
+                    {{ signature.signature|slice:":24" }}...
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card" style="text-align: center; padding: var(--sp-5); background: var(--success-50); border-left: 4px solid var(--success-500);">
+        <p style="color: var(--success-700); margin: 0;">
+            🔐 {% trans "Cryptographically verified with HMAC-SHA256" %}
+        </p>
+    </div>
+
+    {% else %}
+
+    <div style="text-align: center;">
+        <div style="font-size: 64px;">✗</div>
+        <h1 style="font-family: var(--font-serif); color: var(--danger-600); margin-top: var(--sp-3);">
+            {% trans "Verification Failed" %}
+        </h1>
+        <p class="text-muted">{{ reason }}</p>
+    </div>
+
+    {% endif %}
+
+    <p style="text-align: center; margin-top: var(--sp-6);">
+        <a href="/" style="color: var(--brand-600);">← {% trans "Return to home" %}</a>
+    </p>
+
+</div>
+
+</body>
+</html>

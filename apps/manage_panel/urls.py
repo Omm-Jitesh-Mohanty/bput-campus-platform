@@ -205,5 +205,8 @@ urlpatterns = [
     path('documents/', views.document_templates_list, name='document_templates'),
     path('documents/new/', views.document_template_edit, name='document_template_create'),
     path('documents/<int:pk>/', views.document_template_edit, name='document_template_edit'),
+    path('audit/', views.audit_view, name='audit'),
+    path('audit/timeline/<str:model_name>/<str:object_id>/',views.audit_entity_timeline, name='audit_timeline'),
+    path('attendance/cancel/<int:timetable_id>/', views.cancel_class, name='cancel_class'),
 ]
     

@@ -239,7 +239,7 @@
 {% load i18n static campus_extras %}
 {% load icons %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}" data-theme="{{ request.session.theme|default:'light' }}">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -247,222 +247,423 @@
 
     <title>{% block title %}Campus Platform{% endblock %}</title>
 
-    <!-- PWA -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#1e40af">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <!-- Design System -->
     <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+
     {% if request.session.lite_mode %}
         <link rel="stylesheet" href="{% static 'css/lite.css' %}">
     {% endif %}
 
-    <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
-
-    <!-- Anti-FOUC: apply theme before first paint -->
-    <script>
-        (function() {
-            const stored = localStorage.getItem('theme');
-            if (stored === 'dark' || stored === 'light') {
-                document.documentElement.setAttribute('data-theme', stored);
-            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-        })();
-    </script>
 
     {% block extra_head %}{% endblock %}
 </head>
 
 <body class="{% if request.session.lite_mode %}lite{% endif %}">
 
-    <!-- Skip to content -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
-    <!-- Navbar -->
     <header class="navbar">
         <div class="navbar-inner">
 
             <a href="{% url 'accounts:home' %}" class="navbar-brand">
-                <span style="font-size: 22px;">🏛</span>
-                <span>{% trans "Campus" %}</span>
+                <img src="{% static 'icons/logo.png' %}"alt="CampNova" style="width: 36px; height: 36px; border-radius: 8px; object-fit: contain;">
+                <span style="font-weight: 700; letter-spacing: -0.01em;">
+                    Camp<span style="color: var(--gold-500);">Nova</span>
+                </span>
             </a>
 
             {% if user.is_authenticated %}
 
-            <nav class="navbar-links">
+                <nav class="navbar-links" aria-label="{% trans 'Main navigation' %}">
 
-                <a href="{% url 'dashboard:student_home' %}">
-                    {% if user.is_student %}📊{% else %}🎛{% endif %}
-                    {% trans "Dashboard" %}
-                </a>
-
-                {% if user.is_student %}
-
-                    <a href="{% url 'attendance:list' %}">
-                        📈 {% trans "Attendance" %}
+                    <a href="{% url 'home' %}"
+                       class="navbar-home{% if request.resolver_match.view_name == 'home' %} active{% endif %}"
+                       {% if request.resolver_match.view_name == 'home' %}aria-current="page"{% endif %}>
+                        🏠 {% trans "Home" %}
                     </a>
 
-                    <a href="{% url 'attendance:timetable' %}">
-                        📅 {% trans "Timetable" %}
-                    </a>
+                    {% if user.role == 'student' %}
 
-                    <a href="{% url 'tickets:my_tickets' %}">
-                        🎫 {% trans "Requests" %}
-                    </a>
+                        <a href="{% url 'dashboard:student_home' %}"
+                           class="{% if request.resolver_match.view_name == 'dashboard:student_home' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'dashboard:student_home' %}aria-current="page"{% endif %}>
+                            📊 {% trans "Dashboard" %}
+                        </a>
 
-                    <a href="{% url 'notices:list' %}">
-                        📢 {% trans "Notices" %}
-                    </a>
+                        <a href="{% url 'attendance:list' %}"
+                           class="{% if request.resolver_match.view_name == 'attendance:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'attendance:list' %}aria-current="page"{% endif %}>
+                            📈 {% trans "Attendance" %}
+                        </a>
 
-                    <a href="{% url 'feedback:submit' %}">
-                        💬 {% trans "Feedback" %}
-                    </a>
+                        <a href="{% url 'attendance:timetable' %}"
+                           class="{% if request.resolver_match.view_name == 'attendance:timetable' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'attendance:timetable' %}aria-current="page"{% endif %}>
+                            📅 {% trans "Timetable" %}
+                        </a>
 
-                    <a href="{% url 'documents:my_documents' %}">
-                        📄 {% trans "Documents" %}
-                    </a>
+                        <a href="{% url 'tickets:my_tickets' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_tickets' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_tickets' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Requests" %}
+                        </a>
 
-                {% endif %}
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-                {% if user.is_admin_role %}
+                        <a href="{% url 'documents:my_documents' %}"
+                           class="{% if request.resolver_match.view_name == 'documents:my_documents' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'documents:my_documents' %}aria-current="page"{% endif %}>
+                            📄 {% trans "Documents" %}
+                        </a>
 
-                    <a href="{% url 'tickets:my_tickets' %}">
-                        🎫 {% trans "Queue" %}
-                    </a>
+                        <a href="{% url 'feedback:submit' %}"
+                           class="{% if request.resolver_match.view_name == 'feedback:submit' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'feedback:submit' %}aria-current="page"{% endif %}>
+                            💬 {% trans "Feedback" %}
+                        </a>
 
-                    <a href="{% url 'dashboard:analytics' %}">
-                        🧠 {% trans "Analytics" %}
-                    </a>
+                    {% endif %}
 
-                    <a href="{% url 'notices:publish' %}">
-                        📢 {% trans "Publish" %}
-                    </a>
+                    {% if user.role == 'warden' %}
 
-                    <a href="{% url 'documents:admin_list' %}">
-                        📄 {% trans "Docs" %}
-                    </a>
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
 
-                    <a href="{% url 'manage_panel:home' %}">
-                        ⚙️ {% trans "Manage" %}
-                    </a>
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-                {% endif %}
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
 
-            </nav>
+                        <a href="{% url 'emergency:admin_list' %}"
+                           class="{% if request.resolver_match.view_name == 'emergency:admin_list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'emergency:admin_list' %}aria-current="page"{% endif %}>
+                            🚨 {% trans "SOS Alerts" %}
+                        </a>
 
-            <div class="navbar-right">
+                    {% endif %}
 
-                <!-- Notification bell -->
-                {% include 'partials/_notification_bell.html' %}
+                    {% if user.role == 'hod' %}
 
-                <!-- Language -->
-                <form action="{% url 'set_language' %}" method="post" style="display: inline;">
-                    {% csrf_token %}
+                        <a href="{% url 'teachers:dashboard' %}"
+                           class="{% if request.resolver_match.view_name == 'teachers:dashboard' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'teachers:dashboard' %}aria-current="page"{% endif %}>
+                            👨‍🏫 {% trans "Classes" %}
+                        </a>
 
-                    <input name="next" type="hidden" value="{{ request.path }}">
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
 
-                    <select name="language"
-                            onchange="this.form.submit()"
-                            style="padding: 6px 8px;
-                                   border-radius: 6px;
-                                   border: 1px solid var(--border-default);
-                                   background: var(--bg-surface);
-                                   color: var(--text-primary);
-                                   font-size: 12px;">
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-                        <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>
-                            EN
-                        </option>
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
 
-                        <option value="hi" {% if LANGUAGE_CODE == 'hi' %}selected{% endif %}>
-                            हिं
-                        </option>
+                    {% endif %}
 
-                        <option value="or" {% if LANGUAGE_CODE == 'or' %}selected{% endif %}>
-                            ଓଡ଼
-                        </option>
+                    {% if user.role == 'dean' %}
 
-                    </select>
-                </form>
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
 
-                <!-- Theme toggle -->
-                <button type="button"
-                        class="btn btn-ghost btn-sm"
-                        onclick="toggleTheme()"
-                        title="{% trans 'Toggle theme' %}"
-                        id="theme-toggle">
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-                    <span id="theme-icon">🌙</span>
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
 
-                </button>
+                    {% endif %}
 
-                <!-- User chip -->
-                <div class="user-chip">
+                    {% if user.role == 'ao' %}
 
-                    <div class="avatar">
-                        {{ user|get_initials|default:"U" }}
-                    </div>
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
 
-                    <div>
-                        <div style="font-weight: 500;">
-                            {{ user.get_short_name|default:user.username }}
-                        </div>
+                        <a href="{% url 'documents:admin_list' %}"
+                           class="{% if request.resolver_match.view_name == 'documents:admin_list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'documents:admin_list' %}aria-current="page"{% endif %}>
+                            📄 {% trans "Documents" %}
+                        </a>
 
-                        <div style="font-size: 10px; color: var(--text-muted);">
-                            {{ user.get_role_display }}
-                        </div>
-                    </div>
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-                </div>
+                    {% endif %}
 
-                <!-- Logout -->
-                <form method="post"
-                      action="{% url 'accounts:logout' %}"
-                      style="display: inline;">
+                    {% if user.role == 'asst_prof' or user.role == 'teacher' or user.role == 'lab_asst' %}
 
-                    {% csrf_token %}
+                        <a href="{% url 'teachers:dashboard' %}"
+                           class="{% if request.resolver_match.view_name == 'teachers:dashboard' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'teachers:dashboard' %}aria-current="page"{% endif %}>
+                            👨‍🏫 {% trans "My Classes" %}
+                        </a>
 
-                    <button type="submit"
-                            class="btn btn-ghost btn-sm"
-                            title="{% trans 'Logout' %}">
-                        ⏻
-                    </button>
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
 
-                </form>
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
 
-            </div>
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
+
+                    {% endif %}
+
+                    {% if user.role == 'clerk' %}
+
+                        <a href="{% url 'tickets:my_queue' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:my_queue' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:my_queue' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "My Queue" %}
+                        </a>
+
+                        <a href="{% url 'documents:admin_list' %}"
+                           class="{% if request.resolver_match.view_name == 'documents:admin_list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'documents:admin_list' %}aria-current="page"{% endif %}>
+                            📄 {% trans "Documents" %}
+                        </a>
+
+                    {% endif %}
+
+                    {% if user.role == 'principal' %}
+
+                        <a href="{% url 'dashboard:executive' %}"
+                           class="{% if request.resolver_match.view_name == 'dashboard:executive' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'dashboard:executive' %}aria-current="page"{% endif %}>
+                            📊 {% trans "Dashboard" %}
+                        </a>
+
+                        <a href="{% url 'tickets:all_tickets' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:all_tickets' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:all_tickets' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "All Requests" %}
+                        </a>
+
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
+
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
+
+                        <a href="{% url 'manage_panel:home' %}"
+                           class="{% if request.resolver_match.view_name == 'manage_panel:home' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'manage_panel:home' %}aria-current="page"{% endif %}>
+                            ⚙️ {% trans "Manage" %}
+                        </a>
+
+                        <a href="{% url 'manage_panel:audit' %}"
+                           class="{% if request.resolver_match.view_name == 'manage_panel:audit' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'manage_panel:audit' %}aria-current="page"{% endif %}>
+                            📋 {% trans "Audit" %}
+                        </a>
+
+                    {% endif %}
+
+                    {% if user.role == 'chairman' or user.role == 'director' %}
+
+                        <a href="{% url 'dashboard:executive' %}"
+                           class="{% if request.resolver_match.view_name == 'dashboard:executive' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'dashboard:executive' %}aria-current="page"{% endif %}>
+                            📊 {% trans "Dashboard" %}
+                        </a>
+
+                        <a href="{% url 'tickets:all_tickets' %}"
+                           class="{% if request.resolver_match.view_name == 'tickets:all_tickets' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'tickets:all_tickets' %}aria-current="page"{% endif %}>
+                            🎫 {% trans "All Requests" %}
+                        </a>
+
+                        <a href="{% url 'notices:list' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:list' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:list' %}aria-current="page"{% endif %}>
+                            📢 {% trans "Notices" %}
+                        </a>
+
+                        <a href="{% url 'notices:publish' %}"
+                           class="{% if request.resolver_match.view_name == 'notices:publish' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'notices:publish' %}aria-current="page"{% endif %}>
+                            ✍️ {% trans "Publish" %}
+                        </a>
+
+                        <a href="{% url 'manage_panel:home' %}"
+                           class="{% if request.resolver_match.view_name == 'manage_panel:home' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'manage_panel:home' %}aria-current="page"{% endif %}>
+                            ⚙️ {% trans "Manage" %}
+                        </a>
+
+                        <a href="{% url 'manage_panel:audit' %}"
+                           class="{% if request.resolver_match.view_name == 'manage_panel:audit' %}active{% endif %}"
+                           {% if request.resolver_match.view_name == 'manage_panel:audit' %}aria-current="page"{% endif %}>
+                            📋 {% trans "Audit" %}
+                        </a>
+
+                    {% endif %}
+
+                </nav>
 
             {% endif %}
 
         </div>
+
+        {% if user.is_authenticated %}
+            <div class="navbar-bottom-row">
+                <div class="navbar-bottom-spacer"></div>
+
+                <div class="navbar-right">
+
+                    {% if user.role == 'student' %}
+                        <a href="{% url 'emergency:sos_home' %}"
+                           class="navbar-sos"
+                           title="{% trans 'Emergency SOS' %}"
+                           aria-label="{% trans 'Emergency SOS' %}">
+                            SOS
+                        </a>
+                    {% endif %}
+
+                    {% include 'partials/_notification_bell.html' %}
+
+                    <form action="{% url 'set_language' %}" method="post" class="language-form">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+
+                        <select name="language"
+                                onchange="this.form.submit()"
+                                aria-label="{% trans 'Choose language' %}"
+                                class="language-select">
+
+                            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>
+                                EN
+                            </option>
+
+                            <option value="hi" {% if LANGUAGE_CODE == 'hi' %}selected{% endif %}>
+                                हिं
+                            </option>
+
+                            <option value="or" {% if LANGUAGE_CODE == 'or' %}selected{% endif %}>
+                                ଓଡ଼
+                            </option>
+
+                        </select>
+                    </form>
+
+                    <div class="user-chip" title="{{ user.scope_summary }}">
+                        <div class="avatar">
+                            {{ user|get_initials|default:"U" }}
+                        </div>
+
+                        <div class="user-chip-details">
+                            <div class="user-chip-name">
+                                {{ user.get_short_name|default:user.username }}
+                            </div>
+
+                            <div class="user-chip-meta">
+                                {{ user.get_role_display }}
+                                {% if user.department %} · {{ user.department }}{% endif %}
+                                {% if user.hostel_block and user.hostel_block != 'DAY' %} · {{ user.hostel_block }}{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post"
+                          action="{% url 'accounts:logout' %}"
+                          class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-ghost btn-sm"
+                                title="{% trans 'Logout' %}"
+                                aria-label="{% trans 'Logout' %}">
+                            ⏻
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        {% endif %}
     </header>
 
-    <!-- Messages -->
     {% if messages %}
-
-    <div class="container" style="padding-bottom: 0;">
-
-        {% for message in messages %}
-
-            <div class="alert alert-{{ message.tags|default:'info' }} fade-in">
-                {{ message }}
-            </div>
-
-        {% endfor %}
-
-    </div>
-
+        <div class="container messages-container" style="padding-bottom: 0;">
+            {% for message in messages %}
+                {% if "don't have access" not in message.message and "no access" not in message.message|lower %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} fade-in">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
     {% endif %}
 
-    <!-- Main -->
     <main id="main-content" class="container">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+    {% if user.is_authenticated and request.resolver_match.view_name != 'chatbot:home' %}
+        <a href="{% url 'chatbot:home' %}"
+           class="floating-assistant"
+           aria-label="{% trans 'Open AI Assistant' %}"
+           title="{% trans 'Chat with AI Assistant' %}">
+            <span class="floating-assistant-icon" aria-hidden="true">✦</span>
+            <span class="floating-assistant-label">{% trans "Ask Assistant" %}</span>
+        </a>
+    {% endif %}
+
     <footer class="footer">
         <p>
             © {% now "Y" %} BPUT Campus Platform ·
@@ -471,39 +672,8 @@
     </footer>
 
     <script src="{% static 'js/confetti.js' %}" defer></script>
-
     <script src="{% static 'js/ws_client.js' %}" defer></script>
-
     <script src="{% static 'js/main.js' %}" defer></script>
-
-    <script>
-        // ===== Theme toggle =====
-        function toggleTheme() {
-            const current =
-                document.documentElement.getAttribute('data-theme') || 'light';
-
-            const next =
-                current === 'dark' ? 'light' : 'dark';
-
-            document.documentElement.setAttribute('data-theme', next);
-
-            localStorage.setItem('theme', next);
-
-            document.getElementById('theme-icon').textContent =
-                next === 'dark' ? '☀️' : '🌙';
-        }
-
-        // Set initial icon
-        document.addEventListener('DOMContentLoaded', () => {
-
-            const current =
-                document.documentElement.getAttribute('data-theme');
-
-            document.getElementById('theme-icon').textContent =
-                current === 'dark' ? '☀️' : '🌙';
-
-        });
-    </script>
 
     {% block extra_js %}{% endblock %}
 

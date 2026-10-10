@@ -18,7 +18,7 @@ from .base import TimeStampedModel
 class Department(TimeStampedModel):
     """
     A configurable department/unit. Replaces hard-coded DEPARTMENTS list.
-    
+
     Supports hierarchical organization (e.g., Electrical is child of Maintenance).
     Includes routing keywords for AI-based auto-assignment.
     """
@@ -251,11 +251,55 @@ class TicketType(TimeStampedModel):
         )
     )
 
-    # Workflow (set in Step 10)
-    # workflow = models.ForeignKey('Workflow', null=True, on_delete=models.SET_NULL)
+    # Which workflow should be used for tickets of this type
+    # (Replaces the old approach where we inferred workflow from department)
+    default_workflow = models.ForeignKey(
+        'workflows.Workflow',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='default_for_ticket_types',
+        help_text="Approval workflow for this ticket type"
+    )
 
     # Status
     is_active = models.BooleanField(default=True, db_index=True)
+    sort_order = models.PositiveIntegerField(default=100)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+# =====================================================================
+# Complaint Subtype
+# =====================================================================
+class ComplaintSubtype(models.Model):
+    """Configurable subtype of complaint with its own workflow."""
+    code = models.SlugField(max_length=40, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+
+    parent_ticket_type = models.ForeignKey(
+        TicketType,
+        on_delete=models.CASCADE,
+        related_name='subtypes',
+        default=None
+    )
+
+    workflow = models.ForeignKey(
+        'workflows.Workflow',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='subtype_workflows'
+    )
+
+    routing_keywords = models.JSONField(default=list, blank=True)
+    icon = models.CharField(max_length=10, default='📌')
+    is_active = models.BooleanField(default=True)
     sort_order = models.PositiveIntegerField(default=100)
 
     class Meta:
@@ -351,9 +395,15 @@ class SystemSetting(TimeStampedModel):
 
     key = models.CharField(max_length=100, unique=True, db_index=True)
     value = models.JSONField()
-    value_type = models.CharField(max_length=20, choices=VALUE_TYPES, default='string')
+    value_type = models.CharField(
+        max_length=20,
+        choices=VALUE_TYPES,
+        default='string'
+    )
     category = models.CharField(
-        max_length=50, default='general', db_index=True,
+        max_length=50,
+        default='general',
+        db_index=True,
         help_text="Grouping for admin UI (e.g., 'attendance', 'ai', 'ui')"
     )
     label = models.CharField(max_length=200, blank=True)
@@ -363,7 +413,8 @@ class SystemSetting(TimeStampedModel):
         help_text="If True, value is exposed to frontend (safe for non-secrets)"
     )
     editable_by_role = models.CharField(
-        max_length=20, default='principal',
+        max_length=20,
+        default='principal',
         help_text="Minimum role required to edit (student/teacher/warden/hod/dean/principal)"
     )
 
@@ -403,26 +454,39 @@ class AuditLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name='audit_logs'
     )
-    action = models.CharField(max_length=30, choices=ACTION_TYPES, db_index=True)
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_TYPES,
+        db_index=True
+    )
 
     # What was affected
-    target_model = models.CharField(max_length=100, blank=True, db_index=True)
+    target_model = models.CharField(
+        max_length=100,
+        blank=True,
+        db_index=True
+    )
     target_id = models.CharField(max_length=50, blank=True)
     target_repr = models.CharField(max_length=200, blank=True)
 
     # Context
     changes = models.JSONField(
-        default=dict, blank=True,
+        default=dict,
+        blank=True,
         help_text="{field_name: {'old': ..., 'new': ...}}"
     )
     metadata = models.JSONField(default=dict, blank=True)
 
     # Request context
-    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
     user_agent = models.CharField(max_length=300, blank=True)
 
     class Meta:
@@ -435,7 +499,11 @@ class AuditLog(models.Model):
 
     def __str__(self):
         who = self.user.username if self.user else 'system'
-        return f"[{self.timestamp:%Y-%m-%d %H:%M}] {who} {self.action} {self.target_model}#{self.target_id}"
+        return (
+            f"[{self.timestamp:%Y-%m-%d %H:%M}] "
+            f"{who} {self.action} "
+            f"{self.target_model}#{self.target_id}"
+        )
 
 
 # =====================================================================
@@ -461,14 +529,24 @@ class NotificationTemplate(TimeStampedModel):
     ]
 
     event_code = models.SlugField(
-        max_length=60, db_index=True,
+        max_length=60,
+        db_index=True,
         help_text="Event trigger (e.g., 'ticket.created', 'ticket.resolved')"
     )
-    channel = models.CharField(max_length=20, choices=CHANNELS, db_index=True)
-    language = models.CharField(max_length=5, choices=LANGUAGES, default='en')
+    channel = models.CharField(
+        max_length=20,
+        choices=CHANNELS,
+        db_index=True
+    )
+    language = models.CharField(
+        max_length=5,
+        choices=LANGUAGES,
+        default='en'
+    )
 
     subject_template = models.CharField(
-        max_length=200, blank=True,
+        max_length=200,
+        blank=True,
         help_text="Subject line (Email only)"
     )
     body_template = models.TextField(
@@ -488,9 +566,17 @@ class NotificationTemplate(TimeStampedModel):
     def render(self, context):
         """Render subject + body with given context."""
         from django.template import Template, Context
+
         ctx = Context(context)
-        subject = Template(self.subject_template).render(ctx) if self.subject_template else ''
+
+        subject = (
+            Template(self.subject_template).render(ctx)
+            if self.subject_template
+            else ''
+        )
+
         body = Template(self.body_template).render(ctx)
+
         return subject, body
 
 
@@ -504,7 +590,8 @@ class AIPromptTemplate(TimeStampedModel):
     Only ONE template per (key, is_active=True) should exist at a time.
     """
     key = models.SlugField(
-        max_length=80, db_index=True,
+        max_length=80,
+        db_index=True,
         help_text="Prompt identifier (e.g., 'ticket.formatter')"
     )
     version = models.PositiveIntegerField(default=1)
@@ -523,11 +610,14 @@ class AIPromptTemplate(TimeStampedModel):
 
     # Metadata for A/B testing
     model_name = models.CharField(
-        max_length=100, blank=True,
+        max_length=100,
+        blank=True,
         help_text="Override default model (e.g., 'llama3.2:3b')"
     )
     temperature = models.DecimalField(
-        max_digits=3, decimal_places=2, default=0.30
+        max_digits=3,
+        decimal_places=2,
+        default=0.30
     )
     max_tokens = models.PositiveIntegerField(default=500)
 
@@ -537,7 +627,8 @@ class AIPromptTemplate(TimeStampedModel):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name='created_prompts'
     )
@@ -561,6 +652,8 @@ class AIPromptTemplate(TimeStampedModel):
         """
         if self.is_active:
             AIPromptTemplate.objects.filter(
-                key=self.key, is_active=True
+                key=self.key,
+                is_active=True
             ).exclude(pk=self.pk).update(is_active=False)
+
         super().save(*args, **kwargs)

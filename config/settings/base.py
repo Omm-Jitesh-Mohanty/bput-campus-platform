@@ -43,6 +43,9 @@ LOCAL_APPS = [
     'apps.manage_panel',
     'apps.workflows',
     'apps.notifications',
+    'apps.chatbot.apps.ChatbotConfig',
+    'apps.emergency.apps.EmergencyConfig',
+    'apps.teachers',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -60,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
+    'apps.accounts.middleware.DjangoAdminAccessMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -78,6 +82,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
                 'apps.core.context_processors.campus_config',
+                'apps.core.context_processors.user_permissions_context',
             ],
         },
     },
@@ -261,3 +266,15 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+# ===== SOS (Emergency Calling) =====
+SOS_PROVIDER = os.getenv('SOS_PROVIDER', 'log')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '')
+TWILIO_FROM = os.getenv('TWILIO_FROM', '')
+SOS_PUBLIC_BASE_URL = os.getenv('SOS_PUBLIC_BASE_URL', '')
+
+SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000').rstrip('/')
+
+DOC_SIGNING_SECRET = os.getenv('DOC_SIGNING_SECRET', '')

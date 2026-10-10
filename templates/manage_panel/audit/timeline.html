@@ -1,0 +1,92 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_heading %}🕒 {% trans "Entity Timeline" %}{% endblock %}
+{% block manage_subtitle %}{{ entity_label }}{% endblock %}
+
+{% block manage_content %}
+
+{% if not timeline %}
+<div class="card text-center" style="padding: 60px;">
+    <p class="text-muted">{% trans "No audit entries for this entity." %}</p>
+</div>
+{% else %}
+
+<div class="card" style="padding: var(--sp-6);">
+    <h3 style="margin-bottom: var(--sp-6);">
+        {% trans "Full Lifecycle" %}
+        <span class="text-muted" style="font-weight: 400; font-size: var(--fs-sm);">
+            ({{ timeline|length }} events)
+        </span>
+    </h3>
+
+    <div style="position: relative; padding-left: 40px;">
+        <!-- Vertical line -->
+        <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px;
+             background: var(--border-default);"></div>
+
+        {% for log in timeline %}
+        <div style="position: relative; margin-bottom: var(--sp-6);">
+            <!-- Dot -->
+            <div style="position: absolute; left: -32px; top: 4px;
+                 width: 16px; height: 16px; border-radius: 50%;
+                 background:
+                     {% if log.action == 'create' %}var(--success-500)
+                     {% elif log.action == 'delete' %}var(--danger-500)
+                     {% elif log.action == 'config_change' %}var(--brand-500)
+                     {% elif log.action == 'login' %}var(--gray-400)
+                     {% elif log.action == 'resolve' %}var(--success-500)
+                     {% elif log.action == 'escalate' %}var(--warning-500)
+                     {% else %}var(--warning-500){% endif %};
+                 border: 3px solid var(--bg-surface);"></div>
+
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3);">
+                <div>
+                    <strong>{{ log.get_action_display }}</strong>
+                    <span class="text-muted" style="font-size: var(--fs-sm);">
+                        by {{ log.user.username|default:"system" }}
+                    </span>
+                </div>
+                <div class="text-xs text-muted" style="white-space: nowrap;">
+                    {{ log.timestamp|date:"d M Y H:i" }}
+                </div>
+            </div>
+
+            <!-- Changes -->
+            {% if log.changes %}
+            <div style="margin-top: var(--sp-2); padding: var(--sp-3);
+                 background: var(--bg-muted); border-radius: var(--radius);
+                 font-family: var(--font-mono); font-size: var(--fs-xs);">
+                {% for field, diff in log.changes.items %}
+                <div style="margin-bottom: 4px;">
+                    <strong>{{ field }}:</strong>
+                    <span style="background: #fef2f2; color: #991b1b; padding: 1px 6px; border-radius: 3px;">
+                        {{ diff.old|truncatechars:50 }}
+                    </span>
+                    <span style="color: var(--text-muted);">→</span>
+                    <span style="background: #f0fdf4; color: #166534; padding: 1px 6px; border-radius: 3px;">
+                        {{ diff.new|truncatechars:50 }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Metadata -->
+            {% if log.metadata %}
+            <div class="text-xs text-muted" style="margin-top: var(--sp-2);">
+                <details>
+                    <summary style="cursor: pointer;">{% trans "Metadata" %}</summary>
+                    <pre style="margin-top: 4px; white-space: pre-wrap;">{{ log.metadata }}</pre>
+                </details>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endif %}
+
+{% endblock %}

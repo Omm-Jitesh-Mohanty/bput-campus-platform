@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Teacher Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+<div style="margin-bottom: var(--sp-6);">
+    <h1>👨‍🏫 {% trans "Teacher Dashboard" %}</h1>
+    <p class="text-muted">
+        {{ user.get_full_name }} · {{ user.department }}
+        · {% now "l, d M Y" %}
+    </p>
+</div>
+
+<h2>{% trans "Today's Classes" %}</h2>
+
+{% if my_classes %}
+{% for cls in my_classes %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1;">
+            <div style="display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-2);">
+                <strong style="font-size: var(--fs-lg);">{{ cls.time_slot }}</strong>
+                <span class="badge badge-blue">{{ cls.subject_code }}</span>
+                {% if cancellations|get_item:cls.id %}
+                    <span class="badge badge-red">{% trans "Cancelled" %}</span>
+                {% endif %}
+            </div>
+            <div style="font-weight: 500;">{{ cls.subject_name }}</div>
+            <div class="text-sm text-muted">
+                {{ cls.department }} · {{ cls.batch_year }} · {% trans "Room" %} {{ cls.room|default:"—" }}
+            </div>
+        </div>
+        <div style="display: flex; gap: var(--sp-2); flex-wrap: wrap;">
+            <a href="{% url 'teachers:mark_attendance' cls.id %}" class="btn btn-sm">
+                ✅ {% trans "Mark Attendance" %}
+            </a>
+            <a href="{% url 'teachers:cancel_class' cls.id %}" class="btn btn-secondary btn-sm">
+                ❌ {% trans "Cancel" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card" style="text-align: center; padding: var(--sp-10);">
+    <div style="font-size: 48px;">🎉</div>
+    <h3 style="margin-top: var(--sp-3);">{% trans "No classes today" %}</h3>
+    <p class="text-muted">{% trans "Enjoy your day off!" %}</p>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-6);">
+    <a href="{% url 'teachers:my_classes' %}" class="card card-interactive" style="text-align: center; padding: var(--sp-5);">
+        <div style="font-size: 32px;">📅</div>
+        <strong>{% trans "Weekly Schedule" %}</strong>
+    </a>
+    <a href="{% url 'teachers:my_students' %}" class="card card-interactive" style="text-align: center; padding: var(--sp-5);">
+        <div style="font-size: 32px;">👥</div>
+        <strong>{% trans "My Students" %}</strong>
+    </a>
+    <a href="{% url 'tickets:my_queue' %}" class="card card-interactive" style="text-align: center; padding: var(--sp-5);">
+        <div style="font-size: 32px;">🎫</div>
+        <strong>{% trans "My Queue" %}</strong>
+    </a>
+    <a href="{% url 'notices:publish' %}" class="card card-interactive" style="text-align: center; padding: var(--sp-5);">
+        <div style="font-size: 32px;">📢</div>
+        <strong>{% trans "Publish Notice" %}</strong>
+    </a>
+</div>
+
+</div>
+{% endblock %}

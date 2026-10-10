@@ -1,0 +1,1183 @@
+/* ============================================================
+   BPUT CAMPUS HOMEPAGE
+   Modern Indian Heritage — Temple / Mandala / Academic
+   ============================================================ */
+
+:root {
+    --ivory: #fdf8f0;
+    --parchment: #f5e6d3;
+
+    --deep-maroon: #6b1e2c;
+    --royal-maroon: #8b1e2c;
+
+    --temple-gold: #c9982a;
+    --bright-gold: #e0b544;
+
+    --ink: #2a1a0e;
+
+    --leaf-green: #2d5016;
+    --peacock-teal: #0d5c63;
+
+    --bput-blue: #1e40af;
+    --bput-blue-dark: #102a72;
+    --bput-blue-deep: #071d55;
+
+    --soft-blue: #eff6ff;
+    --soft-gold: #fff7df;
+
+    --shadow-blue:
+        rgba(30, 64, 175, 0.10);
+
+    --shadow-gold:
+        rgba(201, 152, 42, 0.18);
+}
+
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif;
+
+    color: var(--ink);
+
+    background:
+        var(--ivory);
+
+    line-height: 1.6;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+img {
+    max-width: 100%;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+a {
+    color: inherit;
+}
+
+
+/* ============================================================
+   CONTAINER
+   ============================================================ */
+
+.container {
+    width: min(1200px, 94%);
+
+    margin: 0 auto;
+
+    padding:
+        0 24px;
+}
+
+
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.hero {
+    position: relative;
+
+    min-height: 92vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(circle at 18% 20%,
+            rgba(224, 181, 68, 0.18),
+            transparent 30%),
+        radial-gradient(circle at 82% 25%,
+            rgba(30, 64, 175, 0.12),
+            transparent 32%),
+        linear-gradient(135deg,
+            #ffffff 0%,
+            #f8fbff 48%,
+            #eef5ff 100%);
+
+    overflow: hidden;
+
+    text-align: center;
+
+    padding:
+        60px 24px;
+}
+
+
+/* ============================================================
+   HERO DECORATIVE OVERLAY
+   ============================================================ */
+
+.hero__overlay {
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        radial-gradient(circle at 20% 30%,
+            rgba(224, 181, 68, 0.12),
+            transparent 45%),
+        radial-gradient(circle at 80% 70%,
+            rgba(30, 64, 175, 0.08),
+            transparent 45%);
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   HERO CONTENT
+   ============================================================ */
+
+.hero__content {
+    position: relative;
+
+    z-index: 2;
+
+    width: min(900px, 96%);
+}
+
+
+/* ============================================================
+   SHLOKA
+   ============================================================ */
+
+.hero__shloka {
+    margin-bottom: 32px;
+
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    color:
+        var(--royal-maroon);
+
+    letter-spacing:
+        0.05em;
+}
+
+.shloka__line {
+    font-size: 22px;
+
+    font-weight: 600;
+
+    margin-bottom: 4px;
+}
+
+.shloka__line--small {
+    font-size: 16px;
+
+    opacity:
+        0.80;
+}
+
+
+/* ============================================================
+   DEITY AREA
+   ============================================================ */
+
+.hero__icons {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap:
+        clamp(30px, 7vw, 75px);
+
+    margin-bottom: 40px;
+}
+
+
+/* ============================================================
+   MANDALA DEITY CIRCLE
+   ============================================================ */
+
+.icon__deity {
+    position: relative;
+
+    width: 230px;
+    height: 230px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle,
+            #ffffff 0%,
+            #f8fbff 55%,
+            rgba(219, 234, 254, 0.72) 70%,
+            transparent 72%);
+
+    border:
+        2px solid rgba(30, 64, 175, 0.20);
+
+    box-shadow:
+        0 20px 50px rgba(30, 64, 175, 0.12),
+
+        inset 0 0 0 8px rgba(255, 255, 255, 0.7),
+
+        0 0 0 12px rgba(201, 152, 42, 0.06),
+
+        0 0 0 25px rgba(30, 64, 175, 0.035);
+
+    animation:
+        homepageDeityFloat 6s ease-in-out infinite;
+}
+
+
+/* ============================================================
+   MANDALA INNER RINGS
+   ============================================================ */
+
+.icon__deity::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 12px;
+
+    border-radius: 50%;
+
+    border:
+        1px dashed rgba(201, 152, 42, 0.55);
+
+    box-shadow:
+        0 0 0 8px rgba(255, 255, 255, 0.30);
+
+    animation:
+        homepageMandalaRotate 24s linear infinite;
+}
+
+
+.icon__deity::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 28px;
+
+    border-radius: 50%;
+
+    border:
+        1px dotted rgba(30, 64, 175, 0.25);
+
+    background:
+        repeating-conic-gradient(from 0deg,
+            rgba(201, 152, 42, 0.08) 0deg 8deg,
+            transparent 8deg 20deg);
+
+    animation:
+        homepageMandalaRotateReverse 32s linear infinite;
+}
+
+
+/* ============================================================
+   DEITY SVG / IMAGE
+   ============================================================ */
+
+.icon__deity svg,
+.icon__deity img {
+    position: relative;
+
+    z-index: 4;
+
+    width:
+        78%;
+
+    height:
+        78%;
+
+    object-fit:
+        contain;
+
+    filter:
+        drop-shadow(0 15px 22px rgba(30, 64, 175, 0.18));
+}
+
+
+/* ============================================================
+   SECOND DEITY GOLD ACCENT
+   ============================================================ */
+
+.icon__deity:last-child {
+    animation-delay:
+        -3s;
+
+    border-color:
+        rgba(201, 152, 42, 0.32);
+
+    background:
+        radial-gradient(circle,
+            #ffffff 0%,
+            #fffdf4 55%,
+            rgba(255, 247, 220, 0.88) 70%,
+            transparent 72%);
+}
+
+
+/* ============================================================
+   HERO TITLE
+   ============================================================ */
+
+.hero__title {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    font-size:
+        clamp(42px, 7vw, 84px);
+
+    font-weight:
+        700;
+
+    line-height:
+        1.05;
+
+    color:
+        var(--bput-blue-dark);
+
+    margin-bottom:
+        20px;
+
+    letter-spacing:
+        -0.02em;
+
+    text-shadow:
+        0 10px 30px rgba(30, 64, 175, 0.08);
+}
+
+
+/* ============================================================
+   TITLE ACCENT
+   ============================================================ */
+
+.hero__title--accent {
+    background:
+        linear-gradient(100deg,
+            #1e40af 0%,
+            #2563eb 35%,
+            #a83232 68%,
+            #c9982a 100%);
+
+    -webkit-background-clip:
+        text;
+
+    background-clip:
+        text;
+
+    color:
+        transparent;
+}
+
+
+/* ============================================================
+   HERO SUBTITLE
+   ============================================================ */
+
+.hero__subtitle {
+    font-size:
+        clamp(15px, 1.5vw, 19px);
+
+    color:
+        #64748b;
+
+    max-width:
+        700px;
+
+    margin:
+        0 auto 35px;
+
+    line-height:
+        1.75;
+}
+
+
+/* ============================================================
+   HERO CTA — INTENTIONALLY HIDDEN
+   ============================================================ */
+
+.hero__cta {
+    display:
+        none !important;
+}
+
+
+/* ============================================================
+   OLD BUTTONS — DISABLED FOR HOMEPAGE
+   ============================================================ */
+
+.btn {
+    display:
+        none !important;
+}
+
+
+/* ============================================================
+   HERO QUOTE
+   ============================================================ */
+
+.hero__quote {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    color:
+        #64748b;
+
+    font-size:
+        16px;
+
+    margin-top:
+        25px;
+}
+
+.hero__quote em {
+    display:
+        block;
+
+    font-size:
+        20px;
+
+    font-style:
+        italic;
+
+    color:
+        var(--bput-blue);
+
+    margin-bottom:
+        4px;
+}
+
+
+/* ============================================================
+   DECORATIVE LOTUS
+   ============================================================ */
+
+.hero__lotus {
+    position:
+        absolute;
+
+    bottom:
+        -10px;
+
+    left:
+        50%;
+
+    transform:
+        translateX(-50%);
+
+    width:
+        90%;
+
+    max-width:
+        800px;
+
+    color:
+        var(--temple-gold);
+
+    opacity:
+        0.45;
+
+    pointer-events:
+        none;
+}
+
+.hero__lotus svg {
+    width:
+        100%;
+
+    height:
+        auto;
+}
+
+
+/* ============================================================
+   FEATURES
+   ============================================================ */
+
+.features {
+    padding:
+        100px 0;
+
+    background:
+        linear-gradient(180deg,
+            #ffffff,
+            #fdf8f0);
+}
+
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+
+.section-header {
+    text-align:
+        center;
+
+    margin-bottom:
+        60px;
+}
+
+.section-header h2 {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    font-size:
+        clamp(32px, 4vw, 48px);
+
+    font-weight:
+        600;
+
+    color:
+        var(--deep-maroon);
+
+    margin-bottom:
+        12px;
+}
+
+.section-header p {
+    font-size:
+        17px;
+
+    color:
+        #6b5842;
+
+    max-width:
+        650px;
+
+    margin:
+        0 auto;
+}
+
+
+/* ============================================================
+   FEATURE GRID
+   ============================================================ */
+
+.feature-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(auto-fit,
+            minmax(280px, 1fr));
+
+    gap:
+        24px;
+}
+
+
+/* ============================================================
+   FEATURE CARD
+   ============================================================ */
+
+.feature-card {
+    position:
+        relative;
+
+    background:
+        rgba(255, 255, 255, 0.96);
+
+    padding:
+        32px 28px;
+
+    border-radius:
+        18px;
+
+    border:
+        1px solid rgba(201, 152, 42, 0.18);
+
+    box-shadow:
+        0 8px 28px rgba(107, 30, 44, 0.06);
+
+    overflow:
+        hidden;
+
+    transition:
+        transform 300ms ease,
+        box-shadow 300ms ease,
+        border-color 300ms ease;
+}
+
+.feature-card::before {
+    content:
+        '';
+
+    position:
+        absolute;
+
+    top:
+        0;
+
+    left:
+        0;
+
+    width:
+        100%;
+
+    height:
+        4px;
+
+    background:
+        linear-gradient(90deg,
+            var(--temple-gold),
+            var(--royal-maroon),
+            var(--bput-blue));
+
+    transform:
+        scaleX(0);
+
+    transform-origin:
+        left;
+
+    transition:
+        transform 300ms ease;
+}
+
+.feature-card:hover {
+    transform:
+        translateY(-7px);
+
+    box-shadow:
+        0 18px 42px rgba(30, 64, 175, 0.12);
+
+    border-color:
+        rgba(201, 152, 42, 0.38);
+}
+
+.feature-card:hover::before {
+    transform:
+        scaleX(1);
+}
+
+
+/* ============================================================
+   FEATURE ICON
+   ============================================================ */
+
+.feature-card__icon {
+    width:
+        58px;
+
+    height:
+        58px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    font-size:
+        28px;
+
+    margin-bottom:
+        18px;
+
+    border-radius:
+        17px;
+
+    background:
+        linear-gradient(135deg,
+            #eff6ff,
+            #dbeafe);
+
+    box-shadow:
+        inset 0 0 0 1px rgba(30, 64, 175, 0.08);
+}
+
+.feature-card h3 {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    font-size:
+        22px;
+
+    font-weight:
+        600;
+
+    color:
+        var(--deep-maroon);
+
+    margin-bottom:
+        10px;
+}
+
+.feature-card p {
+    color:
+        #6b5842;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.65;
+}
+
+
+/* ============================================================
+   ADMINISTRATION
+   ============================================================ */
+
+.for-admins {
+    padding:
+        100px 0;
+
+    background:
+        radial-gradient(circle at 10% 20%,
+            rgba(224, 181, 68, 0.16),
+            transparent 32%),
+        radial-gradient(circle at 90% 80%,
+            rgba(59, 130, 246, 0.15),
+            transparent 32%),
+        linear-gradient(135deg,
+            #071d55 0%,
+            #102a72 50%,
+            #1e40af 100%);
+
+    color:
+        #fff;
+
+    position:
+        relative;
+
+    overflow:
+        hidden;
+}
+
+.for-admins::before {
+    content:
+        '';
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    opacity:
+        0.08;
+
+    background-image:
+        linear-gradient(45deg,
+            transparent 45%,
+            #ffffff 46%,
+            #ffffff 48%,
+            transparent 49%);
+
+    background-size:
+        38px 38px;
+
+    pointer-events:
+        none;
+}
+
+.for-admins .container {
+    position:
+        relative;
+
+    z-index:
+        2;
+}
+
+
+/* ============================================================
+   ADMIN GRID
+   ============================================================ */
+
+.admin-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(auto-fit,
+            minmax(240px, 1fr));
+
+    gap:
+        20px;
+}
+
+
+/* ============================================================
+   ADMIN CARD
+   ============================================================ */
+
+.admin-card {
+    padding:
+        28px 24px;
+
+    border-radius:
+        16px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.18);
+
+    backdrop-filter:
+        blur(10px);
+
+    transition:
+        transform 300ms ease,
+        background 300ms ease,
+        border-color 300ms ease;
+}
+
+.admin-card:hover {
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    border-color:
+        rgba(224, 181, 68, 0.45);
+
+    transform:
+        translateY(-5px);
+}
+
+.admin-card h3 {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    font-size:
+        20px;
+
+    font-weight:
+        600;
+
+    color:
+        var(--bright-gold);
+
+    margin-bottom:
+        10px;
+}
+
+.admin-card p {
+    color:
+        rgba(255, 255, 255, 0.75);
+
+    font-size:
+        14px;
+
+    line-height:
+        1.65;
+}
+
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.site-footer {
+    padding:
+        60px 0 40px;
+
+    background:
+        linear-gradient(180deg,
+            #ffffff,
+            var(--parchment));
+
+    text-align:
+        center;
+
+    border-top:
+        3px solid var(--temple-gold);
+}
+
+.footer__shloka {
+    font-family:
+        'Cormorant Garamond',
+        Georgia,
+        serif;
+
+    font-size:
+        22px;
+
+    color:
+        var(--deep-maroon);
+
+    margin-bottom:
+        4px;
+}
+
+.footer__note {
+    font-size:
+        14px;
+
+    color:
+        #8b7553;
+
+    font-style:
+        italic;
+
+    margin-bottom:
+        20px;
+}
+
+.footer__credit {
+    font-size:
+        13px;
+
+    color:
+        #a89273;
+}
+
+
+/* ============================================================
+   HOMEPAGE ANIMATIONS
+   ============================================================ */
+
+@keyframes homepageDeityFloat {
+
+    0%,
+    100% {
+        transform:
+            translateY(0);
+    }
+
+    50% {
+        transform:
+            translateY(-8px);
+    }
+}
+
+@keyframes homepageMandalaRotate {
+    from {
+        transform:
+            rotate(0deg);
+    }
+
+    to {
+        transform:
+            rotate(360deg);
+    }
+}
+
+@keyframes homepageMandalaRotateReverse {
+    from {
+        transform:
+            rotate(360deg);
+    }
+
+    to {
+        transform:
+            rotate(0deg);
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .hero {
+        min-height:
+            auto;
+
+        padding:
+            70px 20px;
+    }
+
+    .hero__icons {
+        gap:
+            25px;
+    }
+
+    .icon__deity {
+        width:
+            190px;
+
+        height:
+            190px;
+    }
+
+    .feature-grid {
+        grid-template-columns:
+            repeat(2,
+                minmax(0, 1fr));
+    }
+
+    .admin-grid {
+        grid-template-columns:
+            repeat(2,
+                minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .container {
+        width:
+            94%;
+
+        padding:
+            0 15px;
+    }
+
+    .hero {
+        min-height:
+            88vh;
+
+        padding:
+            50px 20px;
+    }
+
+    .hero__icons {
+        gap:
+            12px;
+    }
+
+    .icon__deity {
+        width:
+            150px;
+
+        height:
+            150px;
+    }
+
+    .icon__deity::before {
+        inset:
+            8px;
+    }
+
+    .icon__deity::after {
+        inset:
+            18px;
+    }
+
+    .hero__title {
+        font-size:
+            clamp(42px,
+                13vw,
+                64px);
+    }
+
+    .hero__subtitle {
+        font-size:
+            15px;
+    }
+
+    .features,
+    .for-admins {
+        padding:
+            65px 0;
+    }
+
+    .feature-grid,
+    .admin-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .hero__cta,
+    .btn {
+        display:
+            none !important;
+    }
+}
+
+
+@media (max-width: 450px) {
+
+    .hero__icons {
+        gap:
+            4px;
+    }
+
+    .icon__deity {
+        width:
+            135px;
+
+        height:
+            135px;
+    }
+
+    .hero__shloka {
+        margin-bottom:
+            24px;
+    }
+
+    .shloka__line {
+        font-size:
+            18px;
+    }
+
+    .shloka__line--small {
+        font-size:
+            13px;
+    }
+
+    .hero__quote {
+        font-size:
+            14px;
+    }
+}
+
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        scroll-behavior:
+            auto !important;
+
+        transition-duration:
+            0.01ms !important;
+    }
+}

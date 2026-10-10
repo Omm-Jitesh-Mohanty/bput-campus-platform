@@ -252,7 +252,87 @@
     </table>
 </div>
 {% else %}
-    {# student view — similar card-list style #}
+
+    {% for ticket in tickets %}
+
+    <a href="{% url 'tickets:detail' ticket.id %}"
+       style="text-decoration: none; color: inherit;">
+
+        <div class="card card-interactive"
+             style="cursor: pointer; margin-bottom: var(--sp-3);">
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3);">
+
+                <div style="flex: 1; min-width: 0;">
+
+                    <div style="display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); flex-wrap: wrap;">
+
+                        <span style="font-size: var(--fs-xs); color: var(--text-muted);">
+                            #{{ ticket.id }}
+                        </span>
+
+                        <span class="badge {{ ticket.status|status_badge }}">
+                            {{ ticket.get_status_display }}
+                        </span>
+
+                        <span class="badge {{ ticket.priority|priority_badge }}">
+                            {{ ticket.get_priority_display }}
+                        </span>
+
+                    </div>
+
+                    <h3 style="margin: 0; font-size: var(--fs-lg);">
+                        {{ ticket.subject }}
+                    </h3>
+
+                    <p style="color: var(--text-muted); font-size: var(--fs-sm); margin-top: var(--sp-1);">
+                        {{ ticket.get_ticket_type_display }}
+
+                        {% if ticket.assigned_department %}
+                            · {{ ticket.assigned_department|title }}
+                        {% endif %}
+
+                        · {{ ticket.created_at|short_time_ago }}
+                    </p>
+
+                </div>
+
+                <div style="font-size: 24px; flex-shrink: 0;">
+                    →
+                </div>
+
+            </div>
+
+        </div>
+
+    </a>
+
+    {% empty %}
+
+    <div class="card" style="text-align: center; padding: var(--sp-10);">
+
+        <div style="font-size: 48px; margin-bottom: var(--sp-4);">
+            📭
+        </div>
+
+        <h3>
+            {% trans "No requests yet" %}
+        </h3>
+
+        <p class="text-muted">
+            {% trans "Your submitted requests will appear here." %}
+        </p>
+
+        <a href="{% url 'tickets:submit' %}"
+           class="btn"
+           style="margin-top: var(--sp-4);">
+            + {% trans "Create Request" %}
+        </a>
+
+    </div>
+
+    {% endfor %}
+
 {% endif %}
 
 {% endblock %}

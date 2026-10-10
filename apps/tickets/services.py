@@ -66,7 +66,7 @@ def create_ticket(student, ticket_type, raw_input, subject=None, attachment=None
         user=student,
     )
 
-    # Notify student that ticket was created
+    # Notify the student (always)
     try:
         from apps.notifications.services import NotificationService
 
@@ -75,6 +75,9 @@ def create_ticket(student, ticket_type, raw_input, subject=None, attachment=None
             'ticket.created',
             recipients=[student],
         )
+
+        # The workflow engine automatically notifies the first approver
+
     except Exception as e:
         import logging
         logging.getLogger(__name__).exception(

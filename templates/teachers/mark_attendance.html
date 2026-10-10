@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Mark Attendance" %}{% endblock %}
+
+{% block content %}
+<div class="container-narrow" style="max-width: 700px; margin: 0 auto;">
+
+<h1>✅ {% trans "Mark Attendance" %}</h1>
+<p class="text-muted">
+    {{ timetable.subject_name }} ({{ timetable.subject_code }}) · {{ timetable.time_slot }}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="form-group">
+            <label>{% trans "Date" %}</label>
+            <input type="date" name="date" value="{{ today|date:'Y-m-d' }}">
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>{% trans "Students" %} ({{ students|length }})</h3>
+        <div style="display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3);">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selectAll()">
+                {% trans "All Present" %}
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="clearAll()">
+                {% trans "Clear" %}
+            </button>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">{% trans "Present" %}</th>
+                    <th>{% trans "Roll No" %}</th>
+                    <th>{% trans "Name" %}</th>
+                    <th>{% trans "Batch" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td><input type="checkbox" name="present" value="{{ s.id }}" class="present-check"></td>
+                    <td>{{ s.username }}</td>
+                    <td>{{ s.get_full_name|default:s.username }}</td>
+                    <td>{{ s.batch_year }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <button type="submit" class="btn btn-lg" style="width: 100%;">
+        ✅ {% trans "Save Attendance" %}
+    </button>
+</form>
+
+</div>
+
+<script>
+function selectAll() {
+    document.querySelectorAll('.present-check').forEach(c => c.checked = true);
+}
+function clearAll() {
+    document.querySelectorAll('.present-check').forEach(c => c.checked = false);
+}
+</script>
+{% endblock %}

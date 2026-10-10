@@ -4,80 +4,630 @@
 {% block title %}{% trans "Attendance" %}{% endblock %}
 
 {% block content %}
+<style>
+    /* =========================================================
+       ATTENDANCE PAGE — CARD-BASED ARTISTIC THEME
+       ========================================================= */
+    .att-page {
+        position: relative;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px 60px;
+        overflow: hidden;
 
-<h1>📊 {% trans "My Attendance" %}</h1>
+        background:
+            radial-gradient(circle at 15% 8%,
+                rgba(219, 234, 254, 0.9) 0%, transparent 35%),
+            radial-gradient(circle at 85% 92%,
+                rgba(254, 240, 220, 0.7) 0%, transparent 35%),
+            linear-gradient(180deg,
+                #eef6ff 0%,
+                #ffffff 45%,
+                #fff8eb 100%);
+    }
 
-<!-- ===== Overall summary card ===== -->
-<div class="card" style="background: {% if summary.is_safe %}#f0fdf4{% else %}#fef2f2{% endif %};">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <h2 style="margin: 0;">Overall: {{ summary.overall_percentage }}%</h2>
-            <p style="color: #64748b; margin-top: 4px;">
-                Attended {{ summary.total_attended }} / {{ summary.total_held }} classes
-            </p>
-        </div>
-        <div style="text-align: right;">
-            {% if summary.is_safe %}
-                <span class="badge badge-green" style="font-size: 14px; padding: 8px 14px;">
-                    ✅ {% trans "Safe" %}
-                </span>
-            {% else %}
-                <span class="badge badge-red" style="font-size: 14px; padding: 8px 14px;">
-                    ⚠️ {% trans "Below 75%" %}
-                </span>
-            {% endif %}
-        </div>
+    /* Floral columns */
+    .att-floral-left,
+    .att-floral-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 70px;
+        pointer-events: none;
+        z-index: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        padding: 40px 0;
+    }
+
+    .att-floral-left { left: 0; }
+    .att-floral-right { right: 0; }
+
+    .att-dot {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.7;
+        animation: attFloralPulse 4s ease-in-out infinite;
+    }
+
+    .att-floral-left .att-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.5) 0%,
+            rgba(30,64,175,0.2) 40%,
+            transparent 70%);
+        box-shadow: 0 0 14px rgba(30,64,175,0.3);
+    }
+    .att-floral-left .att-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.55) 0%,
+            rgba(201,150,47,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 14px rgba(201,150,47,0.3);
+    }
+    .att-floral-right .att-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.55) 0%,
+            rgba(201,150,47,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 14px rgba(201,150,47,0.3);
+    }
+    .att-floral-right .att-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.5) 0%,
+            rgba(30,64,175,0.2) 40%,
+            transparent 70%);
+        box-shadow: 0 0 14px rgba(30,64,175,0.3);
+    }
+
+    .att-dot::before {
+        content: "";
+        position: absolute;
+        inset: 5px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(255,255,255,0.9);
+        animation: attFloralSpin 14s linear infinite;
+    }
+    .att-dot::after {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+    }
+
+    .att-floral-left  .att-dot:nth-child(1) { animation-delay: 0s; }
+    .att-floral-left  .att-dot:nth-child(2) { animation-delay: 0.5s; }
+    .att-floral-left  .att-dot:nth-child(3) { animation-delay: 1s; }
+    .att-floral-left  .att-dot:nth-child(4) { animation-delay: 1.5s; }
+    .att-floral-right .att-dot:nth-child(1) { animation-delay: 0.3s; }
+    .att-floral-right .att-dot:nth-child(2) { animation-delay: 0.8s; }
+    .att-floral-right .att-dot:nth-child(3) { animation-delay: 1.3s; }
+    .att-floral-right .att-dot:nth-child(4) { animation-delay: 1.8s; }
+
+    @keyframes attFloralPulse {
+        0%, 100% { transform: scale(1);    opacity: 0.6; }
+        50%      { transform: scale(1.1);  opacity: 0.95; }
+    }
+    @keyframes attFloralSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    /* =========================================================
+       CONTENT WRAPPER
+       ========================================================= */
+    .att-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .att-title {
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-size: 38px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+    }
+
+    .att-subtitle {
+        color: #5c6b85;
+        font-size: 15px;
+        margin: 0 0 26px;
+    }
+
+    /* =========================================================
+       OVERALL SUMMARY HERO
+       ========================================================= */
+    .att-hero {
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.12);
+        border-radius: 20px;
+        padding: 26px 30px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+            0 6px 24px rgba(30, 64, 175, 0.08),
+            inset 0 0 0 1px rgba(255,255,255,0.8);
+    }
+
+    .att-hero::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg,
+            {% if summary.is_safe %}#16a34a, #22c55e{% else %}#dc2626, #ef4444{% endif %});
+    }
+
+    /* Circular progress ring */
+    .att-ring {
+        width: 110px;
+        height: 110px;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+    .att-ring svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+    }
+
+    .att-ring__track {
+        fill: none;
+        stroke: #e5e7eb;
+        stroke-width: 8;
+    }
+
+    .att-ring__progress {
+        fill: none;
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 283;
+        stroke-dashoffset: {{ 283|add:"0" }};
+        animation: attRingFill 1.2s ease-out both;
+    }
+
+    @keyframes attRingFill {
+        from { stroke-dashoffset: 283; }
+        to   { stroke-dashoffset: calc(283 - (283 * {{ summary.overall_percentage|default:0 }} / 100)); }
+    }
+
+    .att-ring__label {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        font-family: var(--font-serif, serif);
+    }
+
+    .att-ring__pct {
+        font-size: 24px;
+        font-weight: 700;
+        color: {% if summary.is_safe %}#16a34a{% else %}#dc2626{% endif %};
+        line-height: 1;
+    }
+
+    .att-ring__sub {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Summary text */
+    .att-hero__text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .att-hero__title {
+        font-family: var(--font-serif, serif);
+        font-size: 22px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 4px;
+    }
+
+    .att-hero__caption {
+        font-size: 13px;
+        color: #5c6b85;
+        margin: 0 0 10px;
+    }
+
+    .att-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .att-hero__badge--safe {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .att-hero__badge--risk {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    /* =========================================================
+       SECTION HEADING
+       ========================================================= */
+    .att-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 20px;
+    }
+
+    .att-section-heading h2 {
+        font-family: var(--font-serif, serif);
+        font-size: 22px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0;
+    }
+
+    .att-section-heading::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg,
+            rgba(201,150,47,0.4), transparent);
+    }
+
+    /* =========================================================
+       SUBJECT CARDS GRID
+       ========================================================= */
+    .att-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 18px;
+    }
+
+    .subj-card {
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.10);
+        border-radius: 16px;
+        padding: 20px 22px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(30, 64, 175, 0.05);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Accent strip on the left, colored by percentage */
+    .subj-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 4px;
+        background: {% if item.record.percentage >= 85 %}#16a34a{% elif item.record.percentage >= 75 %}#f59e0b{% else %}#dc2626{% endif %};
+    }
+
+    .subj-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(30, 64, 175, 0.10);
+        border-color: rgba(201, 150, 47, 0.35);
+    }
+
+    /* Card header */
+    .subj-card__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .subj-card__name {
+        font-family: var(--font-serif, serif);
+        font-size: 18px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 3px;
+        line-height: 1.25;
+    }
+
+    .subj-card__meta {
+        font-size: 12px;
+        color: #5c6b85;
+        margin: 0;
+    }
+
+    .subj-card__pct {
+        font-family: var(--font-serif, serif);
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+        flex-shrink: 0;
+        text-align: right;
+    }
+    .subj-card__pct--good { color: #16a34a; }
+    .subj-card__pct--warn { color: #f59e0b; }
+    .subj-card__pct--bad  { color: #dc2626; }
+
+    .subj-card__pct small {
+        display: block;
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 2px;
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-family: var(--font-sans, sans-serif);
+    }
+
+    /* Progress bar */
+    .subj-card__bar {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 6px;
+        position: relative;
+    }
+
+    .subj-card__fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .subj-card__fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg,
+            transparent, rgba(255,255,255,0.4), transparent);
+        animation: attShine 2.4s ease-in-out infinite;
+    }
+
+    @keyframes attShine {
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .subj-card__counts {
+        font-size: 12px;
+        color: #5c6b85;
+        display: flex;
+        justify-content: space-between;
+        margin: 0;
+    }
+
+    /* Recovery plan */
+    .subj-card__plan {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #fff7ed, #fefce8);
+        border-left: 3px solid #f59e0b;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .subj-card__plan-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+        line-height: 1.2;
+    }
+
+    .subj-card__plan-text {
+        font-size: 12.5px;
+        color: #78350f;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .subj-card__plan-text strong {
+        color: #92400e;
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    /* Empty state */
+    .att-empty {
+        background: #ffffff;
+        border: 1.5px dashed rgba(30, 64, 175, 0.20);
+        border-radius: 16px;
+        padding: 60px 20px;
+        text-align: center;
+        color: #5c6b85;
+    }
+
+    .att-empty__icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 900px) {
+        .att-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    }
+
+    @media (max-width: 700px) {
+        .att-floral-left,
+        .att-floral-right { width: 40px; }
+        .att-dot { width: 20px; height: 20px; }
+        .att-dot::before { inset: 3px; }
+        .att-dot::after { inset: 6px; }
+
+        .att-page { padding: 24px 14px 40px; }
+        .att-title { font-size: 30px; }
+        .att-hero {
+            flex-direction: column;
+            text-align: center;
+            padding: 24px 20px;
+            gap: 16px;
+        }
+        .att-hero__text { text-align: center; }
+        .att-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .att-dot,
+        .att-dot::before,
+        .subj-card__fill::after,
+        .att-ring__progress { animation: none !important; }
+    }
+</style>
+
+<div class="att-page">
+
+    <!-- LEFT floral column -->
+    <div class="att-floral-left">
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
     </div>
-</div>
 
-<!-- ===== Per-subject list ===== -->
-<h2 style="margin-top: 32px;">{% trans "Subject-wise Breakdown" %}</h2>
+    <!-- RIGHT floral column -->
+    <div class="att-floral-right">
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
+        <span class="att-dot"></span>
+    </div>
 
-{% for item in detailed %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div style="flex: 1;">
-            <h3 style="margin: 0;">{{ item.record.subject_name }}</h3>
-            <p style="color: #64748b; font-size: 13px; margin-top: 2px;">
-                {{ item.record.subject_code }}
-                {% if item.record.faculty_name %} · {{ item.record.faculty_name }}{% endif %}
-            </p>
+    <div class="att-content">
 
-            <!-- Progress bar -->
-            <div style="background: #e5e7eb; border-radius: 6px; height: 10px; margin: 12px 0 6px 0; overflow: hidden;">
-                <div style="width: {{ item.record.percentage }}%;
-                            height: 100%;
-                            background: {% if item.record.percentage >= 85 %}#16a34a{% elif item.record.percentage >= 75 %}#f59e0b{% else %}#dc2626{% endif %};">
+        <h1 class="att-title">📊 {% trans "My Attendance" %}</h1>
+        <p class="att-subtitle">
+            {% trans "Subject-wise breakdown with AI-powered recovery plans." %}
+        </p>
+
+        <!-- ===== Overall hero summary ===== -->
+        <div class="att-hero">
+
+            <div class="att-ring">
+                <svg viewBox="0 0 100 100">
+                    <circle class="att-ring__track" cx="50" cy="50" r="45"></circle>
+                    <circle class="att-ring__progress"
+                            cx="50" cy="50" r="45"
+                            stroke="{% if summary.is_safe %}#16a34a{% else %}#dc2626{% endif %}"
+                            style="stroke-dashoffset: calc(283 - (283 * {{ summary.overall_percentage|default:0 }} / 100));"></circle>
+                </svg>
+                <div class="att-ring__label">
+                    <div class="att-ring__pct">{{ summary.overall_percentage }}%</div>
+                    <div class="att-ring__sub">{% trans "Overall" %}</div>
                 </div>
             </div>
-            <p style="font-size: 12px; color: #64748b;">
-                {{ item.record.attended_classes }} / {{ item.record.total_classes }} classes
-            </p>
 
-            <!-- AI Recovery Plan -->
-            {% if item.plan.needed > 0 %}
-            <div style="background: #fef3c7; border-left: 4px solid #f59e0b;
-                        padding: 10px 12px; margin-top: 12px; border-radius: 4px;">
-                <strong style="color: #92400e;">🎯 Recovery Plan:</strong>
-                <p style="margin-top: 4px; color: #78350f; font-size: 14px;">
-                    {{ item.plan.message }}
+            <div class="att-hero__text">
+                <h2 class="att-hero__title">
+                    {% if summary.is_safe %}
+                        {% trans "You're on track" %}
+                    {% else %}
+                        {% trans "Attention needed" %}
+                    {% endif %}
+                </h2>
+                <p class="att-hero__caption">
+                    {% trans "Attended" %} {{ summary.total_attended }} {% trans "of" %} {{ summary.total_held }} {% trans "classes" %}
                 </p>
+
+                {% if summary.is_safe %}
+                    <span class="att-hero__badge att-hero__badge--safe">
+                        ✅ {% trans "Safe — above 75%" %}
+                    </span>
+                {% else %}
+                    <span class="att-hero__badge att-hero__badge--risk">
+                        ⚠️ {% trans "Below 75% — needs recovery" %}
+                    </span>
+                {% endif %}
             </div>
-            {% endif %}
+
         </div>
 
-        <div style="text-align: right; margin-left: 20px;">
-            <span class="badge {{ item.record.percentage|percentage_color }}"
-                  style="font-size: 16px; padding: 8px 14px;">
-                {{ item.record.percentage }}%
-            </span>
+        <!-- ===== Subject heading ===== -->
+        <div class="att-section-heading">
+            <h2>{% trans "Subject-wise Breakdown" %}</h2>
         </div>
+
+        <!-- ===== Subject cards ===== -->
+        {% if detailed %}
+            <div class="att-grid">
+                {% for item in detailed %}
+                <div class="subj-card">
+
+                    <div class="subj-card__head">
+                        <div style="min-width: 0;">
+                            <h3 class="subj-card__name">{{ item.record.subject_name }}</h3>
+                            <p class="subj-card__meta">
+                                {{ item.record.subject_code }}
+                                {% if item.record.faculty_name %} · {{ item.record.faculty_name }}{% endif %}
+                            </p>
+                        </div>
+                        <div class="subj-card__pct
+                            {% if item.record.percentage >= 85 %}subj-card__pct--good
+                            {% elif item.record.percentage >= 75 %}subj-card__pct--warn
+                            {% else %}subj-card__pct--bad{% endif %}">
+                            {{ item.record.percentage }}%
+                            <small>{% trans "attended" %}</small>
+                        </div>
+                    </div>
+
+                    <div class="subj-card__bar">
+                        <div class="subj-card__fill"
+                             style="width: {{ item.record.percentage }}%;
+                                    background: {% if item.record.percentage >= 85 %}linear-gradient(90deg, #16a34a, #22c55e){% elif item.record.percentage >= 75 %}linear-gradient(90deg, #f59e0b, #fbbf24){% else %}linear-gradient(90deg, #dc2626, #ef4444){% endif %};"></div>
+                    </div>
+
+                    <p class="subj-card__counts">
+                        <span>{{ item.record.attended_classes }} / {{ item.record.total_classes }} {% trans "classes" %}</span>
+                        <span>{% if item.record.percentage >= 75 %}✅ {% trans "Safe" %}{% else %}⚠️ {% trans "Below 75%" %}{% endif %}</span>
+                    </p>
+
+                    {% if item.plan.needed > 0 %}
+                    <div class="subj-card__plan">
+                        <span class="subj-card__plan-icon">🎯</span>
+                        <div class="subj-card__plan-text">
+                            <strong>{% trans "Recovery Plan" %}</strong>
+                            {{ item.plan.message }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="att-empty">
+                <div class="att-empty__icon">📭</div>
+                <p>{% trans "No attendance records yet." %}</p>
+            </div>
+        {% endif %}
+
     </div>
 </div>
-{% empty %}
-<div class="card" style="text-align: center; color: #64748b;">
-    <p>{% trans "No attendance records yet." %}</p>
-</div>
-{% endfor %}
 
 {% endblock %}

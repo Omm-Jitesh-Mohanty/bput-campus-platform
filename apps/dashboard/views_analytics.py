@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.core.cache import cache
 
+from apps.core.permissions import require_perm, Perm
+
 from .analytics import (
     forecast_ticket_volume,
     forecast_by_department,
@@ -19,11 +21,10 @@ from .analytics import (
 from .analytics.recommender import generate_recommendations
 
 
-@login_required
+# @require_perm(Perm.VIEW_PREDICTIONS)
+@require_perm(Perm.VIEW_ANALYTICS)
 def analytics_dashboard(request):
     """Advanced predictive analytics dashboard."""
-    if not request.user.is_admin_role():
-        return redirect('dashboard:student_home')
 
     # Try cache (10 min)
     cache_key = 'analytics_dashboard_v2'

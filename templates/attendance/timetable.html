@@ -4,53 +4,557 @@
 {% block title %}{% trans "Timetable" %}{% endblock %}
 
 {% block content %}
+<style>
+    /* =========================================================
+       TIMETABLE PAGE — HORIZONTAL DAY ROWS + ARTISTIC THEME
+       ========================================================= */
+    .tt-page {
+        position: relative;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px 60px;
+        overflow: hidden;
 
-<h1>📅 {% trans "Weekly Timetable" %}</h1>
-<p style="color: #64748b; margin-bottom: 24px;">
-    {{ user.department }} · {{ user.batch_year }} Batch
-</p>
+        background:
+            radial-gradient(circle at 15% 8%,
+                rgba(219, 234, 254, 0.9) 0%, transparent 35%),
+            radial-gradient(circle at 85% 92%,
+                rgba(254, 240, 220, 0.7) 0%, transparent 35%),
+            linear-gradient(180deg,
+                #eef6ff 0%,
+                #ffffff 45%,
+                #fff8eb 100%);
+    }
 
-{% for day in days %}
-    {% with day_slots=timetable_by_day|get_item:day %}
-    <div class="card" style="{% if day == today_code %}border-left: 4px solid #1e40af;{% endif %}">
-        <h3>
-            {{ day }}
-            {% if day == today_code %}
-                <span class="badge badge-blue">Today</span>
-            {% endif %}
-        </h3>
+    /* Floral columns */
+    .tt-floral-left,
+    .tt-floral-right {
+        position: absolute;
+        top: 0; bottom: 0;
+        width: 70px;
+        pointer-events: none;
+        z-index: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        padding: 60px 0;
+    }
+    .tt-floral-left  { left: 0; }
+    .tt-floral-right { right: 0; }
 
-        {% if day_slots.slots %}
-            <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0;">
-                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">TIME</th>
-                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">SUBJECT</th>
-                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">FACULTY</th>
-                        <th style="text-align: left; padding: 8px; font-size: 12px; color: #64748b;">ROOM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for slot in day_slots.slots %}
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 8px; font-weight: 600; font-size: 13px;">{{ slot.time_slot }}</td>
-                        <td style="padding: 10px 8px;">
-                            {{ slot.subject_name }}
-                            <br><span style="font-size: 11px; color: #64748b;">{{ slot.subject_code }}</span>
-                        </td>
-                        <td style="padding: 10px 8px; font-size: 13px;">{{ slot.faculty_name|default:"—" }}</td>
-                        <td style="padding: 10px 8px; font-size: 13px;">{{ slot.room|default:"—" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p style="color: #94a3b8; margin-top: 12px; font-size: 14px;">
-                {% trans "No classes scheduled." %}
-            </p>
-        {% endif %}
+    .tt-dot {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.7;
+        animation: ttFloralPulse 4s ease-in-out infinite;
+    }
+    .tt-floral-left  .tt-dot:nth-child(odd) {
+        background: radial-gradient(circle, rgba(30,64,175,0.5) 0%, rgba(30,64,175,0.2) 40%, transparent 70%);
+        box-shadow: 0 0 14px rgba(30,64,175,0.3);
+    }
+    .tt-floral-left  .tt-dot:nth-child(even) {
+        background: radial-gradient(circle, rgba(201,150,47,0.55) 0%, rgba(201,150,47,0.25) 40%, transparent 70%);
+        box-shadow: 0 0 14px rgba(201,150,47,0.3);
+    }
+    .tt-floral-right .tt-dot:nth-child(odd) {
+        background: radial-gradient(circle, rgba(201,150,47,0.55) 0%, rgba(201,150,47,0.25) 40%, transparent 70%);
+        box-shadow: 0 0 14px rgba(201,150,47,0.3);
+    }
+    .tt-floral-right .tt-dot:nth-child(even) {
+        background: radial-gradient(circle, rgba(30,64,175,0.5) 0%, rgba(30,64,175,0.2) 40%, transparent 70%);
+        box-shadow: 0 0 14px rgba(30,64,175,0.3);
+    }
+
+    .tt-dot::before {
+        content: "";
+        position: absolute; inset: 5px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(255,255,255,0.9);
+        animation: ttFloralSpin 14s linear infinite;
+    }
+    .tt-dot::after {
+        content: "";
+        position: absolute; inset: 12px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+    }
+
+    .tt-floral-left  .tt-dot:nth-child(1) { animation-delay: 0s; }
+    .tt-floral-left  .tt-dot:nth-child(2) { animation-delay: 0.5s; }
+    .tt-floral-left  .tt-dot:nth-child(3) { animation-delay: 1s; }
+    .tt-floral-right .tt-dot:nth-child(1) { animation-delay: 0.3s; }
+    .tt-floral-right .tt-dot:nth-child(2) { animation-delay: 0.8s; }
+    .tt-floral-right .tt-dot:nth-child(3) { animation-delay: 1.3s; }
+
+    @keyframes ttFloralPulse {
+        0%, 100% { transform: scale(1);    opacity: 0.6; }
+        50%      { transform: scale(1.1);  opacity: 0.95; }
+    }
+    @keyframes ttFloralSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    /* =========================================================
+       CONTENT
+       ========================================================= */
+    .tt-content {
+        position: relative;
+        z-index: 2;
+        max-width: 1320px;
+        margin: 0 auto;
+    }
+
+    .tt-title {
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-size: 38px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+    }
+
+    .tt-subtitle {
+        color: #5c6b85;
+        font-size: 15px;
+        margin: 0 0 8px;
+    }
+
+    .tt-today-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #fff7df, #fdf2d9);
+        border: 1px solid #e8cf88;
+        color: #7a5a10;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        margin-bottom: 20px;
+    }
+
+    /* =========================================================
+       HORIZONTAL DAY ROWS
+       ========================================================= */
+    .tt-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .tt-row {
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.10);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(30, 64, 175, 0.05);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        min-height: 96px;
+    }
+
+    .tt-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 32px rgba(30, 64, 175, 0.10);
+        border-color: rgba(201, 150, 47, 0.35);
+    }
+
+    /* Today — highlighted */
+    .tt-row--today {
+        border-color: rgba(201, 150, 47, 0.6);
+        box-shadow:
+            0 6px 22px rgba(201,150,47,0.20),
+            0 0 0 3px rgba(201,150,47,0.08);
+    }
+
+    .tt-row--today::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #c9962f, #a83232, #c9962f);
+        background-size: 200% 100%;
+        animation: ttTodayShine 3s linear infinite;
+    }
+
+    @keyframes ttTodayShine {
+        0%   { background-position: 0% 0; }
+        100% { background-position: 200% 0; }
+    }
+
+    /* ---- Day header block (left) ---- */
+    .tt-row__head {
+        flex-shrink: 0;
+        width: 140px;
+        padding: 18px 16px;
+        border-right: 1px solid rgba(30, 64, 175, 0.08);
+        background: linear-gradient(180deg, #ffffff, #f9fbff);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .tt-row--today .tt-row__head {
+        background: linear-gradient(180deg, #fffdf4, #fff7df);
+    }
+
+    .tt-row__name {
+        font-family: var(--font-serif, serif);
+        font-size: 18px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0;
+        letter-spacing: 0.01em;
+    }
+
+    .tt-row--today .tt-row__name {
+        color: #7a5a10;
+    }
+
+    .tt-row__count {
+        font-size: 10.5px;
+        color: #94a3b8;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        display: inline-block;
+        width: fit-content;
+    }
+
+    .tt-row--today .tt-row__count {
+        background: #fff7df;
+        color: #a67c1a;
+    }
+
+    /* ---- Slots stream (right) ---- */
+    .tt-row__slots {
+        flex: 1;
+        min-width: 0;
+        padding: 14px 16px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(30,64,175,0.2) transparent;
+    }
+
+    .tt-row__slots::-webkit-scrollbar { height: 6px; }
+    .tt-row__slots::-webkit-scrollbar-thumb {
+        background: rgba(30,64,175,0.2);
+        border-radius: 999px;
+    }
+    .tt-row__slots::-webkit-scrollbar-track { background: transparent; }
+
+    /* Slot cards inside rows */
+    .tt-slot {
+        flex-shrink: 0;
+        width: 220px;
+        background: #ffffff;
+        border: 1px solid rgba(30, 64, 175, 0.08);
+        border-radius: 10px;
+        padding: 10px 12px 10px 15px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .tt-slot::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, #1e40af, #2563eb);
+    }
+
+    .tt-slot:nth-child(3n+2)::before {
+        background: linear-gradient(180deg, #c9962f, #e0b544);
+    }
+    .tt-slot:nth-child(3n+3)::before {
+        background: linear-gradient(180deg, #a83232, #dc2626);
+    }
+
+    .tt-slot:hover {
+        background: #f9fbff;
+        border-color: rgba(30, 64, 175, 0.20);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(30, 64, 175, 0.10);
+    }
+
+    .tt-slot__time {
+        font-family: var(--font-mono, monospace);
+        font-size: 10.5px;
+        font-weight: 700;
+        color: #1e40af;
+        letter-spacing: 0.03em;
+        display: block;
+    }
+
+    .tt-slot__subject {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0a1f52;
+        line-height: 1.3;
+        margin: 0;
+    }
+
+    .tt-slot__code {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        display: block;
+    }
+
+    .tt-slot__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 10.5px;
+        color: #5c6b85;
+        margin-top: 2px;
+    }
+
+    .tt-slot__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        line-height: 1.3;
+    }
+
+    /* Empty day — compact placeholder */
+    .tt-row__empty {
+        flex: 1;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #cbd5e1;
+        font-size: 13px;
+        font-style: italic;
+    }
+
+    .tt-row__empty-icon {
+        font-size: 20px;
+        opacity: 0.6;
+    }
+
+    /* =========================================================
+       MOBILE FALLBACK — Vertical cards per day
+       ========================================================= */
+    .tt-mobile {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .tt-mobile-day {
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.10);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(30, 64, 175, 0.05);
+    }
+
+    .tt-mobile-day--today {
+        border-color: rgba(201, 150, 47, 0.55);
+        box-shadow: 0 6px 20px rgba(201,150,47,0.18);
+    }
+
+    .tt-mobile-day__head {
+        padding: 14px 18px;
+        background: linear-gradient(180deg, #ffffff, #f9fbff);
+        border-bottom: 1px solid rgba(30, 64, 175, 0.06);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .tt-mobile-day--today .tt-mobile-day__head {
+        background: linear-gradient(180deg, #fffdf4, #fff7df);
+    }
+
+    .tt-mobile-day__body {
+        padding: 12px 16px 16px;
+    }
+
+    .tt-mobile-slot {
+        display: flex;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px dashed rgba(30, 64, 175, 0.08);
+    }
+    .tt-mobile-slot:last-child { border-bottom: none; }
+
+    .tt-mobile-slot__time {
+        min-width: 90px;
+        font-family: var(--font-mono, monospace);
+        font-size: 11px;
+        font-weight: 700;
+        color: #1e40af;
+        padding-top: 3px;
+    }
+
+    .tt-mobile-slot__content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tt-mobile-slot__subject {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #0a1f52;
+        margin: 0 0 2px;
+    }
+
+    .tt-mobile-slot__meta {
+        font-size: 11px;
+        color: #5c6b85;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 900px) {
+        .tt-rows { display: none; }
+        .tt-mobile { display: flex; }
+        .tt-floral-left, .tt-floral-right { width: 40px; }
+        .tt-dot { width: 20px; height: 20px; }
+        .tt-dot::before { inset: 3px; }
+        .tt-dot::after { inset: 6px; }
+        .tt-page { padding: 24px 14px 40px; }
+        .tt-title { font-size: 30px; }
+    }
+
+    @media (max-width: 600px) {
+        .tt-slot { width: 180px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tt-dot, .tt-dot::before,
+        .tt-row--today::before { animation: none !important; }
+    }
+</style>
+
+<div class="tt-page">
+
+    <div class="tt-floral-left">
+        <span class="tt-dot"></span>
+        <span class="tt-dot"></span>
+        <span class="tt-dot"></span>
     </div>
-    {% endwith %}
-{% endfor %}
+    <div class="tt-floral-right">
+        <span class="tt-dot"></span>
+        <span class="tt-dot"></span>
+        <span class="tt-dot"></span>
+    </div>
+
+    <div class="tt-content">
+
+        <h1 class="tt-title">📅 {% trans "Weekly Timetable" %}</h1>
+        <p class="tt-subtitle">
+            {{ user.department }} · {{ user.batch_year }} Batch
+        </p>
+        <div class="tt-today-pill">
+            ✨ {% trans "Today:" %} {{ today_code }}
+        </div>
+
+        <!-- ===== Desktop: horizontal day rows ===== -->
+        <div class="tt-rows">
+            {% for day in days %}
+                {% with day_slots=timetable_by_day|get_item:day %}
+                <div class="tt-row {% if day == today_code %}tt-row--today{% endif %}">
+
+                    <div class="tt-row__head">
+                        <h3 class="tt-row__name">{{ day }}</h3>
+                        <span class="tt-row__count">
+                            {% with count=day_slots.slots|length %}
+                                {% if count %}{{ count }} {% trans "classes" %}{% else %}{% trans "Free" %}{% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+
+                    {% if day_slots.slots %}
+                        <div class="tt-row__slots">
+                            {% for slot in day_slots.slots %}
+                            <div class="tt-slot">
+                                <span class="tt-slot__time">{{ slot.time_slot }}</span>
+                                <p class="tt-slot__subject">{{ slot.subject_name }}</p>
+                                <span class="tt-slot__code">{{ slot.subject_code }}</span>
+                                <div class="tt-slot__meta">
+                                    {% if slot.faculty_name %}
+                                        <span>👤 {{ slot.faculty_name }}</span>
+                                    {% endif %}
+                                    {% if slot.room %}
+                                        <span>📍 {{ slot.room }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="tt-row__empty">
+                            <span class="tt-row__empty-icon">☕</span>
+                            <span>{% trans "No classes scheduled — enjoy your day off." %}</span>
+                        </div>
+                    {% endif %}
+
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
+        <!-- ===== Mobile: vertical per-day cards ===== -->
+        <div class="tt-mobile">
+            {% for day in days %}
+                {% with day_slots=timetable_by_day|get_item:day %}
+                <div class="tt-mobile-day {% if day == today_code %}tt-mobile-day--today{% endif %}">
+                    <div class="tt-mobile-day__head">
+                        <h3 class="tt-row__name">{{ day }}</h3>
+                        {% if day == today_code %}
+                            <span class="badge" style="background:#fff7df; color:#7a5a10; border:1px solid #e8cf88;">Today</span>
+                        {% endif %}
+                    </div>
+                    <div class="tt-mobile-day__body">
+                        {% if day_slots.slots %}
+                            {% for slot in day_slots.slots %}
+                            <div class="tt-mobile-slot">
+                                <div class="tt-mobile-slot__time">{{ slot.time_slot }}</div>
+                                <div class="tt-mobile-slot__content">
+                                    <p class="tt-mobile-slot__subject">{{ slot.subject_name }}</p>
+                                    <div class="tt-mobile-slot__meta">
+                                        {{ slot.subject_code }}
+                                        {% if slot.faculty_name %} · {{ slot.faculty_name }}{% endif %}
+                                        {% if slot.room %} · {{ slot.room }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p style="color:#94a3b8; font-size:13px; font-style:italic; margin:0;">
+                                {% trans "No classes scheduled." %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
 
 {% endblock %}

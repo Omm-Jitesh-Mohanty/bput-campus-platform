@@ -1,0 +1,618 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Emergency SOS" %}{% endblock %}
+
+{% block content %}
+<style>
+    /* =========================================================
+       SOS PAGE — SHARP GRADIENT + ANIMATED FLORAL BORDERS
+       ========================================================= */
+    .sos-page {
+        position: relative;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px 60px;
+        overflow: hidden;
+
+        /* Sharper gradient, no blur */
+        background:
+            radial-gradient(circle at 15% 8%,
+                rgba(219, 234, 254, 0.9) 0%, transparent 35%),
+            radial-gradient(circle at 85% 92%,
+                rgba(191, 219, 254, 0.8) 0%, transparent 35%),
+            linear-gradient(180deg,
+                #eef6ff 0%,
+                #ffffff 45%,
+                #fff8eb 100%);
+    }
+
+    /* =========================================================
+       LEFT FLORAL BORDER — animated mandala column
+       ========================================================= */
+    .sos-floral-left,
+    .sos-floral-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 90px;
+        pointer-events: none;
+        z-index: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        padding: 30px 0;
+    }
+
+    .sos-floral-left {
+        left: 0;
+        background: linear-gradient(90deg,
+            rgba(30,64,175,0.10) 0%,
+            rgba(201,150,47,0.06) 40%,
+            transparent 100%);
+    }
+
+    .sos-floral-right {
+        right: 0;
+        background: linear-gradient(270deg,
+            rgba(30,64,175,0.10) 0%,
+            rgba(201,150,47,0.06) 40%,
+            transparent 100%);
+    }
+
+    /* Individual mandala dot rings */
+    .floral-dot {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.75;
+        animation: floralPulse 4s ease-in-out infinite;
+    }
+
+    .sos-floral-left .floral-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.55) 0%,
+            rgba(30,64,175,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 20px rgba(30,64,175,0.35);
+    }
+
+    .sos-floral-left .floral-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.60) 0%,
+            rgba(201,150,47,0.28) 40%,
+            transparent 70%);
+        box-shadow: 0 0 20px rgba(201,150,47,0.35);
+    }
+
+    .sos-floral-right .floral-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.60) 0%,
+            rgba(201,150,47,0.28) 40%,
+            transparent 70%);
+        box-shadow: 0 0 20px rgba(201,150,47,0.35);
+    }
+
+    .sos-floral-right .floral-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.55) 0%,
+            rgba(30,64,175,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 20px rgba(30,64,175,0.35);
+    }
+
+    /* Inner ornamental ring on each dot */
+    .floral-dot::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(255,255,255,0.9);
+        animation: floralSpin 12s linear infinite;
+    }
+
+    .floral-dot::after {
+        content: "";
+        position: absolute;
+        inset: 16px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+        box-shadow: 0 0 8px rgba(201,150,47,0.5);
+    }
+
+    /* Staggered animations per dot */
+    .sos-floral-left .floral-dot:nth-child(1) { animation-delay: 0s;    }
+    .sos-floral-left .floral-dot:nth-child(2) { animation-delay: 0.6s;  }
+    .sos-floral-left .floral-dot:nth-child(3) { animation-delay: 1.2s;  }
+    .sos-floral-left .floral-dot:nth-child(4) { animation-delay: 1.8s;  }
+    .sos-floral-left .floral-dot:nth-child(5) { animation-delay: 2.4s;  }
+    .sos-floral-left .floral-dot:nth-child(6) { animation-delay: 3.0s;  }
+
+    .sos-floral-right .floral-dot:nth-child(1) { animation-delay: 0.3s; }
+    .sos-floral-right .floral-dot:nth-child(2) { animation-delay: 0.9s; }
+    .sos-floral-right .floral-dot:nth-child(3) { animation-delay: 1.5s; }
+    .sos-floral-right .floral-dot:nth-child(4) { animation-delay: 2.1s; }
+    .sos-floral-right .floral-dot:nth-child(5) { animation-delay: 2.7s; }
+    .sos-floral-right .floral-dot:nth-child(6) { animation-delay: 3.3s; }
+
+    @keyframes floralPulse {
+        0%, 100% { transform: scale(1);     opacity: 0.65; }
+        50%      { transform: scale(1.08);  opacity: 0.95; }
+    }
+
+    @keyframes floralSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    /* Vertical vine connecting the dots */
+    .sos-floral-left::before,
+    .sos-floral-right::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        bottom: 20px;
+        width: 2px;
+        background: linear-gradient(180deg,
+            transparent 0%,
+            rgba(201,150,47,0.4) 15%,
+            rgba(30,64,175,0.35) 50%,
+            rgba(201,150,47,0.4) 85%,
+            transparent 100%);
+    }
+
+    .sos-floral-left::before { left: 44px; }
+    .sos-floral-right::before { right: 44px; }
+
+    /* =========================================================
+       CONTENT WRAPPER
+       ========================================================= */
+    .sos-content {
+        position: relative;
+        z-index: 2;
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .sos-title {
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-size: 38px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 8px;
+        letter-spacing: -0.01em;
+    }
+
+    .sos-subtitle {
+        color: #5c6b85;
+        font-size: 15px;
+        margin: 0 0 20px;
+        line-height: 1.55;
+    }
+
+    /* =========================================================
+       SOS BUTTON — same as before, with pulse ring
+       ========================================================= */
+    .sos-button-wrapper {
+        display: flex;
+        justify-content: center;
+        margin: 40px 0;
+        position: relative;
+    }
+
+    .sos-button-wrapper::before {
+        content: "";
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+            rgba(220,38,38,0.20) 0%,
+            rgba(220,38,38,0.10) 45%,
+            transparent 70%);
+        animation: sosRing 3s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes sosRing {
+        0%, 100% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.7; }
+        50%      { transform: translate(-50%, -50%) scale(1.10); opacity: 1; }
+    }
+
+    #sos-btn {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ef4444, #991b1b);
+        color: white;
+        border: 8px solid #7f1d1d;
+        cursor: pointer;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        box-shadow:
+            0 8px 32px rgba(220,38,38,0.45),
+            inset 0 -6px 12px rgba(0,0,0,0.25),
+            inset 0 6px 12px rgba(255,255,255,0.18);
+        transition: all 0.2s;
+        z-index: 2;
+    }
+
+    #sos-btn:hover {
+        box-shadow:
+            0 12px 40px rgba(220,38,38,0.6),
+            inset 0 -6px 12px rgba(0,0,0,0.25),
+            inset 0 6px 12px rgba(255,255,255,0.18);
+    }
+
+    #sos-btn:active { transform: scale(0.96); }
+    #sos-btn:disabled { opacity: 0.85; cursor: not-allowed; }
+
+    /* =========================================================
+       FORM FIELDS — sharper, no blur
+       ========================================================= */
+    .sos-field {
+        text-align: left;
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.15);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(30,64,175,0.06);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sos-field:hover {
+        border-color: rgba(201, 150, 47, 0.35);
+    }
+
+    .sos-field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #12266b;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .sos-field select,
+    .sos-field input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 15px;
+        color: #172554;
+        background: #ffffff;
+        border: 1px solid rgba(30, 64, 175, 0.18);
+        border-radius: 8px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .sos-field select:focus,
+    .sos-field input[type="text"]:focus {
+        outline: none;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12);
+    }
+
+    /* =========================================================
+       ALERT CARDS — floral accent + hover animation
+       ========================================================= */
+    .alerts-list {
+        text-align: left;
+        margin-top: 16px;
+    }
+
+    .alert-item {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        margin-bottom: 12px;
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.12);
+        border-radius: 12px;
+        padding: 16px 18px 16px 22px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(30,64,175,0.06);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Floral left accent — a gold-to-blue vertical strip */
+    .alert-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 5px;
+        background: linear-gradient(180deg,
+            #c9962f 0%,
+            #1e40af 50%,
+            #c9962f 100%);
+        transition: width 0.3s ease;
+    }
+
+    /* Floral corner dot, top-right */
+    .alert-item::after {
+        content: "";
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.9) 0%,
+            rgba(201,150,47,0.3) 60%,
+            transparent 100%);
+        opacity: 0.6;
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .alert-item:hover {
+        transform: translateY(-3px);
+        border-color: rgba(201, 150, 47, 0.5);
+        box-shadow: 0 12px 28px rgba(30,64,175,0.14);
+    }
+
+    .alert-item:hover::before {
+        width: 7px;
+    }
+
+    .alert-item:hover::after {
+        opacity: 1;
+        transform: scale(1.4);
+    }
+
+    .alert-item__title {
+        display: block;
+        font-size: 15px;
+        font-weight: 600;
+        color: #0a1f52;
+        margin-bottom: 4px;
+    }
+
+    .alert-item__time {
+        font-size: 12px;
+        color: #5c6b85;
+    }
+
+    .alert-item__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .alert-item__content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alert-item__badge {
+        flex-shrink: 0;
+    }
+
+    /* =========================================================
+       MANAGER BUTTON
+       ========================================================= */
+    .manage-contacts-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 26px;
+        background: #ffffff;
+        color: #12266b;
+        border: 1.5px solid #c9962f;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(201,150,47,0.15);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        margin-top: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .manage-contacts-btn::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg,
+            transparent, rgba(201,150,47,0.08), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+
+    .manage-contacts-btn:hover {
+        background: #fff7df;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(201,150,47,0.3);
+        text-decoration: none;
+        color: #12266b;
+    }
+
+    .manage-contacts-btn:hover::before {
+        transform: translateX(100%);
+    }
+
+    /* =========================================================
+       WARNING BANNER
+       ========================================================= */
+    .sos-warning {
+        text-align: left;
+        background: linear-gradient(90deg, #fff7df, #ffffff);
+        border-left: 4px solid #c9962f;
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin: 20px 0;
+        font-size: 14px;
+        color: #7a5a10;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 700px) {
+        .sos-floral-left,
+        .sos-floral-right { width: 50px; }
+        .sos-floral-left::before { left: 24px; }
+        .sos-floral-right::before { right: 24px; }
+        .floral-dot { width: 30px; height: 30px; }
+        .floral-dot::before { inset: 5px; }
+        .floral-dot::after { inset: 10px; }
+
+        .sos-page { padding: 24px 14px 40px; }
+        .sos-title { font-size: 30px; }
+        #sos-btn { width: 180px; height: 180px; font-size: 24px; }
+        .sos-button-wrapper::before { width: 240px; height: 240px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .floral-dot,
+        .floral-dot::before,
+        .sos-button-wrapper::before {
+            animation: none !important;
+        }
+    }
+</style>
+
+<div class="sos-page">
+
+    <!-- LEFT animated floral border -->
+    <div class="sos-floral-left">
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+    </div>
+
+    <!-- RIGHT animated floral border -->
+    <div class="sos-floral-right">
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+        <span class="floral-dot"></span>
+    </div>
+
+    <div class="sos-content">
+
+        <h1 class="sos-title">🚨 {% trans "Emergency SOS" %}</h1>
+        <p class="sos-subtitle">
+            {% trans "Press the button below to alert your emergency contacts immediately." %}
+        </p>
+
+        <form method="post" action="{% url 'emergency:trigger' %}" id="sos-form">
+            {% csrf_token %}
+
+            <div class="sos-button-wrapper">
+                <button type="submit" id="sos-btn"
+                        onmousedown="this.style.transform='scale(0.95)';"
+                        onmouseup="this.style.transform='';">
+                    SOS
+                    <div style="font-size:12px; font-weight:400; margin-top:8px; letter-spacing:1px;">
+                        {% trans "Press and hold 2s" %}
+                    </div>
+                </button>
+            </div>
+
+            <div class="sos-field">
+                <label>{% trans "Type of emergency" %}</label>
+                <select name="trigger_type">
+                    <option value="medical">🏥 {% trans "Medical" %}</option>
+                    <option value="fire">🔥 {% trans "Fire" %}</option>
+                    <option value="safety">🛡 {% trans "Personal Safety" %}</option>
+                    <option value="sos_button">🚨 {% trans "General SOS" %}</option>
+                </select>
+            </div>
+
+            <div class="sos-field">
+                <label>{% trans "Describe briefly (optional)" %}</label>
+                <input type="text" name="reason"
+                       placeholder="{% trans 'e.g., high fever, need help in room' %}"
+                       maxlength="200">
+            </div>
+        </form>
+
+        {% if not contacts %}
+        <div class="sos-warning">
+            ⚠️ {% trans "No emergency contacts saved. Add them now to ensure help reaches you fast." %}
+            <div style="margin-top: 10px;">
+                <a href="{% url 'emergency:contacts' %}" class="btn btn-sm">{% trans "Add Contacts" %}</a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if recent_alerts %}
+        <h3 style="text-align: left; margin-top: 40px; color: #0a1f52; font-family: var(--font-serif, 'Cormorant Garamond', serif); font-size: 22px;">
+            {% trans "Your Recent Alerts" %}
+        </h3>
+
+        <div class="alerts-list">
+            {% for a in recent_alerts %}
+            <a href="{% url 'emergency:alert_detail' a.id %}" class="alert-item">
+                <div class="alert-item__row">
+
+                    <div class="alert-item__content">
+                        <strong class="alert-item__title">
+                            {{ a.get_trigger_type_display }}
+                        </strong>
+                        <span class="alert-item__time">
+                            {{ a.created_at|timesince }} {% trans "ago" %}
+                        </span>
+                    </div>
+
+                    <div class="alert-item__badge">
+                        <span class="badge
+                            {% if a.status == 'acknowledged' or a.status == 'resolved' %}badge-green
+                            {% elif a.status == 'calling' %}badge-yellow
+                            {% elif a.status == 'failed' %}badge-red
+                            {% else %}badge-blue{% endif %}">
+                            {{ a.get_status_display }}
+                        </span>
+                    </div>
+
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <a href="{% url 'emergency:contacts' %}" class="manage-contacts-btn">
+            ⚙️ {% trans "Manage Emergency Contacts" %}
+        </a>
+
+    </div>
+</div>
+
+<script>
+document.getElementById('sos-form').addEventListener('submit', function(event) {
+    const confirmed = confirm('This will immediately call your emergency contacts. Continue?');
+
+    if (!confirmed) {
+        event.preventDefault();
+        return;
+    }
+
+    const btn = document.getElementById('sos-btn');
+
+    btn.innerHTML = '⏳<div style="font-size:12px; margin-top:8px;">Triggering…</div>';
+
+    setTimeout(function() {
+        btn.disabled = true;
+    }, 0);
+});
+</script>
+
+{% endblock %}

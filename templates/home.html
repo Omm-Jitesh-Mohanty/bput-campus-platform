@@ -1,0 +1,2280 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}
+BPUT Campus Platform — {% trans "Welcome to BPUT Campus Platform" %}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .home-page {
+        --home-blue: #1e40af;
+        --home-blue-dark: #102a72;
+        --home-blue-deep: #071d55;
+        --home-blue-light: #eff6ff;
+        --home-blue-soft: #dbeafe;
+
+        --home-gold: #c9962f;
+        --home-gold-light: #f6df9a;
+        --home-gold-soft: #fff7df;
+
+        --home-red: #a83232;
+        --home-red-light: #f8e2df;
+
+        --home-orange: #d97706;
+        --home-green: #28734b;
+
+        --home-white: #ffffff;
+        --home-text: #172554;
+        --home-muted: #64748b;
+
+        --home-border: rgba(30, 64, 175, 0.12);
+
+        position: relative;
+        overflow: hidden;
+        color: var(--home-text);
+
+        background:
+            radial-gradient(
+                circle at 8% 8%,
+                rgba(246, 223, 154, 0.22),
+                transparent 24%
+            ),
+            radial-gradient(
+                circle at 92% 12%,
+                rgba(219, 234, 254, 0.8),
+                transparent 28%
+            ),
+            linear-gradient(
+                180deg,
+                #ffffff 0%,
+                #f9fbff 48%,
+                #eef5ff 100%
+            );
+    }
+
+    /* =========================================================
+       NEW: PALACE BACKGROUND LAYER
+       ========================================================= */
+    .home-page::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("{% static 'images/palace-background.png' %}");
+        background-repeat: no-repeat;
+        background-position: center bottom;
+        background-size: 100% auto;
+        opacity: 0.8;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* =========================================================
+       NEW: PEACOCK BORDER LAYER (full-width frame)
+       ========================================================= */
+    .home-page::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 900px;
+        background-image: url("{% static 'images/peacock-border.png' %}");
+        background-repeat: no-repeat;
+        background-position: center top;
+        background-size: 100% auto;
+        opacity: 1;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* Make sure direct children of home-page float above both layers */
+    .home-page > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    .home-page *,
+    .home-page *::before,
+    .home-page *::after {
+        box-sizing: border-box;
+    }
+
+    /* =========================================================
+       HERITAGE CORNERS
+       ========================================================= */
+
+    .heritage-corner {
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        pointer-events: none;
+        z-index: 10;
+        opacity: 0.48;
+    }
+
+    .heritage-corner::before,
+    .heritage-corner::after {
+        content: "";
+        position: absolute;
+        border-color: var(--home-gold);
+    }
+
+    .heritage-corner--left {
+        top: 0;
+        left: 0;
+        border-top: 2px solid rgba(201,150,47,0.55);
+        border-left: 2px solid rgba(201,150,47,0.55);
+        border-radius: 0 0 90px 0;
+    }
+
+    .heritage-corner--left::before {
+        width: 110px;
+        height: 110px;
+        top: 18px;
+        left: 18px;
+        border-top: 1px solid rgba(168,50,50,0.5);
+        border-left: 1px solid rgba(168,50,50,0.5);
+        border-radius: 0 0 55px 0;
+    }
+
+    .heritage-corner--right {
+        top: 0;
+        right: 0;
+        border-top: 2px solid rgba(201,150,47,0.55);
+        border-right: 2px solid rgba(201,150,47,0.55);
+        border-radius: 0 0 0 90px;
+    }
+
+    .heritage-corner--right::before {
+        width: 110px;
+        height: 110px;
+        top: 18px;
+        right: 18px;
+        border-top: 1px solid rgba(168,50,50,0.5);
+        border-right: 1px solid rgba(168,50,50,0.5);
+        border-radius: 0 0 0 55px;
+    }
+
+    /* =========================================================
+       SIDE MANDALA PATTERNS
+       ========================================================= */
+
+    .heritage-pattern {
+        position: absolute;
+        width: 170px;
+        height: 170px;
+        opacity: 0.11;
+        pointer-events: none;
+
+        background-image:
+            linear-gradient(
+                45deg,
+                transparent 42%,
+                var(--home-blue) 43%,
+                var(--home-blue) 47%,
+                transparent 48%
+            ),
+            linear-gradient(
+                -45deg,
+                transparent 42%,
+                var(--home-red) 43%,
+                var(--home-red) 47%,
+                transparent 48%
+            );
+
+        background-size: 34px 34px;
+        transform: rotate(45deg);
+    }
+
+    .heritage-pattern--left {
+        left: -65px;
+        bottom: 130px;
+    }
+
+    .heritage-pattern--right {
+        right: -65px;
+        bottom: 160px;
+    }
+
+    /* =========================================================
+       HERO  — semi-transparent so palace layer shows through
+       ========================================================= */
+
+    .home-hero {
+        position: relative;
+        min-height: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        overflow: hidden;
+        isolation: isolate;
+
+        /* NEW: reduced opacity radial gradient */
+        background:
+            radial-gradient(
+                ellipse at center top,
+                rgba(255,255,255,0.55) 0%,
+                rgba(239,246,255,0.45) 48%,
+                rgba(218,232,252,0.30) 100%
+            );
+    }
+
+    .home-hero::before {
+        content: "";
+
+        position: absolute;
+
+        left: 50%;
+        top: 150px;
+
+        width: 780px;
+        height: 520px;
+
+        transform: translateX(-50%);
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                ellipse,
+                rgba(30,64,175,0.10),
+                rgba(201,150,47,0.06) 48%,
+                transparent 72%
+            );
+
+        filter: blur(10px);
+
+        z-index: -3;
+
+        animation:
+            heritageGlow 8s ease-in-out infinite;
+    }
+
+    .home-hero::after {
+        content: "";
+
+        position: absolute;
+
+        left: 0;
+        right: 0;
+        bottom: -1px;
+
+        height: 145px;
+
+        background:
+            linear-gradient(
+                135deg,
+                transparent 49%,
+                rgba(201,150,47,0.20) 50%,
+                transparent 51%
+            ),
+            linear-gradient(
+                45deg,
+                transparent 49%,
+                rgba(168,50,50,0.10) 50%,
+                transparent 51%
+            );
+
+        background-size: 46px 46px;
+
+        opacity: 0.45;
+
+        mask-image:
+            linear-gradient(
+                to bottom,
+                transparent,
+                black
+            );
+
+        z-index: -1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 5;
+
+        width: min(1220px, 94%);
+
+        margin: 0 auto;
+
+        padding:
+            28px 0 76px;
+
+        text-align: center;
+    }
+
+    /* =========================================================
+       TEMPLE ENTRANCE ORNAMENT
+       ========================================================= */
+
+    .temple-top {
+        position: relative;
+
+        width: min(900px, 94%);
+
+        height: 82px;
+
+        margin:
+            0 auto 0;
+
+        display: flex;
+
+        align-items: flex-end;
+
+        justify-content: center;
+    }
+
+    .temple-roof {
+        position: absolute;
+
+        left: 50%;
+
+        bottom: 15px;
+
+        width: 88%;
+        height: 56px;
+
+        transform: translateX(-50%);
+
+        border-top:
+            3px solid rgba(201,150,47,0.72);
+
+        border-bottom:
+            1px solid rgba(201,150,47,0.45);
+
+        background:
+            linear-gradient(
+                180deg,
+                rgba(255,255,255,0.94),
+                rgba(246,223,154,0.20)
+            );
+
+        clip-path:
+            polygon(
+                0 100%,
+                7% 40%,
+                18% 40%,
+                24% 15%,
+                32% 40%,
+                42% 40%,
+                50% 0,
+                58% 40%,
+                68% 40%,
+                76% 15%,
+                82% 40%,
+                93% 40%,
+                100% 100%
+            );
+
+        box-shadow:
+            0 10px 30px rgba(30,64,175,0.08);
+    }
+
+    .temple-roof::before {
+        content: "";
+
+        position: absolute;
+
+        left: 8%;
+        right: 8%;
+        bottom: 8px;
+
+        height: 2px;
+
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                var(--home-gold),
+                transparent
+            );
+    }
+
+    .temple-spire {
+        position: absolute;
+
+        left: 50%;
+        bottom: 38px;
+
+        width: 25px;
+        height: 25px;
+
+        transform:
+            translateX(-50%)
+            rotate(45deg);
+
+        background:
+            linear-gradient(
+                135deg,
+                #fffdf4,
+                #f6df9a
+            );
+
+        border:
+            2px solid var(--home-gold);
+
+        box-shadow:
+            0 5px 15px rgba(201,150,47,0.18);
+    }
+
+    .temple-finial {
+        position: absolute;
+
+        left: 50%;
+        top: 2px;
+
+        width: 7px;
+        height: 34px;
+
+        transform: translateX(-50%);
+
+        background:
+            linear-gradient(
+                90deg,
+                var(--home-gold),
+                #f6df9a,
+                var(--home-gold)
+            );
+
+        border-radius: 999px;
+    }
+
+    .temple-finial::before {
+        content: "";
+
+        position: absolute;
+
+        left: 50%;
+        top: -7px;
+
+        width: 17px;
+        height: 17px;
+
+        transform: translateX(-50%);
+
+        border-radius: 50%;
+
+        background: #fff;
+
+        border:
+            2px solid var(--home-gold);
+
+        box-shadow:
+            0 0 15px rgba(201,150,47,0.20);
+    }
+
+    .temple-pillar {
+        position: absolute;
+
+        bottom: 0;
+
+        width: 18px;
+        height: 55px;
+
+        border:
+            1px solid rgba(201,150,47,0.42);
+
+        background:
+            linear-gradient(
+                90deg,
+                rgba(201,150,47,0.08),
+                rgba(255,255,255,0.9),
+                rgba(201,150,47,0.08)
+            );
+    }
+
+    .temple-pillar--left {
+        left: 11%;
+    }
+
+    .temple-pillar--right {
+        right: 11%;
+    }
+
+    /* =========================================================
+       DIYA ORNAMENTS
+       ========================================================= */
+
+    .temple-diya {
+        position: absolute;
+
+        bottom: 5px;
+
+        width: 54px;
+        height: 38px;
+
+        z-index: 4;
+    }
+
+    .temple-diya--left {
+        left: 2%;
+    }
+
+    .temple-diya--right {
+        right: 2%;
+    }
+
+    .diya-bowl {
+        position: absolute;
+
+        left: 50%;
+        bottom: 0;
+
+        width: 48px;
+        height: 20px;
+
+        transform: translateX(-50%);
+
+        background:
+            linear-gradient(
+                180deg,
+                #f6df9a,
+                #c9962f
+            );
+
+        border-radius:
+            50%
+            50%
+            65%
+            65%;
+
+        box-shadow:
+            0 6px 18px rgba(201,150,47,0.25);
+
+        border:
+            1px solid rgba(168,50,50,0.25);
+    }
+
+    .diya-bowl::after {
+        content: "";
+
+        position: absolute;
+
+        left: 50%;
+        bottom: 3px;
+
+        width: 28px;
+        height: 4px;
+
+        transform: translateX(-50%);
+
+        border-radius: 50%;
+
+        background:
+            rgba(255,255,255,0.5);
+    }
+
+    .diya-flame {
+        position: absolute;
+
+        left: 50%;
+        bottom: 16px;
+
+        width: 16px;
+        height: 24px;
+
+        transform:
+            translateX(-50%)
+            rotate(2deg);
+
+        border-radius:
+            50%
+            50%
+            50%
+            50%;
+
+        background:
+            radial-gradient(
+                ellipse at 50% 70%,
+                #fff8cf 0%,
+                #f6df9a 35%,
+                #d97706 65%,
+                transparent 72%
+            );
+
+        filter:
+            drop-shadow(
+                0 0 9px
+                rgba(217,119,6,0.65)
+            );
+
+        animation:
+            flameGlow 1.8s ease-in-out infinite;
+    }
+
+    .temple-diya--right .diya-flame {
+        animation-delay: 0.7s;
+    }
+
+    /* =========================================================
+       INVOCATION
+       ========================================================= */
+
+    .hero-invocation {
+        animation:
+            fadeDown 1s ease-out both;
+    }
+
+    .hero-shloka {
+        display: inline-flex;
+
+        flex-direction: column;
+
+        gap: 4px;
+
+        padding:
+            10px 22px;
+
+        border-radius: 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(255,255,255,0.95),
+                rgba(255,250,236,0.94)
+            );
+
+        border:
+            1px solid rgba(201,150,47,0.25);
+
+        box-shadow:
+            0 15px 45px rgba(30,64,175,0.08),
+            inset 0 0 0 1px rgba(255,255,255,0.7);
+
+        backdrop-filter: blur(14px);
+    }
+
+    .shloka-line {
+        font-family:
+            "Cormorant Garamond",
+            serif;
+
+        font-size: 18px;
+
+        font-weight: 700;
+
+        color: var(--home-blue);
+
+        letter-spacing: 0.03em;
+    }
+
+    .shloka-line--small {
+        font-size: 14px;
+        color: #68758a;
+    }
+
+    /* =========================================================
+       DEITY STAGE
+       ========================================================= */
+
+    .deity-stage {
+        position: relative;
+
+        width: min(920px, 96%);
+
+        min-height: 310px;
+
+        margin:
+            18px auto 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap:
+            clamp(40px, 9vw, 120px);
+    }
+
+    .deity-stage::before {
+        content: "";
+
+        position: absolute;
+
+        width: 340px;
+        height: 340px;
+
+        border-radius: 50%;
+
+        border:
+            1px solid
+            rgba(30,64,175,0.10);
+
+        box-shadow:
+            0 0 0 20px rgba(30,64,175,0.025),
+            0 0 0 42px rgba(201,150,47,0.035),
+            0 0 0 70px rgba(30,64,175,0.018);
+
+        animation:
+            sacredPulse 6s ease-in-out infinite;
+    }
+
+    /* =========================================================
+       DEITY
+       ========================================================= */
+
+    .deity {
+        position: relative;
+
+        width: 260px;
+        height: 260px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        animation:
+            deityAppear 1.1s ease-out both;
+    }
+
+    .deity:nth-child(2) {
+        animation-delay: 0.25s;
+    }
+
+    /* =========================================================
+       MANDALA RING
+       ========================================================= */
+
+    .deity-halo {
+        position: absolute;
+
+        inset: 13px;
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                circle,
+                rgba(255,255,255,0.99) 0%,
+                rgba(219,234,254,0.92) 45%,
+                rgba(30,64,175,0.15) 68%,
+                transparent 73%
+            );
+
+        box-shadow:
+            0 25px 60px rgba(30,64,175,0.13),
+            inset 0 0 35px rgba(255,255,255,0.9);
+
+        animation:
+            haloFloat 6s ease-in-out infinite;
+    }
+
+    .deity:nth-child(2) .deity-halo {
+        background:
+            radial-gradient(
+                circle,
+                rgba(255,255,255,0.99) 0%,
+                rgba(255,247,220,0.96) 45%,
+                rgba(201,150,47,0.17) 68%,
+                transparent 73%
+            );
+    }
+
+    .deity-ring {
+        position: absolute;
+
+        inset: 2px;
+
+        border-radius: 50%;
+
+        border:
+            2px solid
+            rgba(30,64,175,0.18);
+
+        box-shadow:
+            inset 0 0 0 7px rgba(255,255,255,0.45),
+            0 0 0 8px rgba(201,150,47,0.06);
+
+        animation:
+            ringRotate 22s linear infinite;
+    }
+
+    .deity:nth-child(2) .deity-ring {
+        border-color:
+            rgba(201,150,47,0.32);
+
+        animation-direction: reverse;
+    }
+
+    .deity-ring::before {
+        content: "";
+
+        position: absolute;
+
+        inset: 13px;
+
+        border-radius: 50%;
+
+        border:
+            1px dashed
+            rgba(201,150,47,0.38);
+
+        box-shadow:
+            0 0 0 9px rgba(255,255,255,0.18);
+    }
+
+    .deity-ring::after {
+        content: "";
+
+        position: absolute;
+
+        inset: 29px;
+
+        border-radius: 50%;
+
+        border:
+            1px dotted
+            rgba(30,64,175,0.25);
+
+        background:
+            repeating-conic-gradient(
+                from 0deg,
+                rgba(201,150,47,0.08) 0deg 8deg,
+                transparent 8deg 20deg
+            );
+    }
+
+    .deity:nth-child(2) .deity-ring::after {
+        border-color:
+            rgba(201,150,47,0.32);
+
+        background:
+            repeating-conic-gradient(
+                from 0deg,
+                rgba(201,150,47,0.10) 0deg 8deg,
+                transparent 8deg 20deg
+            );
+    }
+
+    /* =========================================================
+       IMAGE FRAME
+       ========================================================= */
+
+    .deity-image-frame {
+        position: relative;
+
+        z-index: 5;
+
+        width: 198px;
+        height: 198px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background:
+            radial-gradient(
+                circle,
+                rgba(255,255,255,0.98),
+                rgba(255,255,255,0.72) 68%,
+                transparent 70%
+            );
+
+        box-shadow:
+            0 18px 45px rgba(15,42,117,0.13),
+            inset 0 0 0 2px rgba(255,255,255,0.8);
+    }
+
+    .deity-image {
+        position: relative;
+
+        z-index: 6;
+
+        width: 184px;
+        height: 184px;
+
+        object-fit: contain;
+
+        filter:
+            drop-shadow(
+                0 18px 24px
+                rgba(15,42,117,0.18)
+            );
+
+        animation:
+            deityFloat 5s ease-in-out infinite;
+
+        transition:
+            transform 0.5s ease,
+            filter 0.5s ease;
+    }
+
+    .deity:hover .deity-image {
+        transform:
+            translateY(-9px)
+            scale(1.055);
+
+        filter:
+            drop-shadow(
+                0 26px 32px
+                rgba(15,42,117,0.28)
+            );
+    }
+
+    /* =========================================================
+       WELCOME MESSAGE
+       ========================================================= */
+
+    .hero-title {
+        margin:
+            22px 0 12px;
+
+        font-family:
+            "Cormorant Garamond",
+            serif;
+
+        font-size:
+            clamp(44px, 5.4vw, 72px);
+
+        line-height: 0.92;
+
+        font-weight: 700;
+
+        letter-spacing:
+            -0.035em;
+
+        color:
+            var(--home-blue-dark);
+
+        text-shadow:
+            0 10px 35px
+            rgba(30,64,175,0.08);
+
+        animation:
+            fadeUp 1s 0.25s ease-out both;
+    }
+
+    .hero-title-accent {
+        background:
+            linear-gradient(
+                100deg,
+                #1e40af 0%,
+                #2563eb 32%,
+                #a83232 67%,
+                #c9962f 100%
+            );
+
+        -webkit-background-clip: text;
+        background-clip: text;
+
+        color: transparent;
+    }
+
+    .hero-subtitle {
+        width:
+            min(790px, 92%);
+
+        margin:
+            0 auto;
+
+        color:
+            var(--home-muted);
+
+        font-size:
+            clamp(16px, 2vw, 19px);
+
+        line-height:
+            1.8;
+
+        animation:
+            fadeUp 1s 0.4s ease-out both;
+    }
+
+    .hero-cta {
+        display: none;
+    }
+
+    /* =========================================================
+       QUOTE
+       ========================================================= */
+
+    .hero-quote {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 4px;
+
+        margin-top: 16px;
+
+        color:
+            var(--home-muted);
+
+        animation:
+            fadeUp 1s 0.55s ease-out both;
+    }
+
+    .hero-quote em {
+        font-family:
+            "Cormorant Garamond",
+            serif;
+
+        font-size: 20px;
+
+        font-weight: 700;
+
+        color:
+            var(--home-blue);
+    }
+
+    .hero-quote span {
+        font-size: 13px;
+    }
+
+    /* =========================================================
+       FLOATING ORNAMENTS
+       ========================================================= */
+
+    .floating-ornament {
+        position: absolute;
+
+        z-index: 1;
+
+        pointer-events: none;
+
+        animation:
+            ornamentFloat 7s ease-in-out infinite;
+    }
+
+    .ornament-diamond {
+        width: 15px;
+        height: 15px;
+
+        border:
+            2px solid
+            rgba(201,150,47,0.5);
+
+        transform: rotate(45deg);
+    }
+
+    .ornament-diamond--1 {
+        top: 22%;
+        left: 14%;
+    }
+
+    .ornament-diamond--2 {
+        top: 30%;
+        right: 15%;
+
+        animation-delay: 1.3s;
+    }
+
+    .ornament-diamond--3 {
+        bottom: 25%;
+        left: 25%;
+
+        animation-delay: 2.2s;
+    }
+
+    .ornament-diamond--4 {
+        bottom: 29%;
+        right: 25%;
+
+        animation-delay: 3.2s;
+    }
+
+    .floating-petal {
+        position: absolute;
+
+        width: 13px;
+        height: 20px;
+
+        border-radius:
+            80% 20% 80% 20%;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(168,50,50,0.5),
+                rgba(201,150,47,0.4)
+            );
+
+        opacity: 0.45;
+
+        animation:
+            petalFloat 10s linear infinite;
+    }
+
+    .petal-1 {
+        top: 20%;
+        left: 25%;
+    }
+
+    .petal-2 {
+        top: 25%;
+        right: 25%;
+        animation-delay: 2s;
+    }
+
+    .petal-3 {
+        bottom: 30%;
+        left: 18%;
+        animation-delay: 4s;
+    }
+
+    .petal-4 {
+        bottom: 25%;
+        right: 18%;
+        animation-delay: 6s;
+    }
+
+    /* =========================================================
+       SECTIONS
+       ========================================================= */
+
+    .home-section {
+        position: relative;
+
+        padding:
+            95px 20px;
+
+        /* NEW: solid background so feature cards sit cleanly over layers */
+        background: linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f9fbff 100%
+        );
+    }
+
+    .home-container {
+        width:
+            min(1150px, 94%);
+
+        margin:
+            0 auto;
+    }
+
+    .section-heading {
+        text-align: center;
+
+        margin-bottom: 48px;
+    }
+
+    .section-heading h2 {
+        margin:
+            0 0 12px;
+
+        font-family:
+            "Cormorant Garamond",
+            serif;
+
+        font-size:
+            clamp(38px, 5vw, 58px);
+
+        line-height: 1;
+
+        color:
+            var(--home-blue-dark);
+    }
+
+    .section-heading p {
+        max-width: 680px;
+
+        margin:
+            0 auto;
+
+        color:
+            var(--home-muted);
+
+        line-height: 1.7;
+    }
+
+    /* =========================================================
+       HERITAGE DIVIDER
+       ========================================================= */
+
+    .heritage-divider {
+        width:
+            min(760px, 90%);
+
+        height: 40px;
+
+        margin:
+            -30px auto 25px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        gap: 12px;
+    }
+
+    .heritage-divider::before,
+    .heritage-divider::after {
+        content: "";
+
+        height: 1px;
+
+        flex: 1;
+
+        background:
+            linear-gradient(
+                90deg,
+                transparent,
+                rgba(201,150,47,0.45)
+            );
+    }
+
+    .heritage-divider::after {
+        background:
+            linear-gradient(
+                90deg,
+                rgba(201,150,47,0.45),
+                transparent
+            );
+    }
+
+    .heritage-divider span {
+        color:
+            var(--home-gold);
+
+        font-size: 22px;
+    }
+
+    /* =========================================================
+       FEATURE CARDS
+       ========================================================= */
+
+    .feature-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 22px;
+    }
+
+    .feature-card {
+        position: relative;
+
+        padding: 30px;
+
+        border-radius: 22px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(255,255,255,0.96),
+                rgba(248,251,255,0.94)
+            );
+
+        border:
+            1px solid var(--home-border);
+
+        box-shadow:
+            0 15px 40px
+            rgba(30,64,175,0.07);
+
+        overflow: hidden;
+
+        transition:
+            transform 0.35s ease,
+            box-shadow 0.35s ease,
+            border-color 0.35s ease;
+    }
+
+    .feature-card::before {
+        content: "";
+
+        position: absolute;
+
+        left: 0;
+        top: 0;
+
+        width: 100%;
+        height: 4px;
+
+        background:
+            linear-gradient(
+                90deg,
+                #1e40af,
+                #c9962f,
+                #a83232
+            );
+
+        transform:
+            scaleX(0);
+
+        transform-origin: left;
+
+        transition:
+            transform 0.35s ease;
+    }
+
+    .feature-card:hover {
+        transform:
+            translateY(-8px);
+
+        border-color:
+            rgba(30,64,175,0.20);
+
+        box-shadow:
+            0 25px 55px
+            rgba(30,64,175,0.13);
+    }
+
+    .feature-card:hover::before {
+        transform:
+            scaleX(1);
+    }
+
+    .feature-icon {
+        width: 58px;
+        height: 58px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        margin-bottom: 18px;
+
+        border-radius: 17px;
+
+        font-size: 27px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #eff6ff,
+                #dbeafe
+            );
+
+        box-shadow:
+            inset 0 0 0 1px
+            rgba(30,64,175,0.08);
+    }
+
+    .feature-card:nth-child(2) .feature-icon,
+    .feature-card:nth-child(5) .feature-icon {
+        background:
+            linear-gradient(
+                135deg,
+                #fff7ed,
+                #fef3c7
+            );
+    }
+
+    .feature-card:nth-child(3) .feature-icon {
+        background:
+            linear-gradient(
+                135deg,
+                #fef2f2,
+                #fee2e2
+            );
+    }
+
+    .feature-card h3 {
+        margin:
+            0 0 10px;
+
+        color:
+            var(--home-blue-dark);
+
+        font-size: 18px;
+    }
+
+    .feature-card p {
+        margin: 0;
+
+        color:
+            var(--home-muted);
+
+        line-height: 1.7;
+
+        font-size: 14px;
+    }
+
+    /* =========================================================
+       ADMINISTRATION
+       ========================================================= */
+
+    .admin-section {
+        position: relative;
+
+        overflow: hidden;
+
+        background:
+            radial-gradient(
+                circle at 12% 20%,
+                rgba(201,150,47,0.16),
+                transparent 28%
+            ),
+            radial-gradient(
+                circle at 88% 80%,
+                rgba(59,130,246,0.18),
+                transparent 28%
+            ),
+            linear-gradient(
+                135deg,
+                #071d55 0%,
+                #102a72 45%,
+                #1e40af 100%
+            );
+
+        color:
+            #ffffff;
+    }
+
+    .admin-section::before {
+        content: "";
+
+        position: absolute;
+
+        inset: 0;
+
+        opacity: 0.08;
+
+        background-image:
+            linear-gradient(
+                45deg,
+                transparent 45%,
+                #ffffff 46%,
+                #ffffff 48%,
+                transparent 49%
+            );
+
+        background-size:
+            38px 38px;
+
+        pointer-events: none;
+    }
+
+    .admin-section .section-heading h2 {
+        color:
+            #ffffff;
+    }
+
+    .admin-section .section-heading p {
+        color:
+            rgba(255,255,255,0.78);
+    }
+
+    .admin-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 20px;
+    }
+
+    .admin-card {
+        padding: 28px;
+
+        border-radius: 20px;
+
+        background:
+            rgba(255,255,255,0.10);
+
+        border:
+            1px solid rgba(255,255,255,0.18);
+
+        backdrop-filter:
+            blur(14px);
+
+        transition:
+            transform 0.35s ease,
+            background 0.35s ease,
+            border-color 0.35s ease;
+    }
+
+    .admin-card:hover {
+        transform:
+            translateY(-7px);
+
+        background:
+            rgba(255,255,255,0.16);
+
+        border-color:
+            rgba(246,223,154,0.35);
+    }
+
+    .admin-card h3 {
+        margin:
+            0 0 10px;
+
+        font-size: 18px;
+    }
+
+    .admin-card p {
+        margin: 0;
+
+        color:
+            rgba(255,255,255,0.76);
+
+        font-size: 14px;
+
+        line-height: 1.7;
+    }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .home-footer {
+        position: relative;
+
+        padding:
+            60px 20px;
+
+        text-align: center;
+
+        background:
+            linear-gradient(
+                180deg,
+                #ffffff,
+                #f8fbff
+            );
+
+        border-top:
+            1px solid
+            rgba(30,64,175,0.08);
+    }
+
+    .footer-shloka {
+        margin:
+            0 0 5px;
+
+        font-family:
+            "Cormorant Garamond",
+            serif;
+
+        font-size: 22px;
+
+        font-weight: 700;
+
+        color:
+            var(--home-blue);
+    }
+
+    .footer-note {
+        margin:
+            0 0 18px;
+
+        color:
+            var(--home-muted);
+
+        font-size: 14px;
+    }
+
+    .footer-credit {
+        margin: 0;
+
+        color:
+            #94a3b8;
+
+        font-size: 12px;
+    }
+
+    /* =========================================================
+       ANIMATIONS
+       ========================================================= */
+
+    @keyframes fadeDown {
+        from {
+            opacity: 0;
+            transform:
+                translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform:
+                translateY(0);
+        }
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform:
+                translateY(25px);
+        }
+
+        to {
+            opacity: 1;
+            transform:
+                translateY(0);
+        }
+    }
+
+    @keyframes deityAppear {
+        from {
+            opacity: 0;
+            transform:
+                translateY(35px)
+                scale(0.88);
+        }
+
+        to {
+            opacity: 1;
+            transform:
+                translateY(0)
+                scale(1);
+        }
+    }
+
+    @keyframes deityFloat {
+        0%, 100% {
+            transform:
+                translateY(0);
+        }
+
+        50% {
+            transform:
+                translateY(-9px);
+        }
+    }
+
+    @keyframes haloFloat {
+        0%, 100% {
+            transform:
+                scale(1);
+        }
+
+        50% {
+            transform:
+                scale(1.035);
+        }
+    }
+
+    @keyframes sacredPulse {
+        0%, 100% {
+            transform:
+                scale(1);
+
+            opacity:
+                0.45;
+        }
+
+        50% {
+            transform:
+                scale(1.08);
+
+            opacity:
+                0.85;
+        }
+    }
+
+    @keyframes ringRotate {
+        from {
+            transform:
+                rotate(0deg);
+        }
+
+        to {
+            transform:
+                rotate(360deg);
+        }
+    }
+
+    @keyframes heritageGlow {
+        0%, 100% {
+            transform:
+                translateX(-50%)
+                scale(1);
+        }
+
+        50% {
+            transform:
+                translateX(-50%)
+                scale(1.08);
+        }
+    }
+
+    @keyframes ornamentFloat {
+        0%, 100% {
+            transform:
+                translateY(0)
+                rotate(45deg);
+        }
+
+        50% {
+            transform:
+                translateY(-18px)
+                rotate(135deg);
+        }
+    }
+
+    @keyframes petalFloat {
+        0% {
+            transform:
+                translate3d(0,0,0)
+                rotate(20deg);
+
+            opacity:
+                0;
+        }
+
+        20% {
+            opacity:
+                0.45;
+        }
+
+        50% {
+            transform:
+                translate3d(25px,-45px,0)
+                rotate(110deg);
+        }
+
+        80% {
+            opacity:
+                0.25;
+        }
+
+        100% {
+            transform:
+                translate3d(-15px,-95px,0)
+                rotate(200deg);
+
+            opacity:
+                0;
+        }
+    }
+
+    @keyframes flameGlow {
+        0%, 100% {
+            transform:
+                translateX(-50%)
+                scale(1)
+                rotate(2deg);
+
+            opacity:
+                0.85;
+        }
+
+        50% {
+            transform:
+                translateX(-50%)
+                scale(1.12)
+                rotate(-3deg);
+
+            opacity:
+                1;
+        }
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (min-width: 1101px) {
+        .home-hero {
+            min-height: 0;
+        }
+
+        .hero-content {
+            padding-top: 24px;
+            padding-bottom: 54px;
+        }
+
+        .temple-top {
+            height: 72px;
+        }
+
+        .deity-stage {
+            min-height: 280px;
+            margin-top: 14px;
+        }
+
+        .deity {
+            width: 240px;
+            height: 240px;
+        }
+
+        .deity-image-frame {
+            width: 184px;
+            height: 184px;
+        }
+
+        .deity-image {
+            width: 168px;
+            height: 168px;
+        }
+
+        .hero-title {
+            margin-top: 18px;
+            font-size: clamp(42px, 4.4vw, 64px);
+            line-height: 1;
+        }
+
+        .hero-subtitle {
+            font-size: 17px;
+            line-height: 1.55;
+        }
+
+        .hero-quote {
+            margin-top: 12px;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .home-page::after {
+            height: 500px;
+        }
+
+        .hero-content {
+            padding: 26px 0 58px;
+        }
+
+        .temple-top {
+            height: 76px;
+        }
+
+        .deity-stage {
+            min-height: 250px;
+            gap: clamp(18px, 5vw, 45px);
+            margin-top: 16px;
+        }
+
+        .deity {
+            width: 220px;
+            height: 220px;
+        }
+
+        .deity-image-frame {
+            width: 172px;
+            height: 172px;
+        }
+
+        .deity-image {
+            width: 155px;
+            height: 155px;
+        }
+
+        .hero-title {
+            margin-top: 20px;
+            font-size: clamp(38px, 6vw, 58px);
+            line-height: 1;
+        }
+
+        .feature-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .admin-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 600px) {
+        .home-page::after {
+            height: 300px;
+            opacity: 0.7;
+        }
+
+        .hero-content {
+            padding-top: 25px;
+            padding-bottom: 80px;
+        }
+
+        .heritage-corner {
+            width: 100px;
+            height: 100px;
+        }
+
+        .heritage-pattern {
+            display: none;
+        }
+
+        .temple-top {
+            width: 100%;
+            height: 78px;
+        }
+
+        .temple-roof {
+            width: 94%;
+            height: 43px;
+        }
+
+        .temple-pillar {
+            height: 42px;
+        }
+
+        .temple-diya {
+            transform: scale(0.78);
+        }
+
+        .deity-stage {
+            min-height: 225px;
+            gap: 0;
+        }
+
+        .deity {
+            width: 155px;
+            height: 155px;
+        }
+
+        .deity-image-frame {
+            width: 130px;
+            height: 130px;
+        }
+
+        .deity-image {
+            width: 118px;
+            height: 118px;
+        }
+
+        .deity-ring::before {
+            inset: 8px;
+        }
+
+        .deity-ring::after {
+            inset: 18px;
+        }
+
+        .hero-title {
+            margin-top: 42px;
+            font-size: 54px;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+        }
+
+        .hero-quote {
+            margin-top: 22px;
+        }
+
+        .feature-grid,
+        .admin-grid {
+            grid-template-columns:
+                1fr;
+        }
+
+        .home-section {
+            padding: 70px 15px;
+        }
+
+        .floating-ornament,
+        .floating-petal {
+            display: none;
+        }
+
+        .hero-shloka {
+            padding: 11px 16px;
+        }
+
+        .shloka-line {
+            font-size: 16px;
+        }
+
+        .shloka-line--small {
+            font-size: 12px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .home-page *,
+        .home-page *::before,
+        .home-page *::after {
+            animation-duration:
+                0.01ms !important;
+
+            animation-iteration-count:
+                1 !important;
+
+            transition-duration:
+                0.01ms !important;
+        }
+    }
+
+    .home-page .home-hero {
+        min-height: 0;
+        height: auto;
+    }
+
+    .home-page .hero-content {
+        padding-top: 28px;
+        padding-bottom: 58px;
+    }
+
+    .home-page .hero-title {
+        margin-top: 20px;
+        line-height: 1.02;
+    }
+
+    .home-page .hero-subtitle {
+        line-height: 1.55;
+    }
+
+</style>
+
+
+<div class="home-page">
+
+    <!-- Heritage corner ornaments -->
+    <div class="heritage-corner heritage-corner--left"></div>
+    <div class="heritage-corner heritage-corner--right"></div>
+
+    <div class="heritage-pattern heritage-pattern--left"></div>
+    <div class="heritage-pattern heritage-pattern--right"></div>
+
+
+    <!-- =====================================================
+         HERO
+         ===================================================== -->
+    <section class="home-hero">
+
+        <!-- Floating decorative elements -->
+        <div class="floating-ornament ornament-diamond ornament-diamond--1"></div>
+        <div class="floating-ornament ornament-diamond ornament-diamond--2"></div>
+        <div class="floating-ornament ornament-diamond ornament-diamond--3"></div>
+        <div class="floating-ornament ornament-diamond ornament-diamond--4"></div>
+
+        <div class="floating-petal petal-1"></div>
+        <div class="floating-petal petal-2"></div>
+        <div class="floating-petal petal-3"></div>
+        <div class="floating-petal petal-4"></div>
+
+
+        <div class="hero-content">
+
+            <!-- Temple-style top ornament -->
+            <div class="temple-top">
+
+                <div class="temple-finial"></div>
+                <div class="temple-spire"></div>
+                <div class="temple-roof"></div>
+                <div class="temple-pillar temple-pillar--left"></div>
+                <div class="temple-pillar temple-pillar--right"></div>
+
+                <!-- Left Diya -->
+                <div class="temple-diya temple-diya--left">
+                    <div class="diya-flame"></div>
+                    <div class="diya-bowl"></div>
+                </div>
+
+                <!-- Right Diya -->
+                <div class="temple-diya temple-diya--right">
+                    <div class="diya-flame"></div>
+                    <div class="diya-bowl"></div>
+                </div>
+
+            </div>
+
+
+            <!-- Sanskrit invocation -->
+            <div class="hero-invocation">
+                <div class="hero-shloka">
+                    <div class="shloka-line">
+                        ॥ श्री गणेशाय नमः ॥
+                    </div>
+                    <div class="shloka-line shloka-line--small">
+                        ॥ सरस्वति नमस्तुभ्यं वरदे कामरूपिणि ॥
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Ganesha + Saraswati -->
+            <div class="deity-stage">
+
+                <!-- Ganesha -->
+                <div class="deity">
+                    <div class="deity-halo"></div>
+                    <div class="deity-ring"></div>
+                    <div class="deity-image-frame">
+                        <img
+                            src="{% static 'images/ganesha.png' %}"
+                            alt="{% trans 'Lord Ganesha' %}"
+                            class="deity-image"
+                            loading="eager"
+                        >
+                    </div>
+                </div>
+
+                <!-- Saraswati -->
+                <div class="deity">
+                    <div class="deity-halo"></div>
+                    <div class="deity-ring"></div>
+                    <div class="deity-image-frame">
+                        <img
+                            src="{% static 'images/saraswati.png' %}"
+                            alt="{% trans 'Goddess Saraswati' %}"
+                            class="deity-image"
+                            loading="eager"
+                        >
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Welcome message -->
+            <h1 class="hero-title">
+                {% trans "Welcome to" %}
+                <br>
+                <span class="hero-title-accent">
+                    {% trans "BPUT Campus Platform" %}
+                </span>
+            </h1>
+
+            <p class="hero-subtitle">
+                {% trans "Your campus. Your services. All in one place." %}
+            </p>
+
+
+            <!-- Quote -->
+            <div class="hero-quote">
+                <em>
+                    "{% trans 'Vidya dadati vinayam' %}"
+                </em>
+                <span>
+                    — {% trans "Knowledge bestows humility" %}
+                </span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FEATURES
+         ===================================================== -->
+    <section class="home-section" id="features">
+
+        <div class="home-container">
+
+            <div class="heritage-divider">
+                <span>❈</span>
+            </div>
+
+            <div class="section-heading">
+                <h2>
+                    {% trans "Everything Your Campus Needs" %}
+                </h2>
+                <p>
+                    {% trans "One connected platform for learning, administration, communication and everyday campus life." %}
+                </p>
+            </div>
+
+
+            <div class="feature-grid">
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>{% trans "Attendance with Recovery Plans" %}</h3>
+                    <p>{% trans "See every subject's attendance and receive an AI-powered plan to recover attendance and cross the required threshold." %}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">✍️</div>
+                    <h3>{% trans "One-Click Requests" %}</h3>
+                    <p>{% trans "Leave, gate pass, certificates and complaints can be prepared from simple student inputs and routed through the correct authority." %}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📢</div>
+                    <h3>{% trans "Intelligent Notices" %}</h3>
+                    <p>{% trans "Important announcements are summarized, prioritized and delivered according to the student's relevance and audience." %}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📄</div>
+                    <h3>{% trans "Digital Documents" %}</h3>
+                    <p>{% trans "Generate official documents as digitally authenticated PDFs with verification support." %}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚨</div>
+                    <h3>{% trans "Emergency SOS" %}</h3>
+                    <p>{% trans "A rapid emergency mechanism connects students with configured emergency contacts and campus authorities." %}</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>{% trans "Campus Assistant" %}</h3>
+                    <p>{% trans "Ask questions about campus services and official policies through an AI assistant connected to institutional knowledge." %}</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         ADMINISTRATION
+         ===================================================== -->
+    <section class="home-section admin-section">
+
+        <div class="home-container">
+
+            <div class="section-heading">
+                <h2>{% trans "A Smarter Campus for Administrators" %}</h2>
+                <p>{% trans "Visibility, intelligent workflows, analytics and accountability — all from one connected platform." %}</p>
+            </div>
+
+
+            <div class="admin-grid">
+
+                <div class="admin-card">
+                    <h3>🎛 {% trans "Live Campus View" %}</h3>
+                    <p>{% trans "Monitor requests, approvals, workloads and important campus activity from a unified administrative view." %}</p>
+                </div>
+
+                <div class="admin-card">
+                    <h3>🧠 {% trans "Predictive Insights" %}</h3>
+                    <p>{% trans "Identify emerging attendance, SLA, complaint and operational risks before they become larger problems." %}</p>
+                </div>
+
+                <div class="admin-card">
+                    <h3>⚙️ {% trans "Configurable Workflows" %}</h3>
+                    <p>{% trans "Departments, request types and approval workflows can be configured according to institutional requirements." %}</p>
+                </div>
+
+                <div class="admin-card">
+                    <h3>📋 {% trans "Transparent Audit Trail" %}</h3>
+                    <p>{% trans "Every request, approval, action and resolution can be traced through its complete administrative journey." %}</p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+    <footer class="home-footer">
+
+        <div class="home-container">
+
+            <p class="footer-shloka">
+                ॥ सर्वे भवन्तु सुखिनः ॥
+            </p>
+
+            <p class="footer-note">
+                {% trans "May all beings be happy" %}
+            </p>
+
+            <p class="footer-credit">
+                © {% now "Y" %}
+                BPUT Campus Platform · v1.0 · Built for BPUT Hackathon 2026
+            </p>
+
+        </div>
+
+    </footer>
+
+</div>
+
+{% endblock %}

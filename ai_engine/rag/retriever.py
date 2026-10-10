@@ -1,57 +1,57 @@
 """
-Retriever: find similar past tickets for smart-reply generation.
-Uses simple keyword Jaccard similarity. Upgradeable to embeddings.
+FAISS-based retriever with audience filtering and re-ranking.
 """
-# from tickets.models import CampusTicket
-from apps.tickets.models import CampusTicket
+import logging
+
+from .vector_store import get_vector_store
+from .reranker import rerank
+
+logger = logging.getLogger(__name__)
 
 
-def _tokenize(text):
-    import re
-    text = (text or '').lower()
-    tokens = re.findall(r'[a-z]+', text)
-    stop = {'the', 'a', 'an', 'is', 'are', 'was', 'of', 'and', 'or', 'in', 'on',
-            'for', 'to', 'with', 'this', 'that', 'it', 'my', 'me', 'i', 'at',
-            'room', 'please', 'kindly'}
-    return {t for t in tokens if t not in stop and len(t) > 2}
-
-
-def _jaccard(a, b):
-    if not a or not b:
-        return 0.0
-    return len(a & b) / len(a | b)
-
-
-def find_similar_resolved(ticket, top_k=3, min_score=0.15):
+def retrieve(query, audience='both', top_k=5, candidate_k=20, min_score=0.15):
     """
-    Find similar resolved tickets for RAG context.
-    Match by department + type first, then rank by keyword similarity.
+    Retrieve top_k chunks for a query.
+
+    Args:
+        query: search string
+        audience: 'student' | 'admin' | 'both'
+        top_k: final number of chunks
+        candidate_k: initial retrieval count (before re-ranking)
+        min_score: minimum cosine similarity
+
+    Returns:
+        list of {text, metadata, score, rerank_score}
     """
-    candidates = CampusTicket.objects.filter(
-        status='resolved',
-        assigned_department=ticket.assigned_department,
-    ).exclude(id=ticket.id)[:50]
+    vs = get_vector_store()
+    if len(vs) == 0:
+        logger.warning('Vector store is empty — run reindex_rag')
+        return []
 
-    # If none in same dept, widen the net
-    if not candidates:
-        candidates = CampusTicket.objects.filter(
-            status='resolved',
-        ).exclude(id=ticket.id)[:50]
+    # Stage 1: FAISS retrieval
+    candidates = vs.search(query, top_k=candidate_k)
 
-    ticket_tokens = _tokenize(ticket.raw_input) | _tokenize(ticket.subject)
-
-    scored = []
+    # Filter by audience and score
+    filtered = []
     for c in candidates:
-        c_tokens = _tokenize(c.raw_input) | _tokenize(c.subject)
-        score = _jaccard(ticket_tokens, c_tokens)
-        if score >= min_score:
-            scored.append((score, c))
+        if c['score'] < min_score:
+            continue
+        aud = c['metadata'].get('audience', 'both')
+        if audience != 'both' and aud not in (audience, 'both'):
+            continue
+        filtered.append(c)
 
-    scored.sort(key=lambda x: x[0], reverse=True)
-    return [c for _, c in scored[:top_k]]
+    if not filtered:
+        return []
+
+    # Stage 2: re-rank
+    reranked = rerank(query, filtered, top_k=top_k)
+    return reranked
 
 
-def get_resolution_context(ticket, top_k=3):
-    """Return list of resolution note strings for prompt context."""
-    similar = find_similar_resolved(ticket, top_k=top_k)
-    return [t.resolution_note for t in similar if t.resolution_note]
+def retrieve_for_student(query, top_k=5):
+    return retrieve(query, audience='student', top_k=top_k)
+
+
+def retrieve_for_admin(query, top_k=5):
+    return retrieve(query, audience='admin', top_k=top_k)

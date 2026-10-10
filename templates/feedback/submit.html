@@ -4,76 +4,511 @@
 {% block title %}{% trans "Give Feedback" %}{% endblock %}
 
 {% block content %}
-<div style="max-width: 620px; margin: 0 auto;">
+<style>
+    /* =========================================================
+       FEEDBACK PAGE — ARTISTIC THEME
+       ========================================================= */
+    .fb-page {
+        position: relative;
+        min-height: calc(100vh - 80px);
+        padding: 40px 20px 60px;
+        overflow: hidden;
 
-<h1>💬 {% trans "Give Feedback" %}</h1>
-<p style="color: #64748b; margin-bottom: 24px;">
-    {% trans "Your feedback helps us improve campus facilities." %}
-</p>
+        background:
+            radial-gradient(circle at 15% 8%,
+                rgba(219, 234, 254, 0.9) 0%, transparent 35%),
+            radial-gradient(circle at 85% 92%,
+                rgba(254, 240, 220, 0.7) 0%, transparent 35%),
+            linear-gradient(180deg,
+                #eef6ff 0%,
+                #ffffff 45%,
+                #fff8eb 100%);
+    }
 
-<form method="post">
-    {% csrf_token %}
+    /* LEFT floral column */
+    .fb-floral-left,
+    .fb-floral-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 80px;
+        pointer-events: none;
+        z-index: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        padding: 40px 0;
+    }
 
-    <div class="card">
-        <div class="form-group">
-            <label for="category">{% trans "What are you reviewing?" %}</label>
-            <select name="category" id="category" required>
-                {% for code, name in categories %}
-                    <option value="{{ code }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    .fb-floral-left { left: 0; }
+    .fb-floral-right { right: 0; }
 
-        <div class="form-group">
-            <label>{% trans "How would you rate it?" %}</label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                {% for i in "12345" %}
-                <label style="flex: 1; text-align: center; cursor: pointer; min-width: 80px;">
-                    <input type="radio" name="rating" value="{{ i }}" required style="display: none;"
-                           onchange="this.parentElement.querySelector('.rating-box').classList.add('selected');
-                                     this.parentElement.parentElement.querySelectorAll('.rating-box').forEach(el => el.classList.remove('selected'));
-                                     this.parentElement.querySelector('.rating-box').classList.add('selected');">
-                    <div class="rating-box" style="border: 2px solid #e2e8f0; border-radius: 8px; padding: 12px;
-                         transition: all 0.15s;">
-                        <div style="font-size: 24px;">
-                            {% if i == "1" %}😞
-                            {% elif i == "2" %}😐
-                            {% elif i == "3" %}🙂
-                            {% elif i == "4" %}😀
-                            {% else %}🤩{% endif %}
-                        </div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{ i }}/5</div>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
-        </div>
+    .fb-dot {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        position: relative;
+        opacity: 0.7;
+        animation: fbFloralPulse 4s ease-in-out infinite;
+    }
 
-        <div class="form-group">
-            <label for="comments">{% trans "Comments (optional)" %}</label>
-            <textarea name="comments" id="comments" rows="4"
-                      placeholder="{% trans 'Tell us more…' %}"></textarea>
-        </div>
+    .fb-floral-left .fb-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.5) 0%,
+            rgba(30,64,175,0.2) 40%,
+            transparent 70%);
+        box-shadow: 0 0 16px rgba(30,64,175,0.3);
+    }
+    .fb-floral-left .fb-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.55) 0%,
+            rgba(201,150,47,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 16px rgba(201,150,47,0.3);
+    }
 
-        <label style="display: flex; gap: 8px; align-items: center; font-size: 14px; color: #64748b;">
-            <input type="checkbox" name="is_anonymous">
-            {% trans "Submit anonymously" %}
-        </label>
+    .fb-floral-right .fb-dot:nth-child(odd) {
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.55) 0%,
+            rgba(201,150,47,0.25) 40%,
+            transparent 70%);
+        box-shadow: 0 0 16px rgba(201,150,47,0.3);
+    }
+    .fb-floral-right .fb-dot:nth-child(even) {
+        background: radial-gradient(circle,
+            rgba(30,64,175,0.5) 0%,
+            rgba(30,64,175,0.2) 40%,
+            transparent 70%);
+        box-shadow: 0 0 16px rgba(30,64,175,0.3);
+    }
 
-        <button type="submit" class="btn" style="width: 100%; margin-top: 16px; padding: 12px;">
-            {% trans "Submit Feedback" %}
-        </button>
+    .fb-dot::before {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(255,255,255,0.9);
+        animation: fbFloralSpin 14s linear infinite;
+    }
+
+    .fb-dot::after {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+    }
+
+    .fb-floral-left .fb-dot:nth-child(1) { animation-delay: 0s; }
+    .fb-floral-left .fb-dot:nth-child(2) { animation-delay: 0.5s; }
+    .fb-floral-left .fb-dot:nth-child(3) { animation-delay: 1s; }
+    .fb-floral-left .fb-dot:nth-child(4) { animation-delay: 1.5s; }
+    .fb-floral-left .fb-dot:nth-child(5) { animation-delay: 2s; }
+
+    .fb-floral-right .fb-dot:nth-child(1) { animation-delay: 0.3s; }
+    .fb-floral-right .fb-dot:nth-child(2) { animation-delay: 0.8s; }
+    .fb-floral-right .fb-dot:nth-child(3) { animation-delay: 1.3s; }
+    .fb-floral-right .fb-dot:nth-child(4) { animation-delay: 1.8s; }
+    .fb-floral-right .fb-dot:nth-child(5) { animation-delay: 2.3s; }
+
+    @keyframes fbFloralPulse {
+        0%, 100% { transform: scale(1);    opacity: 0.6; }
+        50%      { transform: scale(1.1);  opacity: 0.95; }
+    }
+    @keyframes fbFloralSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+
+    /* =========================================================
+       CONTENT
+       ========================================================= */
+    .fb-content {
+        position: relative;
+        z-index: 2;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .fb-title {
+        font-family: var(--font-serif, 'Cormorant Garamond', serif);
+        font-size: 38px;
+        font-weight: 700;
+        color: #0a1f52;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+    }
+
+    .fb-subtitle {
+        color: #5c6b85;
+        font-size: 15px;
+        margin: 0 0 24px;
+        line-height: 1.55;
+    }
+
+    /* =========================================================
+       FORM CARD
+       ========================================================= */
+    .fb-card {
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.12);
+        border-radius: 18px;
+        padding: 28px 26px;
+        box-shadow:
+            0 4px 20px rgba(30, 64, 175, 0.06),
+            inset 0 0 0 1px rgba(255,255,255,0.8);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Decorative gold-to-blue top strip */
+    .fb-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg,
+            #1e40af 0%,
+            #c9962f 50%,
+            #a83232 100%);
+    }
+
+    /* Corner floral accent */
+    .fb-card::after {
+        content: "";
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: radial-gradient(circle,
+            rgba(201,150,47,0.9) 0%,
+            rgba(201,150,47,0.3) 60%,
+            transparent 100%);
+        opacity: 0.7;
+    }
+
+    .fb-field {
+        margin-bottom: 22px;
+    }
+
+    .fb-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #12266b;
+        letter-spacing: 0.02em;
+        margin-bottom: 10px;
+    }
+
+    .fb-field select,
+    .fb-field textarea {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 15px;
+        color: #172554;
+        background: #ffffff;
+        border: 1.5px solid rgba(30, 64, 175, 0.15);
+        border-radius: 10px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+    }
+
+    .fb-field select:focus,
+    .fb-field textarea:focus {
+        outline: none;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    .fb-field textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* =========================================================
+       RATING CARDS
+       ========================================================= */
+    .fb-ratings {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .fb-rating-label {
+        display: block;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .fb-rating-label input[type="radio"] {
+        display: none;
+    }
+
+    .rating-box {
+        border: 2px solid rgba(30, 64, 175, 0.12);
+        border-radius: 14px;
+        padding: 14px 8px 12px;
+        text-align: center;
+        background: #ffffff;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .rating-box::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg,
+            rgba(219, 234, 254, 0.3), transparent);
+        opacity: 0;
+        transition: opacity 0.25s;
+    }
+
+    .rating-box:hover {
+        transform: translateY(-3px);
+        border-color: rgba(30, 64, 175, 0.35);
+        box-shadow: 0 8px 20px rgba(30, 64, 175, 0.12);
+    }
+
+    .rating-box:hover::before {
+        opacity: 1;
+    }
+
+    .rating-emoji {
+        font-size: 26px;
+        line-height: 1;
+        position: relative;
+        z-index: 2;
+    }
+
+    .rating-num {
+        font-size: 11px;
+        color: #5c6b85;
+        margin-top: 6px;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Selected state */
+    .fb-rating-label input[type="radio"]:checked + .rating-box {
+        border-color: #c9962f;
+        background: linear-gradient(135deg, #fff7df, #ffffff);
+        transform: translateY(-3px) scale(1.03);
+        box-shadow:
+            0 10px 24px rgba(201,150,47,0.25),
+            0 0 0 3px rgba(201,150,47,0.1);
+    }
+
+    .fb-rating-label input[type="radio"]:checked + .rating-box .rating-num {
+        color: #a67c1a;
+    }
+
+    /* Staggered entrance */
+    .fb-rating-label:nth-child(1) .rating-box { animation: fbRatingIn 0.5s 0.05s ease-out both; }
+    .fb-rating-label:nth-child(2) .rating-box { animation: fbRatingIn 0.5s 0.10s ease-out both; }
+    .fb-rating-label:nth-child(3) .rating-box { animation: fbRatingIn 0.5s 0.15s ease-out both; }
+    .fb-rating-label:nth-child(4) .rating-box { animation: fbRatingIn 0.5s 0.20s ease-out both; }
+    .fb-rating-label:nth-child(5) .rating-box { animation: fbRatingIn 0.5s 0.25s ease-out both; }
+
+    @keyframes fbRatingIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================================
+       ANONYMOUS CHECKBOX
+       ========================================================= */
+    .fb-anon {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        color: #5c6b85;
+        margin-top: 8px;
+        cursor: pointer;
+        padding: 10px 12px;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .fb-anon:hover {
+        background: rgba(219, 234, 254, 0.4);
+    }
+
+    .fb-anon input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #1e40af;
+        cursor: pointer;
+    }
+
+    /* =========================================================
+       SUBMIT BUTTON
+       ========================================================= */
+    .fb-submit {
+        width: 100%;
+        margin-top: 22px;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #1e40af 0%, #12266b 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 6px 20px rgba(30, 64, 175, 0.25);
+    }
+
+    .fb-submit::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg,
+            transparent, rgba(255,255,255,0.2), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+
+    .fb-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(30, 64, 175, 0.35);
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    }
+
+    .fb-submit:hover::before {
+        transform: translateX(100%);
+    }
+
+    .fb-submit:active {
+        transform: translateY(0);
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+    @media (max-width: 700px) {
+        .fb-floral-left,
+        .fb-floral-right { width: 40px; }
+        .fb-dot { width: 24px; height: 24px; }
+        .fb-dot::before { inset: 4px; }
+        .fb-dot::after { inset: 8px; }
+
+        .fb-page { padding: 24px 14px 40px; }
+        .fb-title { font-size: 30px; }
+        .fb-card { padding: 22px 18px; }
+        .fb-ratings { gap: 6px; }
+        .rating-emoji { font-size: 22px; }
+        .rating-box { padding: 12px 4px 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fb-dot,
+        .fb-dot::before,
+        .rating-box {
+            animation: none !important;
+        }
+    }
+</style>
+
+<div class="fb-page">
+
+    <!-- LEFT floral column -->
+    <div class="fb-floral-left">
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
     </div>
 
-</form>
+    <!-- RIGHT floral column -->
+    <div class="fb-floral-right">
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+        <span class="fb-dot"></span>
+    </div>
 
+    <div class="fb-content">
+
+        <h1 class="fb-title">💬 {% trans "Give Feedback" %}</h1>
+        <p class="fb-subtitle">
+            {% trans "Your feedback helps us improve campus facilities." %}
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="fb-card">
+
+                <!-- Category -->
+                <div class="fb-field">
+                    <label for="category">{% trans "What are you reviewing?" %}</label>
+                    <select name="category" id="category" required>
+                        {% for code, name in categories %}
+                            <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Rating -->
+                <div class="fb-field">
+                    <label>{% trans "How would you rate it?" %}</label>
+                    <div class="fb-ratings">
+                        {% for i in "12345" %}
+                        <label class="fb-rating-label">
+                            <input type="radio" name="rating" value="{{ i }}" required>
+                            <div class="rating-box">
+                                <div class="rating-emoji">
+                                    {% if i == "1" %}😞
+                                    {% elif i == "2" %}😐
+                                    {% elif i == "3" %}🙂
+                                    {% elif i == "4" %}😀
+                                    {% else %}🤩{% endif %}
+                                </div>
+                                <div class="rating-num">{{ i }}/5</div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Comments -->
+                <div class="fb-field">
+                    <label for="comments">{% trans "Comments (optional)" %}</label>
+                    <textarea name="comments" id="comments" rows="4"
+                              placeholder="{% trans 'Tell us more…' %}"></textarea>
+                </div>
+
+                <!-- Anonymous -->
+                <label class="fb-anon">
+                    <input type="checkbox" name="is_anonymous">
+                    {% trans "Submit anonymously" %}
+                </label>
+
+                <!-- Submit -->
+                <button type="submit" class="fb-submit">
+                    ✨ {% trans "Submit Feedback" %}
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
 </div>
 
-<style>
-.rating-box.selected {
-    border-color: #1e40af !important;
-    background: #eff6ff;
-    transform: scale(1.05);
-}
-</style>
 {% endblock %}

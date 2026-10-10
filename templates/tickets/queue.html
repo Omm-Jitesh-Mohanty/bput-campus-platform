@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% if is_master_view %}{% trans "All Requests" %}{% else %}{% trans "My Queue" %}{% endif %}{% endblock %}
+
+{% block content %}
+
+{% if is_master_view %}
+    {% include 'partials/_page_header.html' with title="🎫 All Requests" subtitle="Complete view of every ticket in the system" %}
+{% else %}
+    {% include 'partials/_page_header.html' with title="🎫 My Queue" subtitle="Requests awaiting your action" %}
+{% endif %}
+
+{% if not is_master_view %}
+    {% if tickets %}
+    <div class="alert alert-info">
+        <strong>⚡ {{ queue_count }} ticket{{ queue_count|pluralize }}</strong>
+        {% trans "awaiting your action" %}. Each one opens directly to the approval step.
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: var(--sp-12); background: #f0fdf4; border-color: #bbf7d0;">
+        <div style="font-size: 56px; margin-bottom: var(--sp-3);">✅</div>
+        <h2 style="color: var(--success-700); margin: 0;">{% trans "All caught up!" %}</h2>
+        <p class="text-muted" style="margin-top: var(--sp-2);">
+            {% trans "No tickets are waiting for your action." %}
+        </p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% if tickets %}
+<div class="card card-flush">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>{% trans "Student" %}</th>
+                <th>{% trans "Request" %}</th>
+                <th>{% trans "Type" %}</th>
+                <th>{% trans "Priority" %}</th>
+                <th>{% trans "Status" %}</th>
+                <th>{% trans "Age" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tickets %}
+            <tr>
+                <td><span class="text-muted">#{{ t.id }}</span></td>
+
+                <td>
+                    <div style="font-weight: 500;">
+                        {{ t.student.get_short_name|default:t.student.username }}
+                    </div>
+                    <div class="text-xs text-muted">
+                        {{ t.student.department }} · {{ t.student.batch_year }}
+                        {% if t.student.hostel_block and t.student.hostel_block != 'DAY' %}
+                            · {{ t.student.hostel_block }}-{{ t.student.room_number }}
+                        {% endif %}
+                    </div>
+                </td>
+
+                <td>{{ t.subject|truncatechars:60 }}</td>
+
+                {# ---- TYPE with icon ---- #}
+                <td>
+                    <span style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        white-space: nowrap;
+                        padding: 3px 10px;
+                        border-radius: 999px;
+                        background: {% if t.ticket_type == 'complaint' %}#fef2f2
+                                    {% elif t.ticket_type == 'leave' %}#eff6ff
+                                    {% elif t.ticket_type == 'document' %}#f0fdf4
+                                    {% elif t.ticket_type == 'gatepass' %}#fff7ed
+                                    {% else %}#f1f5f9{% endif %};
+                        color: {% if t.ticket_type == 'complaint' %}#991b1b
+                            {% elif t.ticket_type == 'leave' %}#1e40af
+                            {% elif t.ticket_type == 'document' %}#166534
+                            {% elif t.ticket_type == 'gatepass' %}#9a3412
+                            {% else %}#475569{% endif %};">
+                        {% if t.ticket_type == 'complaint' %}🐛 Complaint
+                        {% elif t.ticket_type == 'leave' %}📝 Leave
+                        {% elif t.ticket_type == 'document' %}📄 Document
+                        {% elif t.ticket_type == 'gatepass' %}🚪 Gate Pass
+                        {% else %}📋 {{ t.ticket_type|title }}{% endif %}
+                    </span>
+                </td>
+                {# ---- PRIORITY with visible text ---- #}
+                <td>
+                    {% if t.priority == 'urgent' %}
+                        <span class="badge badge-red" style="font-weight: 600;">🔴 URGENT</span>
+                    {% elif t.priority == 'high' %}
+                        <span class="badge badge-orange" style="font-weight: 600;">🟠 HIGH</span>
+                    {% elif t.priority == 'medium' %}
+                        <span class="badge badge-yellow" style="font-weight: 600;">🟡 MEDIUM</span>
+                    {% elif t.priority == 'low' %}
+                        <span class="badge badge-gray" style="font-weight: 600;">⚪ LOW</span>
+                    {% else %}
+                        <span class="badge badge-gray">{{ t.priority|title }}</span>
+                    {% endif %}
+                </td>
+
+                {# ---- STATUS ---- #}
+                <td>
+                    <span class="badge {{ t.status|status_badge }}">
+                        {{ t.get_status_display }}
+                    </span>
+                </td>
+
+                {# ---- AGE ---- #}
+                <td>
+                    <span class="badge badge-{{ t.ageing_color }}">{{ t.age_hours }}h</span>
+                </td>
+
+                <td style="white-space: nowrap;">
+                    <a href="{% url 'tickets:detail' t.id %}" class="btn btn-sm btn-primary">
+                        {% if is_master_view %}{% trans "View" %}{% else %}{% trans "Review" %}{% endif %} →
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% endblock %}

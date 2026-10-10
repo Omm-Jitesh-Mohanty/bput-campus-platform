@@ -32,7 +32,7 @@ def login_view(request):
                 AuditService.log_login(user, success=True)
 
                 messages.success(request, f"Welcome back, {user.get_short_name() or user.username}!")
-                return redirect('accounts:home')
+                return redirect('home')   # ← land on homepage after login
             else:
                 # Audit failed attempt (with username in metadata)
                 AuditService.record(

@@ -3,14 +3,16 @@
 # Create your views here.
 
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.http import JsonResponse
 from datetime import datetime
 
 from apps.core.decorators import student_required
 from .models import AttendanceRecord, Timetable, ClassCancellation
 from .services import get_student_attendance_summary
+from .routine import compute_daily_plan
 
 
 @login_required
@@ -74,3 +76,23 @@ def timetable_view(request):
         'days': days,
         'today_code': datetime.now().strftime('%a')[:3],
     })
+
+
+@login_required
+def today_plan(request):
+    """Personalized daily plan for the current student."""
+    if not request.user.is_student():
+        return redirect('dashboard:admin_home')
+
+    plan = compute_daily_plan(request.user)
+    return render(request, 'attendance/today_plan.html', {'plan': plan})
+
+
+@login_required
+def today_plan_json(request):
+    """JSON version for the dashboard widget."""
+    if not request.user.is_student():
+        return JsonResponse({'error': 'Students only'}, status=403)
+
+    plan = compute_daily_plan(request.user)
+    return JsonResponse(plan)

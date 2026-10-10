@@ -9,3 +9,4 @@ class CoreConfig(AppConfig):
     def ready(self):
         """Import signals when app is ready."""
         from . import signals  # noqa
+        from . import permissions  # noqa — ensures registry is populated

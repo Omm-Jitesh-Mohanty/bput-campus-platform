@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Emergency Alerts" %}{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto;">
+
+    <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: var(--sp-5);
+    ">
+        <div>
+            <h1 style="margin-bottom: 4px;">
+                🚨 {% trans "Emergency Alerts" %}
+            </h1>
+
+            <p class="text-muted" style="margin-top: 0;">
+                {% trans "Monitor and respond to student emergency alerts." %}
+            </p>
+        </div>
+
+        <div style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        ">
+            <span class="badge badge-red" style="font-size: 14px; padding: 8px 14px;">
+                🚨 {{ active_count }} {% trans "Active" %}
+            </span>
+
+            <a href="{% url 'emergency:sos_home' %}" class="btn btn-secondary">
+                {% trans "Student SOS" %}
+            </a>
+        </div>
+    </div>
+
+
+    <!-- Active Alert Warning -->
+    {% if active_count %}
+        <div class="alert alert-danger" style="
+            margin-bottom: var(--sp-5);
+            border-left: 6px solid var(--danger-500);
+        ">
+            <strong>
+                🚨 {% trans "Active emergency alerts require attention." %}
+            </strong>
+
+            <div style="margin-top: 4px;">
+                {% trans "Review the alerts below and acknowledge or resolve them after appropriate action has been taken." %}
+            </div>
+        </div>
+    {% endif %}
+
+
+    <!-- Alert Table -->
+    <div class="card" style="overflow-x: auto;">
+
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: var(--sp-4);
+        ">
+            <div>
+                <h2 style="margin: 0;">
+                    📋 {% trans "Alert History" %}
+                </h2>
+
+                <p class="text-muted text-xs" style="margin-bottom: 0;">
+                    {% trans "Latest emergency alerts are shown first." %}
+                </p>
+            </div>
+
+            <span class="badge">
+                {{ alerts|length }} {% trans "shown" %}
+            </span>
+        </div>
+
+
+        {% if alerts %}
+
+            <table style="
+                width: 100%;
+                border-collapse: collapse;
+                min-width: 1000px;
+            ">
+
+                <thead>
+                    <tr style="
+                        border-bottom: 2px solid var(--border-color);
+                        text-align: left;
+                    ">
+                        <th style="padding: 12px;">
+                            #
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Student" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Type" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Reason / Location" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Created" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Status" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Acknowledged By" %}
+                        </th>
+
+                        <th style="padding: 12px;">
+                            {% trans "Actions" %}
+                        </th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for alert in alerts %}
+
+                        <tr style="
+                            border-bottom: 1px solid var(--border-color);
+                            {% if alert.status == 'triggered' or alert.status == 'calling' %}
+                                background: rgba(239, 68, 68, 0.06);
+                            {% endif %}
+                        ">
+
+                            <!-- ID -->
+                            <td style="padding: 14px; vertical-align: top;">
+                                <strong>
+                                    #{{ alert.id }}
+                                </strong>
+                            </td>
+
+
+                            <!-- Student -->
+                            <td style="padding: 14px; vertical-align: top;">
+
+                                <strong>
+                                    {{ alert.user.get_full_name|default:alert.user.username }}
+                                </strong>
+
+                                <div class="text-xs text-muted" style="margin-top: 4px;">
+                                    {% trans "Roll:" %} {{ alert.user.username }}
+                                </div>
+
+                                {% if alert.user.department %}
+                                    <div class="text-xs text-muted">
+                                        {{ alert.user.department }}
+                                    </div>
+                                {% endif %}
+
+                                {% if alert.user.hostel_block %}
+                                    <div class="text-xs text-muted">
+                                        🏠 {{ alert.user.hostel_block }}
+                                        {% if alert.user.room_number %}
+                                            - {{ alert.user.room_number }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Type -->
+                            <td style="padding: 14px; vertical-align: top;">
+
+                                <strong>
+                                    {{ alert.get_trigger_type_display }}
+                                </strong>
+
+                            </td>
+
+
+                            <!-- Reason / Location -->
+                            <td style="
+                                padding: 14px;
+                                vertical-align: top;
+                                max-width: 280px;
+                            ">
+
+                                {% if alert.reason %}
+                                    <div>
+                                        <strong>{% trans "Reason:" %}</strong>
+                                        {{ alert.reason }}
+                                    </div>
+                                {% endif %}
+
+                                {% if alert.location %}
+                                    <div class="text-xs text-muted" style="margin-top: 5px;">
+                                        📍 {{ alert.location }}
+                                    </div>
+                                {% endif %}
+
+                                {% if not alert.reason and not alert.location %}
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Created -->
+                            <td style="padding: 14px; vertical-align: top; white-space: nowrap;">
+
+                                <div>
+                                    {{ alert.created_at|date:"d M Y" }}
+                                </div>
+
+                                <div class="text-xs text-muted">
+                                    {{ alert.created_at|date:"H:i:s" }}
+                                </div>
+
+                                <div class="text-xs text-muted">
+                                    {{ alert.created_at|timesince }} {% trans "ago" %}
+                                </div>
+
+                            </td>
+
+
+                            <!-- Status -->
+                            <td style="padding: 14px; vertical-align: top;">
+
+                                <span class="badge
+                                    {% if alert.status == 'acknowledged' or alert.status == 'resolved' %}
+                                        badge-green
+                                    {% elif alert.status == 'calling' %}
+                                        badge-yellow
+                                    {% elif alert.status == 'failed' %}
+                                        badge-red
+                                    {% else %}
+                                        badge-red
+                                    {% endif %}
+                                ">
+                                    {{ alert.get_status_display }}
+                                </span>
+
+                            </td>
+
+
+                            <!-- Acknowledged By -->
+                            <td style="padding: 14px; vertical-align: top;">
+
+                                {% if alert.acknowledged_by %}
+
+                                    <strong>
+                                        {{ alert.acknowledged_by.get_full_name|default:alert.acknowledged_by.username }}
+                                    </strong>
+
+                                    {% if alert.acknowledged_at %}
+                                        <div class="text-xs text-muted">
+                                            {{ alert.acknowledged_at|date:"d M Y, H:i:s" }}
+                                        </div>
+                                    {% endif %}
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Actions -->
+                            <td style="
+                                padding: 14px;
+                                vertical-align: top;
+                                min-width: 220px;
+                            ">
+
+                                <div style="
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 8px;
+                                ">
+
+                                    <a
+                                        href="{% url 'emergency:alert_detail' alert.id %}"
+                                        class="btn btn-secondary"
+                                    >
+                                        👁️ {% trans "View Details" %}
+                                    </a>
+
+
+                                    {% if alert.status == 'triggered' or alert.status == 'calling' %}
+
+                                        <!-- Acknowledge -->
+                                        <form
+                                            method="post"
+                                            action="{% url 'emergency:admin_ack' alert.id %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <input
+                                                type="text"
+                                                name="note"
+                                                maxlength="500"
+                                                placeholder="{% trans 'Acknowledgement note (optional)' %}"
+                                                style="
+                                                    width: 100%;
+                                                    margin-bottom: 6px;
+                                                "
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-primary"
+                                                style="width: 100%;"
+                                                onclick="return confirm('{% trans "Acknowledge this emergency alert?" %}');"
+                                            >
+                                                ✅ {% trans "Acknowledge" %}
+                                            </button>
+                                        </form>
+
+
+                                        <!-- Resolve -->
+                                        <form
+                                            method="post"
+                                            action="{% url 'emergency:admin_resolve' alert.id %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <input
+                                                type="text"
+                                                name="note"
+                                                maxlength="500"
+                                                placeholder="{% trans 'Resolution note (optional)' %}"
+                                                style="
+                                                    width: 100%;
+                                                    margin-bottom: 6px;
+                                                "
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-secondary"
+                                                style="width: 100%;"
+                                                onclick="return confirm('{% trans "Resolve this emergency alert?" %}');"
+                                            >
+                                                ✔️ {% trans "Resolve" %}
+                                            </button>
+                                        </form>
+
+                                    {% elif alert.status == 'acknowledged' %}
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'emergency:admin_resolve' alert.id %}"
+                                        >
+                                            {% csrf_token %}
+
+                                            <input
+                                                type="text"
+                                                name="note"
+                                                maxlength="500"
+                                                placeholder="{% trans 'Resolution note (optional)' %}"
+                                                style="
+                                                    width: 100%;
+                                                    margin-bottom: 6px;
+                                                "
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-primary"
+                                                style="width: 100%;"
+                                                onclick="return confirm('{% trans "Mark this emergency as resolved?" %}');"
+                                            >
+                                                ✔️ {% trans "Resolve" %}
+                                            </button>
+                                        </form>
+
+                                    {% else %}
+
+                                        <span class="text-muted text-xs">
+                                            {% trans "No further action required." %}
+                                        </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div style="
+                text-align: center;
+                padding: 60px 20px;
+            ">
+
+                <div style="font-size: 56px;">
+                    🛡️
+                </div>
+
+                <h2>
+                    {% trans "No Emergency Alerts" %}
+                </h2>
+
+                <p class="text-muted">
+                    {% trans "There are currently no emergency alerts in the system." %}
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

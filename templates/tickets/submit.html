@@ -4,109 +4,161 @@
 {% block title %}{% trans "New Request" %}{% endblock %}
 
 {% block content %}
-<div style="max-width: 760px; margin: 0 auto;">
+<div class="container-narrow" style="max-width: 800px; margin: 0 auto;">
 
 <h1>✍️ {% trans "New Request" %}</h1>
-<p style="color: #64748b; margin-bottom: 24px;">
-    {% trans "Describe your issue in your own words. Our AI will format it into a proper application and route it to the right department." %}
-</p>
+<p class="text-muted">{% trans "Describe your issue in your own words. Our AI will draft a formal application using your college records." %}</p>
 
-<form method="post" enctype="multipart/form-data" id="ticket-form">
-    {% csrf_token %}
-
+<!-- ===== STEP 1: Input ===== -->
+<div id="step-input">
     <div class="card">
-        <!-- ===== Ticket Type (stays at top) ===== -->
         <div class="form-group">
-            <label for="ticket_type">{% trans "What do you need?" %}</label>
-            <select name="ticket_type" id="ticket_type" required
-                    onchange="switchType(this.value)">
-                {% for t in ticket_types %}
-                    <option value="{{ t.code }}"
-                        {% if selected_type.code == t.code %}selected{% endif %}>
-                        {{ t.icon }} {{ t.name }}
-                    </option>
-                {% endfor %}
+            <label for="ticket_type">{% trans "Type of request" %}</label>
+            <select id="ticket_type" required>
+                <option value="complaint">🐛 {% trans "Complaint" %}</option>
+                <option value="leave">📝 {% trans "Leave" %}</option>
+                <option value="document">📄 {% trans "Document" %}</option>
+                <option value="gatepass">🚪 {% trans "Gate Pass" %}</option>
             </select>
-            {% if selected_type.description %}
-            <p style="font-size: 13px; color: #64748b; margin-top: 6px;">
-                {{ selected_type.description }}
-            </p>
-            {% endif %}
         </div>
 
-        <!-- ===== Dynamic fields (AJAX swapped) ===== -->
-        <div id="dynamic-fields-container">
-            {% include 'tickets/_dynamic_fields.html' %}
+        <div class="form-group">
+            <label for="raw_input">{% trans "Describe in your own words" %} *</label>
+            <textarea id="raw_input" rows="5" required
+                      placeholder="e.g., water tap in room 302 is leaking since 3 days"></textarea>
         </div>
 
-        <!-- ===== Universal: description ===== -->
-        <div class="form-group" style="margin-top: 20px;">
-            <label for="raw_input">
-                {% trans "Describe in your own words" %}
-                <span style="color: #dc2626;">*</span>
-            </label>
-            <textarea name="raw_input" id="raw_input" rows="5" required
-                      placeholder="e.g., water tap in room 302 is leaking since 3 days and it's flooding the bathroom">{{ raw_input|default:'' }}</textarea>
-            <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
-                💡 {% trans "Tip: mention location, duration, and severity. AI will handle the formalities." %}
-            </p>
-        </div>
-
-        <!-- ===== Universal: attachment ===== -->
         <div class="form-group">
             <label for="attachment">{% trans "Attachment (optional)" %}</label>
-            <input type="file" name="attachment" id="attachment"
-                   accept=".pdf,.png,.jpg,.jpeg,.docx,.doc">
-            <p style="font-size: 12px; color: #64748b; margin-top: 6px;">
-                {% trans "Max 5 MB · PDF, image, or Word" %}
-            </p>
+            <input type="file" id="attachment" accept=".pdf,.png,.jpg,.jpeg,.docx,.doc">
         </div>
 
-        <!-- ===== Submit ===== -->
-        <div id="offline-indicator" style="display: none; padding: 10px 14px; margin-bottom: 12px;
-             background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;
-             font-size: 14px; color: #78350f;">
-            📴 {% trans "You are offline. Your request will be saved locally and submitted automatically when the connection returns." %}
-        </div>
-
-        <button type="submit" class="btn btn-lg" style="width: 100%;"
-                onclick="setTimeout(() => window.burstConfetti(30), 100);">
-            🚀 {% trans "Submit Request" %}
+        <button type="button" class="btn btn-lg" style="width: 100%;" onclick="generateDraft()">
+            ✨ {% trans "Generate Draft with AI" %}
         </button>
     </div>
+</div>
+
+<!-- ===== STEP 2: Preview + Edit ===== -->
+<div id="step-preview" style="display: none;">
+    <div class="alert alert-info" style="margin-bottom: var(--sp-4);">
+        🤖 {% trans "AI has drafted a formal application using your college records. Review and edit before submitting." %}
+    </div>
+
+    <div class="card">
+        <h3 style="margin-bottom: var(--sp-3);">📄 {% trans "Application Draft" %}</h3>
+        <p class="text-muted" style="font-size: var(--fs-sm);">
+            {% trans "Edit if needed. Your name, roll number, department, and other details are auto-filled from the college database." %}
+        </p>
+
+        <textarea id="formatted_body"
+          rows="20"
+          style="display: block; width: 100%; max-width: 100%; min-height: 520px; box-sizing: border-box; resize: vertical; white-space: pre-wrap; overflow-wrap: break-word; font-family: var(--font-mono); font-size: 14px; line-height: 1.7; padding: 12px;"></textarea>
+
+        <div id="draft-status" class="text-xs text-muted" style="margin-top: var(--sp-2);"></div>
+    </div>
+
+    <div style="display: flex; gap: var(--sp-2);">
+        <button type="button" class="btn btn-secondary" onclick="backToInput()">
+            ← {% trans "Back" %}
+        </button>
+        <button type="button" class="btn btn-lg" style="flex: 1;" onclick="finalSubmit()">
+            ✅ {% trans "Confirm & Submit" %}
+        </button>
+    </div>
+</div>
+
+<!-- Hidden form for final submission -->
+<form id="final-form" method="post" action="{% url 'tickets:confirm' %}" enctype="multipart/form-data" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="ticket_type" id="final_ticket_type">
+    <input type="hidden" name="raw_input" id="final_raw_input">
+    <input type="hidden" name="formatted_body" id="final_formatted_body">
+    <input type="file" name="attachment" id="final_attachment" style="display: none;">
 </form>
 
 </div>
 
 <script>
-// Track current ticket type to avoid redundant AJAX
-let currentType = "{{ selected_type.code }}";
+let draftData = null;
 
-function switchType(newType) {
-    if (newType === currentType) return;
+async function generateDraft() {
+    const ticket_type = document.getElementById('ticket_type').value;
+    const raw_input = document.getElementById('raw_input').value.trim();
 
-    fetch(`/tickets/type/${newType}/fields/`, {
-        headers: {'X-Requested-With': 'XMLHttpRequest'}
-    })
-    .then(r => r.text())
-    .then(html => {
-        document.getElementById('dynamic-fields-container').innerHTML = html;
-        currentType = newType;
-    })
-    .catch(err => console.error('Failed to load fields:', err));
+    if (raw_input.length < 10) {
+        alert('Please describe your issue in at least 10 characters.');
+        return;
+    }
+
+    // Loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Generating…';
+
+    try {
+        const res = await fetch('{% url "tickets:preview" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ ticket_type, raw_input, dynamic_data: {} }),
+        });
+        const data = await res.json();
+
+        if (!data.ok) {
+            alert('Could not generate draft: ' + (data.error || 'unknown'));
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
+        }
+
+        draftData = data;
+
+        // Show preview
+        document.getElementById('step-input').style.display = 'none';
+        document.getElementById('step-preview').style.display = 'block';
+        document.getElementById('formatted_body').value = data.draft;
+        document.getElementById('draft-status').textContent =
+            `Source: ${data.source}${data.latency_ms ? ' · ' + data.latency_ms + 'ms' : ''}`;
+    } catch (e) {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 }
 
-// Offline indicator
-document.addEventListener('DOMContentLoaded', () => {
-    const indicator = document.getElementById('offline-indicator');
-    const update = () => {
-        indicator.style.display = navigator.onLine ? 'none' : 'block';
-    };
+function backToInput() {
+    document.getElementById('step-input').style.display = 'block';
+    document.getElementById('step-preview').style.display = 'none';
+    document.querySelector('#step-input button').disabled = false;
+    document.querySelector('#step-input button').innerHTML = '✨ Generate Draft with AI';
+}
 
-    update();
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
-});
+function finalSubmit() {
+    const body = document.getElementById('formatted_body').value.trim();
+    if (!body) {
+        alert('Application cannot be empty.');
+        return;
+    }
+
+    document.getElementById('final_ticket_type').value = document.getElementById('ticket_type').value;
+    document.getElementById('final_raw_input').value = document.getElementById('raw_input').value;
+    document.getElementById('final_formatted_body').value = body;
+
+    // Copy file if selected
+    const fileInput = document.getElementById('attachment');
+    if (fileInput.files.length) {
+        const dt = new DataTransfer();
+        dt.items.add(fileInput.files[0]);
+        document.getElementById('final_attachment').files = dt.files;
+    }
+
+    window.burstConfetti && window.burstConfetti(30);
+    document.getElementById('final-form').submit();
+}
 </script>
 
 {% endblock %}

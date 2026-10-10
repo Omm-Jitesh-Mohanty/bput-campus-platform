@@ -13,46 +13,39 @@
 </div>
 
 {% if notices %}
-    {% for notice in notices %}
-    <a href="{% url 'notices:detail' notice.id %}" style="text-decoration: none; color: inherit;">
-        <div class="card" style="cursor: pointer;
-            {% if notice.ai_priority == 'high' %}border-left: 4px solid #dc2626;{% elif notice.ai_priority == 'medium' %}border-left: 4px solid #f59e0b;{% else %}border-left: 4px solid #94a3b8;{% endif %}">
-            <div style="display: flex; justify-content: space-between; gap: 12px;">
-                <div style="flex: 1;">
-                    <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
-                        {% if notice.ai_priority == 'high' %}
-                            <span class="badge badge-red">🔴 {% trans "High priority" %}</span>
-                        {% elif notice.ai_priority == 'medium' %}
-                            <span class="badge badge-yellow">🟡 {% trans "Medium" %}</span>
-                        {% else %}
-                            <span class="badge badge-gray">⚪ {% trans "Low" %}</span>
-                        {% endif %}
-                        <span style="font-size: 12px; color: #64748b;">
-                            {{ notice.created_at|short_time_ago }}
-                        </span>
-                    </div>
-                    <h3 style="margin: 0; font-size: 17px;">{{ notice.title }}</h3>
+    {% for item in notices %}
+    {% with n=item.notice %}
+    <a href="{% url 'notices:detail' n.id %}" style="text-decoration: none; color: inherit;">
+        <div class="card"
+             style="cursor: pointer; border-left: 4px solid
+             {% if item.priority == 'critical' %}var(--danger-600)
+             {% elif item.priority == 'high' %}var(--danger-500)
+             {% elif item.priority == 'medium' %}var(--warning-500)
+             {% else %}var(--gray-400){% endif %};">
 
-                    {% if notice.ai_summary %}
-                    <p style="color: #475569; font-size: 14px; margin-top: 6px;">
-                        <strong>Summary:</strong> {{ notice.ai_summary }}
-                    </p>
-                    {% else %}
-                    <p style="color: #64748b; font-size: 14px; margin-top: 6px;">
-                        {{ notice.content|truncatewords:25 }}
-                    </p>
-                    {% endif %}
+            <div style="display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-2);">
+                <span class="badge badge-{% if item.priority == 'critical' %}red{% elif item.priority == 'high' %}red{% elif item.priority == 'medium' %}yellow{% else %}gray{% endif %}">
+                    {% if item.priority == 'critical' %}🚨 CRITICAL
+                    {% elif item.priority == 'high' %}🔴 HIGH
+                    {% elif item.priority == 'medium' %}🟡 MEDIUM
+                    {% else %}⚪ LOW{% endif %}
+                </span>
 
-                    {% if user.is_admin_role %}
-                    <p style="font-size: 12px; color: #64748b; margin-top: 8px;">
-                        📊 {{ notice.read_count }} / {{ notice.total_targeted }} read
-                        ({{ notice.read_percentage }}%)
-                    </p>
-                    {% endif %}
-                </div>
+                {% if item.reasons %}
+                    <span class="text-xs text-muted">
+                        {% for r in item.reasons %}{{ r }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                    </span>
+                {% endif %}
             </div>
+
+            <h3>{{ n.title }}</h3>
+
+            {% if n.ai_summary %}
+                <p class="text-sm text-muted">{{ n.ai_summary }}</p>
+            {% endif %}
         </div>
     </a>
+    {% endwith %}
     {% endfor %}
 {% else %}
 <div class="card" style="text-align: center; padding: 48px;">

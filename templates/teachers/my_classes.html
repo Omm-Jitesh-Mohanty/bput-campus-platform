@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "My Classes" %}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div style="margin-bottom: var(--sp-6);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-4); flex-wrap: wrap;">
+            <div>
+                <h1>📅 {% trans "My Classes" %}</h1>
+
+                <p class="text-muted">
+                    {% trans "Your weekly teaching schedule" %}
+                    {% if user.department %}
+                        · {{ user.department }}
+                    {% endif %}
+                </p>
+            </div>
+
+            <a href="{% url 'teachers:dashboard' %}" class="btn btn-secondary">
+                ← {% trans "Dashboard" %}
+            </a>
+        </div>
+    </div>
+
+    {% for day in days %}
+
+        <section style="margin-bottom: var(--sp-6);">
+
+            <div style="display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3);">
+                <h2 style="margin: 0;">
+                    {% if day == 'Mon' %}
+                        {% trans "Monday" %}
+                    {% elif day == 'Tue' %}
+                        {% trans "Tuesday" %}
+                    {% elif day == 'Wed' %}
+                        {% trans "Wednesday" %}
+                    {% elif day == 'Thu' %}
+                        {% trans "Thursday" %}
+                    {% elif day == 'Fri' %}
+                        {% trans "Friday" %}
+                    {% elif day == 'Sat' %}
+                        {% trans "Saturday" %}
+                    {% else %}
+                        {{ day }}
+                    {% endif %}
+                </h2>
+
+                <span class="badge badge-blue">
+                    {{ by_day|get_item:day|length }}
+                    {% trans "classes" %}
+                </span>
+            </div>
+
+            {% if by_day|get_item:day %}
+
+                <div style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: var(--sp-4);
+                ">
+
+                    {% for cls in by_day|get_item:day %}
+
+                        <div class="card">
+
+                            <div style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                                gap: var(--sp-3);
+                                margin-bottom: var(--sp-3);
+                            ">
+
+                                <div>
+                                    <div style="
+                                        font-size: var(--fs-lg);
+                                        font-weight: 700;
+                                        margin-bottom: var(--sp-1);
+                                    ">
+                                        {{ cls.time_slot }}
+                                    </div>
+
+                                    <div style="
+                                        font-weight: 600;
+                                        font-size: var(--fs-md);
+                                    ">
+                                        {{ cls.subject_name }}
+                                    </div>
+                                </div>
+
+                                {% if cls.subject_code %}
+                                    <span class="badge badge-blue">
+                                        {{ cls.subject_code }}
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                            <div class="text-sm text-muted" style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 6px;
+                                margin-bottom: var(--sp-4);
+                            ">
+
+                                {% if cls.department %}
+                                    <div>
+                                        🏢 {{ cls.department }}
+                                    </div>
+                                {% endif %}
+
+                                {% if cls.batch_year %}
+                                    <div>
+                                        🎓 {% trans "Batch" %} {{ cls.batch_year }}
+                                    </div>
+                                {% endif %}
+
+                                {% if cls.room %}
+                                    <div>
+                                        🚪 {% trans "Room" %} {{ cls.room }}
+                                    </div>
+                                {% endif %}
+
+                                {% if cls.faculty_name %}
+                                    <div>
+                                        👨‍🏫 {{ cls.faculty_name }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                            <div style="
+                                display: flex;
+                                gap: var(--sp-2);
+                                flex-wrap: wrap;
+                            ">
+
+                                <a href="{% url 'teachers:mark_attendance' cls.id %}"
+                                   class="btn btn-sm">
+                                    ✅ {% trans "Attendance" %}
+                                </a>
+
+                                <a href="{% url 'teachers:cancel_class' cls.id %}"
+                                   class="btn btn-secondary btn-sm">
+                                    🔄 {% trans "Change Class" %}
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="card" style="
+                    padding: var(--sp-5);
+                    text-align: center;
+                ">
+                    <div style="font-size: 32px; margin-bottom: var(--sp-2);">
+                        📭
+                    </div>
+
+                    <div class="text-muted">
+                        {% trans "No classes scheduled for this day." %}
+                    </div>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

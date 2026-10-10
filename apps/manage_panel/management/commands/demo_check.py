@@ -37,6 +37,9 @@ class Command(BaseCommand):
             ('LibreOffice available', self._check_libreoffice),
             ('Static files present', self._check_static),
             ('DEBUG mode', self._check_debug),
+            ('RBAC permissions', self._check_rbac),
+            ('Teacher UI', self._check_teachers),
+            ('Unified dashboard URL', self._check_unified_dashboard),
         ]
 
         failures = []
@@ -71,59 +74,105 @@ class Command(BaseCommand):
 
     def _check_config(self):
         from apps.core.models import Department, TicketType, PriorityLevel, SLAPolicy
+
         depts = Department.objects.count()
         tts = TicketType.objects.count()
         prios = PriorityLevel.objects.count()
         slas = SLAPolicy.objects.count()
+
         ok = depts > 0 and tts > 0 and prios > 0 and slas > 0
-        return ok, f'{depts} depts, {tts} types, {prios} priorities, {slas} SLAs'
+
+        return ok, (
+            f'{depts} depts, {tts} types, '
+            f'{prios} priorities, {slas} SLAs'
+        )
 
     def _check_users(self):
         students = User.objects.filter(role='student').count()
         admins = User.objects.exclude(role='student').count()
+
         ok = students >= 5 and admins >= 3
+
         return ok, f'{students} students, {admins} admins'
 
     def _check_tickets(self):
         from apps.tickets.models import CampusTicket
+
         pending = CampusTicket.objects.filter(status='pending').count()
+
         overdue = sum(
-            1 for t in CampusTicket.objects.filter(status='pending')
+            1
+            for t in CampusTicket.objects.filter(status='pending')
             if t.age_hours > 48
         )
+
         ok = pending >= 3
+
         return ok, f'{pending} pending, {overdue} overdue'
 
     def _check_ollama(self):
         import requests
-        url = settings.OLLAMA_URL.replace('/api/generate', '/api/tags')
+
+        url = settings.OLLAMA_URL.replace(
+            '/api/generate',
+            '/api/tags'
+        )
+
         try:
             r = requests.get(url, timeout=3)
+
             ok = r.status_code == 200
+
             return ok, f'HTTP {r.status_code}'
+
         except Exception as e:
             return False, f'unreachable: {e}'
 
     def _check_ollama_model(self):
         import requests
-        url = settings.OLLAMA_URL.replace('/api/generate', '/api/tags')
+
+        url = settings.OLLAMA_URL.replace(
+            '/api/generate',
+            '/api/tags'
+        )
+
         try:
             r = requests.get(url, timeout=3)
-            models = [m['name'] for m in r.json().get('models', [])]
+
+            models = [
+                m['name']
+                for m in r.json().get('models', [])
+            ]
+
             target = settings.OLLAMA_MODEL
-            ok = any(target.split(':')[0] in m for m in models)
-            return ok, f'model "{target}" loaded' if ok else f'available: {models}'
+
+            ok = any(
+                target.split(':')[0] in m
+                for m in models
+            )
+
+            return (
+                ok,
+                f'model "{target}" loaded'
+                if ok
+                else f'available: {models}'
+            )
+
         except Exception as e:
             return False, str(e)
 
     def _check_redis(self):
         try:
             import redis
+
             r = redis.from_url(settings.REDIS_URL)
             r.ping()
+
             return True, 'PONG'
+
         except ImportError:
             return False, 'redis-py not installed (optional)'
+
         except Exception as e:
             return False, f'unreachable: {e}'
 
@@ -141,6 +190,7 @@ class Command(BaseCommand):
     #         return False, 'not in PATH (reportlab fallback will be used)'
     #     except Exception as e:
     #         return False, str(e)
+
     def _check_libreoffice(self):
         import shutil
 
@@ -157,11 +207,138 @@ class Command(BaseCommand):
 
     def _check_static(self):
         from pathlib import Path
-        css = Path(settings.BASE_DIR) / 'static' / 'css' / 'design-system.css'
-        js = Path(settings.BASE_DIR) / 'static' / 'js' / 'ws_client.js'
+
+        css = (
+            Path(settings.BASE_DIR)
+            / 'static'
+            / 'css'
+            / 'design-system.css'
+        )
+
+        js = (
+            Path(settings.BASE_DIR)
+            / 'static'
+            / 'js'
+            / 'ws_client.js'
+        )
+
         ok = css.exists() and js.exists()
-        return ok, 'design-system.css + ws_client.js' if ok else 'missing files'
+
+        return (
+            ok,
+            'design-system.css + ws_client.js'
+            if ok
+            else 'missing files'
+        )
 
     def _check_debug(self):
         ok = settings.DEBUG
-        return ok, 'DEBUG=True (dev)' if ok else 'DEBUG=False (production!)'
+
+        return (
+            ok,
+            'DEBUG=True (dev)'
+            if ok
+            else 'DEBUG=False (production!)'
+        )
+
+    def _check_rbac(self):
+        """Verify the RBAC matrix is loaded and demo users have correct roles."""
+        from apps.core.permissions import has_perm, Perm, ROLE_PERMISSIONS
+        from apps.accounts.models import User
+
+        issues = []
+
+        # Check role registry completeness
+        expected_roles = [
+            'student',
+            'teacher',
+            'asst_prof',
+            'lab_asst',
+            'clerk',
+            'warden',
+            'hod',
+            'ao',
+            'dean',
+            'principal',
+            'director',
+            'chairman',
+        ]
+
+        for r in expected_roles:
+            if r not in ROLE_PERMISSIONS:
+                issues.append(
+                    f'role {r} missing from registry'
+                )
+
+        # Check demo users' permissions
+        try:
+            student = User.objects.get(
+                username='aditya'
+            )
+
+            warden = User.objects.get(
+                username='warden_a'
+            )
+
+            principal = User.objects.get(
+                username='principal'
+            )
+
+            if has_perm(
+                student,
+                Perm.VIEW_MANAGE_PANEL
+            ):
+                issues.append(
+                    'student has manage panel access!'
+                )
+
+            if has_perm(
+                warden,
+                Perm.VIEW_AUDIT_TRAIL
+            ):
+                issues.append(
+                    'warden has audit access!'
+                )
+
+            if not has_perm(
+                principal,
+                Perm.MANAGE_SLAS
+            ):
+                issues.append(
+                    'principal lacks SLA access!'
+                )
+
+        except User.DoesNotExist as e:
+            issues.append(
+                f'missing demo user: {e}'
+            )
+
+        if issues:
+            return False, '; '.join(issues)
+
+        return True, (
+            f'{len(expected_roles)} roles loaded, '
+            f'demo users verified'
+        )
+
+    def _check_teachers(self):
+        """Verify teacher-facing UI exists."""
+        from apps.accounts.models import User
+
+        teachers = User.objects.filter(
+            role__in=['teacher', 'asst_prof', 'lab_asst']
+        ).count()
+
+        return teachers > 0, f'{teachers} teachers in seed'
+
+    def _check_unified_dashboard(self):
+        """Verify the executive dashboard URL resolves."""
+        from django.urls import reverse
+
+        try:
+            url = reverse('dashboard:executive')
+
+            return True, url
+
+        except Exception as e:
+            return False, str(e)

@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from apps.core.services import ConfigService
+from apps.core.scoping import DataScope
 from .models import Notification, NotificationPreference
 
 logger = logging.getLogger(__name__)
@@ -479,32 +480,36 @@ class NotificationService:
 
     @classmethod
     def _approvers_for_step(cls, step_execution):
-        """Return list of users who can act on this step."""
-
+        """
+        Return users who can act on this step.
+        Filters by both role AND scope (department/hostel) — a warden of Block A
+        shouldn't get an approval request for a Block B ticket.
+        """
         step = step_execution.workflow_step
+        ticket = step_execution.ticket
 
+        # Specific user
         if step.specific_user_id:
             return [step.specific_user]
 
-        if step.role_required:
-            return list(
-                User.objects.filter(
-                    role=step.role_required,
-                    is_active=True
-                )
-            )
+        if not step.role_required:
+            # No role specified — send to all admins who can access this ticket
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            candidates = User.objects.filter(is_active=True).exclude(role='student')
+            return [u for u in candidates if DataScope.can_access_ticket(u, ticket)]
 
-        return list(
-            User.objects.filter(
-                role__in=[
-                    'warden',
-                    'hod',
-                    'dean',
-                    'principal'
-                ],
-                is_active=True
-            )
+        # Role-based, scoped
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        candidates = User.objects.filter(
+            role=step.role_required,
+            is_active=True,
         )
+
+        # Filter by scope
+        return [u for u in candidates if DataScope.can_access_ticket(u, ticket)]
 
     @classmethod
     def _priority_for_ticket(cls, ticket):

@@ -1,0 +1,3264 @@
+{% extends 'base.html' %}
+{% load i18n campus_extras %}
+
+{% block title %}{% trans "Campus Dashboard" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+.dash-wrap {
+    padding: 10px;
+    background: var(--bg-app);
+    height: calc(100vh - 60px);
+    min-height: 680px;
+    overflow: hidden;
+}
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 7px;
+    min-height: 38px;
+}
+
+.dash-header h1 {
+    margin: 0;
+    font-size: 21px;
+    line-height: 1.1;
+}
+
+.dash-header p {
+    margin: 3px 0 0;
+    font-size: 9px;
+}
+
+.dash-filters {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 7px 9px;
+    margin-bottom: 7px;
+    display: flex;
+    gap: 7px;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.dash-filters select,
+.dash-filters input {
+    padding: 4px 7px;
+    height: 27px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius);
+    font-size: 9px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    min-width: 78px;
+}
+
+.dash-filters label {
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.filter-item--authority {
+    min-width: 120px;
+}
+
+.filter-reset {
+    margin-left: auto;
+}
+
+.kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+    margin-bottom: 7px;
+}
+
+.kpi-card {
+    padding: 7px 9px;
+    border-radius: var(--radius);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--brand-500);
+    min-width: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.kpi-card__label {
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card__value {
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 4px 0 3px;
+}
+
+.kpi-card__sub {
+    font-size: 7px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card--danger {
+    border-left-color: var(--danger-500);
+}
+
+.kpi-card--danger .kpi-card__value {
+    color: var(--danger-600);
+}
+
+.kpi-card--success {
+    border-left-color: var(--success-500);
+}
+
+.kpi-card--success .kpi-card__value {
+    color: var(--success-600);
+}
+
+.kpi-card--gold {
+    border-left-color: var(--gold-500);
+}
+
+.kpi-card--gold .kpi-card__value {
+    color: var(--gold-600);
+}
+
+.kpi-card--teal {
+    border-left-color: var(--teal-500);
+}
+
+.kpi-card--teal .kpi-card__value {
+    color: var(--teal-600);
+}
+
+
+/* =========================================================
+   DASHBOARD ROWS
+   ========================================================= */
+
+.dashboard-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 7px;
+    min-height: 0;
+}
+
+.dashboard-row--main {
+    height: 190px;
+}
+
+.dashboard-row--secondary {
+    height: 165px;
+}
+
+.dashboard-row--intel {
+    height: 170px;
+}
+
+.dashboard-row--academic {
+    height: 170px;
+}
+
+.dashboard-row--recommendations {
+    height: 110px;
+}
+
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+
+.panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.035);
+}
+
+.panel__title {
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.chart-box {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+.chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* =========================================================
+   DEPARTMENT WORKLOAD
+   ========================================================= */
+
+.department-chart {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.department-chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* =========================================================
+   AGEING
+   ========================================================= */
+
+.ageing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+}
+
+.ageing-card {
+    padding: 6px;
+    border-radius: var(--radius);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+}
+
+.ageing-card__label {
+    font-size: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.ageing-card__value {
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+
+/* =========================================================
+   ACADEMIC RISK
+   ========================================================= */
+
+.academic-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+.academic-stat {
+    padding: 5px;
+    background: var(--bg-muted);
+    border-radius: var(--radius);
+    text-align: center;
+}
+
+.academic-stat__label {
+    font-size: 7px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.academic-stat__value {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+}
+
+.batch-title {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+    font-weight: 600;
+}
+
+.batch-chart {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.batch-chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+/* =========================================================
+   INTELLIGENCE CHARTS
+   ========================================================= */
+
+.intel-chart {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.intel-chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.intel-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+}
+
+.intel-chart-side {
+    position: relative;
+    min-height: 0;
+}
+
+.intel-details {
+    min-width: 0;
+    overflow-y: auto;
+    font-size: 8px;
+}
+
+
+/* =========================================================
+   NOTICE / FEEDBACK / COMPLAINT DETAILS
+   ========================================================= */
+
+.intel-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.intel-stat {
+    min-width: 0;
+}
+
+.intel-stat__label {
+    font-size: 6px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.intel-stat__value {
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+}
+
+.priority-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7px;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--bg-muted);
+}
+
+.priority-row:last-child {
+    border-bottom: none;
+}
+
+.feedback-summary {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.feedback-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.feedback-stat__value {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+}
+
+.feedback-stat__label {
+    font-size: 6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.theme-title {
+    font-size: 7px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    font-weight: 700;
+}
+
+.theme-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 7px;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--bg-muted);
+}
+
+.recurring-title {
+    font-size: 7px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 700;
+}
+
+.recurring-item {
+    padding: 4px 6px;
+    background: #fff7ed;
+    border-left: 3px solid var(--warning-500);
+    border-radius: var(--radius);
+    margin-bottom: 3px;
+    font-size: 8px;
+}
+
+.recurring-item:last-child {
+    margin-bottom: 0;
+}
+
+.emerging-box {
+    margin-top: 4px;
+    padding: 4px 6px;
+    background: var(--danger-50);
+    border-radius: var(--radius);
+    font-size: 7px;
+    color: var(--danger-700);
+}
+
+.intel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+
+/* =========================================================
+   AI RECOMMENDATIONS
+   ========================================================= */
+
+.dashboard-row--recommendations {
+    min-height: 110px;
+}
+
+.recommendation-panel {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.recommendation-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    margin-bottom: 6px;
+}
+
+.recommendation-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.recommendation-heading {
+    min-width: 0;
+}
+
+.recommendation-heading strong {
+    display: block;
+    font-size: 10px;
+    line-height: 1.1;
+}
+
+.recommendation-heading span {
+    display: block;
+    margin-top: 2px;
+    font-size: 7px;
+    color: var(--text-muted);
+}
+
+.recommendation-source {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 999px;
+    font-size: 6px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+}
+
+.recommendation-source--llm {
+    color: var(--success-700);
+    background: var(--success-50);
+    border: 1px solid #bbf7d0;
+}
+
+.recommendation-source--fallback {
+    color: var(--warning-700);
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+}
+
+.recommendation-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.recommendation-card {
+    min-width: 0;
+    min-height: 0;
+    padding: 6px 7px;
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--brand-500);
+    border-radius: var(--radius);
+    background: var(--bg-muted);
+    overflow: hidden;
+}
+
+.recommendation-card--critical {
+    border-left-color: var(--danger-500);
+    background: var(--danger-50);
+}
+
+.recommendation-card--high {
+    border-left-color: var(--danger-500);
+    background: var(--danger-50);
+}
+
+.recommendation-card--medium {
+    border-left-color: var(--warning-500);
+    background: #fff7ed;
+}
+
+.recommendation-card--low {
+    border-left-color: var(--success-500);
+    background: #f0fdf4;
+}
+
+.recommendation-card__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+}
+
+.recommendation-card__priority {
+    font-size: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+}
+
+.recommendation-card--critical .recommendation-card__priority {
+    color: var(--danger-700);
+}
+
+.recommendation-card--high .recommendation-card__priority {
+    color: var(--danger-700);
+}
+
+.recommendation-card--medium .recommendation-card__priority {
+    color: var(--warning-700);
+}
+
+.recommendation-card--low .recommendation-card__priority {
+    color: var(--success-700);
+}
+
+.recommendation-card__title {
+    font-size: 8px;
+    font-weight: 800;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recommendation-card__reason {
+    margin-top: 3px;
+    font-size: 7px;
+    line-height: 1.25;
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recommendation-card__action {
+    margin-top: 4px;
+    font-size: 7px;
+    line-height: 1.2;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recommendation-card__action strong {
+    font-weight: 800;
+}
+
+.recommendation-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 45px;
+    padding: 6px;
+    color: var(--text-muted);
+    font-size: 8px;
+    text-align: center;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius);
+    background: var(--bg-muted);
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 8px;
+    padding: 10px 5px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1400px) {
+
+    .dash-wrap {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .dash-filters {
+        flex-wrap: wrap;
+    }
+
+    .kpi-strip {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .dashboard-row {
+        grid-template-columns: 1fr 1fr;
+        height: auto;
+        min-height: 220px;
+    }
+
+    .dashboard-row--main,
+    .dashboard-row--secondary,
+    .dashboard-row--intel,
+    .dashboard-row--academic {
+        height: auto;
+        min-height: 220px;
+    }
+
+    .dashboard-row--recommendations {
+        height: auto;
+        min-height: 150px;
+    }
+
+    .recommendation-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .panel {
+        min-height: 210px;
+    }
+}
+
+
+@media (max-width: 900px) {
+
+    .kpi-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-row {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-filters {
+        flex-wrap: wrap;
+    }
+
+    .filter-reset {
+        margin-left: 0;
+    }
+
+    .intel-layout {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .recommendation-list {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .intel-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   SHORT SCREENS
+   ========================================================= */
+
+@media (max-height: 800px) and (min-width: 1401px) {
+
+    .dash-wrap {
+        padding: 7px;
+    }
+
+    .dash-header {
+        margin-bottom: 5px;
+    }
+
+    .dash-filters {
+        margin-bottom: 5px;
+        padding: 5px 7px;
+    }
+
+    .kpi-strip {
+        margin-bottom: 5px;
+    }
+
+    .kpi-card {
+        padding: 5px 7px;
+    }
+
+    .dashboard-row {
+        margin-bottom: 5px;
+    }
+
+    .dashboard-row--main {
+        height: 170px;
+    }
+
+    .dashboard-row--secondary {
+        height: 145px;
+    }
+
+    .dashboard-row--intel {
+        height: 150px;
+    }
+
+    .dashboard-row--academic {
+        height: 150px;
+    }
+
+    .dashboard-row--recommendations {
+        height: 105px;
+    }
+
+    .recommendation-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="dash-wrap">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="dash-header">
+
+        <div>
+            <h1>📊 {% trans "Principal Command Center" %}</h1>
+
+            <p class="text-muted">
+                {{ user.get_role_display }} ·
+                {{ last_updated|date:"d M Y, H:i" }}
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard:executive' %}"
+           class="btn btn-secondary btn-sm">
+            🔄 {% trans "Refresh" %}
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTERS
+         ===================================================== -->
+
+    <form method="get"
+          class="dash-filters"
+          id="filterForm">
+
+        <div class="filter-item">
+            <label>📅 {% trans "Date" %}</label>
+
+            <select name="days"
+                    onchange="this.form.submit()">
+
+                <option value="7"
+                    {% if filters.days == '7' %}selected{% endif %}>
+                    7d
+                </option>
+
+                <option value="30"
+                    {% if filters.days == '30' %}selected{% endif %}>
+                    30d
+                </option>
+
+                <option value="90"
+                    {% if filters.days == '90' %}selected{% endif %}>
+                    90d
+                </option>
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>🏫 {% trans "Department" %}</label>
+
+            <select name="department"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.departments %}
+
+                    <option value="{{ code }}"
+                        {% if filters.department == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>🎓 {% trans "Batch" %}</label>
+
+            <select name="batch"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.batches %}
+
+                    <option value="{{ code }}"
+                        {% if filters.batch == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>📋 {% trans "Request Type" %}</label>
+
+            <select name="type"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.types %}
+
+                    <option value="{{ code }}"
+                        {% if filters.type == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>⚡ {% trans "Priority" %}</label>
+
+            <select name="priority"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.priorities %}
+
+                    <option value="{{ code }}"
+                        {% if filters.priority == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>📌 {% trans "Status" %}</label>
+
+            <select name="status"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.statuses %}
+
+                    <option value="{{ code }}"
+                        {% if filters.status == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item filter-item--authority">
+            <label>👤 {% trans "Authority" %}</label>
+
+            <select name="authority"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.authorities %}
+
+                    <option value="{{ code }}"
+                        {% if filters.authority == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item">
+            <label>🏠 {% trans "Hostel" %}</label>
+
+            <select name="hostel"
+                    onchange="this.form.submit()">
+
+                <option value="">
+                    {% trans "All" %}
+                </option>
+
+                {% for code, name in filter_options.hostels %}
+
+                    <option value="{{ code }}"
+                        {% if filters.hostel == code %}selected{% endif %}>
+                        {{ name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+        </div>
+
+
+        <div class="filter-item filter-reset">
+
+            <a href="{% url 'dashboard:executive' %}"
+               class="btn btn-secondary btn-sm">
+
+                ✕ {% trans "Reset" %}
+
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <!-- =====================================================
+         KPI STRIP
+         ===================================================== -->
+
+    <div class="kpi-strip">
+
+        <div class="kpi-card">
+
+            <div class="kpi-card__label">
+                🎫 {% trans "Open Requests" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.open_requests }}
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "unresolved workload" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--danger">
+
+            <div class="kpi-card__label">
+                🚨 {% trans "Critical / Overdue" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.critical_overdue }}
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "immediate attention" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--gold">
+
+            <div class="kpi-card__label">
+                ⏱ {% trans "Avg Resolution" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.avg_resolution_hours }}h
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "last 30d" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--success">
+
+            <div class="kpi-card__label">
+                ⚡ {% trans "Response and Resolution time" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.sla_compliance }}%
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "resolved in time" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--danger">
+
+            <div class="kpi-card__label">
+                🎓 {% trans "Attendance Risk" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.attendance_risk_pct }}%
+            </div>
+
+            <div class="kpi-card__sub">
+                {{ kpis.attendance_risk_count }}
+                {% trans "students <75%" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--teal">
+
+            <div class="kpi-card__label">
+                📢 {% trans "Notice Reach" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.notice_reach }}%
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "read rate" %}
+            </div>
+
+        </div>
+
+
+        <div class="kpi-card kpi-card--danger">
+
+            <div class="kpi-card__label">
+                💬 {% trans "Open Complaints" %}
+            </div>
+
+            <div class="kpi-card__value">
+                {{ kpis.unresolved_complaints }}
+            </div>
+
+            <div class="kpi-card__sub">
+                {% trans "unresolved" %}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ROW 1
+         Requests by Type | Request Volume
+         ===================================================== -->
+
+    <div class="dashboard-row dashboard-row--main">
+
+        <div class="panel">
+
+            <div class="panel__title">
+                📊 {% trans "Requests by Type" %}
+            </div>
+
+            <div class="chart-box">
+                <canvas id="typeChart"></canvas>
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel__title">
+                📈 {% trans "Request Volume (30 days)" %}
+            </div>
+
+            <div class="chart-box">
+                <canvas id="trendChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ROW 2
+         Department Workload | Ageing Heatmap
+         ===================================================== -->
+
+    <div class="dashboard-row dashboard-row--secondary">
+
+        <div class="panel">
+
+            <div class="panel__title">
+                🏫 {% trans "Department Workload" %}
+            </div>
+
+            <div class="department-chart">
+                <canvas id="departmentPerformanceChart"></canvas>
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel__title">
+                🔥 {% trans "Ageing Heatmap" %}
+            </div>
+
+            <div class="ageing-grid">
+
+                {% for key, bucket in ageing.items %}
+
+                <div class="ageing-card"
+                     style="
+                        background:
+                        {% if bucket.color == 'green' %}
+                            #f0fdf4
+                        {% elif bucket.color == 'yellow' %}
+                            #fefce8
+                        {% elif bucket.color == 'orange' %}
+                            #fff7ed
+                        {% else %}
+                            #fef2f2
+                        {% endif %}
+                     ;">
+
+                    <div class="ageing-card__label">
+                        {{ bucket.label }}
+                    </div>
+
+                    <div class="ageing-card__value">
+                        {{ bucket.count }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ROW 3
+         Complaint Intelligence | Notice Intelligence
+         ===================================================== -->
+
+    <div class="dashboard-row dashboard-row--intel">
+
+        <div class="panel">
+
+            <div class="panel__title">
+                🚰 {% trans "Complaint Intelligence" %}
+            </div>
+
+            <div class="intel-layout">
+
+                <div class="intel-chart-side">
+                    <canvas id="complaintChart"></canvas>
+                </div>
+
+                <div class="intel-details">
+
+                    <div class="recurring-title">
+                        {% trans "Recurring Issues" %}
+                    </div>
+
+                    {% for r in complaint_intel.recurring %}
+
+                    <div class="recurring-item">
+
+                        <strong>{{ r.department }}</strong>
+                        — {{ r.count }} {% trans "complaints" %}
+
+                        {% if r.blocks %}
+
+                        <div style="
+                            color: var(--text-muted);
+                            font-size: 7px;
+                            margin-top: 2px;
+                        ">
+
+                            {% for block, c in r.blocks.items %}
+
+                                Block {{ block }}: {{ c }}
+
+                                {% if not forloop.last %}
+                                    ·
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% empty %}
+
+                    <div class="empty-state">
+                        {% trans "No recurring issues detected" %}
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel__title">
+                📢 {% trans "Notice Intelligence" %}
+            </div>
+
+            <div class="intel-layout">
+
+                <div class="intel-chart-side">
+                    <canvas id="noticeChart"></canvas>
+                </div>
+
+                <div class="intel-details">
+
+                    <div class="intel-stat-grid">
+
+                        <div class="intel-stat">
+
+                            <div class="intel-stat__label">
+                                {% trans "Published" %}
+                            </div>
+
+                            <div class="intel-stat__value">
+                                {{ notice_intel.published }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="intel-stat">
+
+                            <div class="intel-stat__label">
+                                {% trans "Targeted" %}
+                            </div>
+
+                            <div class="intel-stat__value">
+                                {{ notice_intel.targeted }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="intel-stat">
+
+                            <div class="intel-stat__label">
+                                {% trans "Read" %}
+                            </div>
+
+                            <div class="intel-stat__value"
+                                 style="color: var(--success-600);">
+                                {{ notice_intel.read }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="intel-stat">
+
+                            <div class="intel-stat__label">
+                                {% trans "Unread" %}
+                            </div>
+
+                            <div class="intel-stat__value"
+                                 style="color: var(--danger-600);">
+                                {{ notice_intel.unread }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="priority-row">
+
+                        <span>
+                            {% trans "Overall read rate" %}
+                        </span>
+
+                        <strong>
+                            {{ notice_intel.read_pct }}%
+                        </strong>
+
+                    </div>
+
+
+                    {% for p in notice_intel.by_priority %}
+
+                    <div class="priority-row">
+
+                        <span style="text-transform: capitalize;">
+                            {{ p.priority }}
+                        </span>
+
+                        <span>
+                            {{ p.published }}
+                            {% trans "published" %}
+                            ·
+                            <strong>{{ p.read_pct }}%</strong>
+                            {% trans "read" %}
+                        </span>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ROW 4
+         Feedback Intelligence | Academic Risk
+         ===================================================== -->
+
+    <div class="dashboard-row dashboard-row--academic">
+
+        <div class="panel">
+
+            <div class="panel__title">
+                💬 {% trans "Feedback Intelligence" %}
+            </div>
+
+            <div class="intel-layout">
+
+                <div class="intel-chart-side">
+                    <canvas id="feedbackChart"></canvas>
+                </div>
+
+                <div class="intel-details">
+
+                    <div class="theme-title">
+                        {% trans "Top Themes" %}
+                    </div>
+
+                    {% for t in feedback_intel.themes|slice:":5" %}
+
+                    <div class="theme-row">
+
+                        <span>
+                            {{ t.name }}
+                        </span>
+
+                        <strong>
+                            {{ t.pct }}%
+                        </strong>
+
+                    </div>
+
+                    {% empty %}
+
+                    <div class="empty-state">
+                        {% trans "No feedback themes available" %}
+                    </div>
+
+                    {% endfor %}
+
+
+                    {% if feedback_intel.emerging %}
+
+                    <div class="emerging-box">
+
+                        🔴 {% trans "Emerging:" %}
+
+                        {% for e in feedback_intel.emerging %}
+
+                            {{ e.name }}
+
+                            {% if not forloop.last %}
+                                ,
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel__title">
+                🎓 {% trans "Academic Risk" %}
+            </div>
+
+
+            <div class="academic-summary">
+
+                <div class="academic-stat">
+
+                    <div class="academic-stat__label">
+                        {% trans "Monitored" %}
+                    </div>
+
+                    <div class="academic-stat__value">
+                        {{ academic_risk.total_monitored }}
+                    </div>
+
+                </div>
+
+
+                <div class="academic-stat"
+                     style="background: var(--danger-50);">
+
+                    <div class="academic-stat__label">
+                        {% trans "Below 75%" %}
+                    </div>
+
+                    <div class="academic-stat__value"
+                         style="color: var(--danger-600);">
+
+                        {{ academic_risk.below_75 }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="batch-title">
+                {% trans "At risk by batch" %}
+            </div>
+
+
+            <div class="batch-chart">
+                <canvas id="academicRiskChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ROW 5
+         AI Recommendations
+         ===================================================== -->
+
+    <div class="dashboard-row dashboard-row--recommendations">
+
+        <div class="panel recommendation-panel">
+
+            <div class="recommendation-header">
+
+                <div class="recommendation-icon">
+                    🤖
+                </div>
+
+                <div class="recommendation-heading">
+
+                    <strong>
+                        {% trans "AI Recommendations" %}
+
+                        {% if ai_recommendations.source == "llm" %}
+
+                            <span class="recommendation-source recommendation-source--llm">
+                                {% trans "AI" %}
+                            </span>
+
+                        {% elif ai_recommendations.source == "fallback" %}
+
+                            <span class="recommendation-source recommendation-source--fallback">
+                                {% trans "Rule-based" %}
+                            </span>
+
+                        {% endif %}
+
+                    </strong>
+
+                    <span>
+                        {% trans "Executive actions derived from current campus intelligence" %}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div id="aiRecommendationList"
+                 class="recommendation-list">
+
+                {% if ai_recommendations.recommendations %}
+
+                    {% for recommendation in ai_recommendations.recommendations %}
+
+                    <div class="recommendation-card recommendation-card--{{ recommendation.priority|default:'medium' }}">
+
+                        <div class="recommendation-card__top">
+
+                            <div class="recommendation-card__priority">
+                                {{ recommendation.priority|default:"medium" }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="recommendation-card__title"
+                             title="{{ recommendation.title }}">
+
+                            {{ recommendation.title }}
+
+                        </div>
+
+
+                        <div class="recommendation-card__reason">
+
+                            {{ recommendation.evidence }}
+
+                        </div>
+
+
+                        <div class="recommendation-card__action">
+
+                            <strong>
+                                {% trans "Action:" %}
+                            </strong>
+
+                            {{ recommendation.action }}
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="recommendation-empty">
+
+                        🤖
+
+                        {% trans "No immediate executive recommendations are supported by the current dashboard data." %}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+{{ type_breakdown|json_script:"type-breakdown-data" }}
+{{ volume_trend|json_script:"volume-trend-data" }}
+{{ dept_performance|json_script:"department-performance-data" }}
+{{ academic_risk.by_batch|json_script:"academic-risk-data" }}
+{{ complaint_intel.categories|json_script:"complaint-category-data" }}
+{{ notice_intel.by_priority|json_script:"notice-priority-data" }}
+{{ ai_recommendations|json_script:"ai-recommendations-data" }}
+
+
+<script id="feedback-intelligence-data"
+        type="application/json">
+{
+    "positive": {{ feedback_intel.positive_pct|default:0 }},
+    "neutral": {{ feedback_intel.neutral_pct|default:0 }},
+    "negative": {{ feedback_intel.negative_pct|default:0 }}
+}
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+
+<script>
+
+const brand = '#8b1e2c';
+const gold = '#c9982a';
+const teal = '#0d5c63';
+const pink = '#db2777';
+const success = '#16a34a';
+const danger = '#dc2626';
+const purple = '#7c3aed';
+const blue = '#2563eb';
+
+
+/* =========================================================
+   AI RECOMMENDATIONS
+   ========================================================= */
+
+const aiRecommendationElement =
+    document.getElementById(
+        'ai-recommendations-data'
+    );
+
+const aiRecommendationList =
+    document.getElementById(
+        'aiRecommendationList'
+    );
+
+
+if (
+    aiRecommendationElement &&
+    aiRecommendationList
+) {
+
+    try {
+
+        const aiRecommendationPayload =
+            JSON.parse(
+                aiRecommendationElement.textContent
+            );
+
+        const aiRecommendations =
+            Array.isArray(
+                aiRecommendationPayload
+            )
+                ? aiRecommendationPayload
+                : (
+                    Array.isArray(
+                        aiRecommendationPayload.recommendations
+                    )
+                        ? aiRecommendationPayload.recommendations
+                        : []
+                );
+
+
+        if (
+            aiRecommendations.length
+        ) {
+
+            aiRecommendationList.innerHTML =
+                aiRecommendations
+                    .slice(0, 3)
+                    .map(
+                        recommendation => {
+
+                            const priority =
+                                String(
+                                    recommendation.priority ||
+                                    'medium'
+                                ).toLowerCase();
+
+                            const safePriority =
+                                [
+                                    'critical',
+                                    'high',
+                                    'medium',
+                                    'low'
+                                ].includes(priority)
+
+                                    ? priority
+
+                                    : 'medium';
+
+
+                            const title =
+                                String(
+                                    recommendation.title ||
+                                    'Executive recommendation'
+                                );
+
+                            const evidence =
+                                String(
+                                    recommendation.evidence ||
+                                    recommendation.reason ||
+                                    ''
+                                );
+
+                            const action =
+                                String(
+                                    recommendation.action ||
+                                    ''
+                                );
+
+
+                            return `
+
+                                <div class="recommendation-card recommendation-card--${safePriority}">
+
+                                    <div class="recommendation-card__top">
+
+                                        <div class="recommendation-card__priority">
+                                            ${safePriority}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="recommendation-card__title"
+                                         title="${title.replace(/"/g, '&quot;')}">
+
+                                        ${title}
+
+                                    </div>
+
+
+                                    <div class="recommendation-card__reason">
+
+                                        ${evidence}
+
+                                    </div>
+
+
+                                    <div class="recommendation-card__action">
+
+                                        <strong>
+                                            {% trans "Action:" %}
+                                        </strong>
+
+                                        ${action}
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        }
+                    )
+                    .join('');
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            'AI recommendation data could not be loaded.',
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   REQUESTS BY TYPE
+   ========================================================= */
+
+const typeData = JSON.parse(
+    document.getElementById('type-breakdown-data').textContent
+);
+
+
+const typeCanvas = document.getElementById('typeChart');
+
+
+if (typeCanvas && typeof Chart !== 'undefined') {
+
+    new Chart(typeCanvas, {
+
+        type: 'bar',
+
+        data: {
+
+            labels: typeData.map(t => t.label),
+
+            datasets: [{
+
+                data: typeData.map(t => t.count),
+
+                backgroundColor: [
+                    brand,
+                    gold,
+                    teal,
+                    pink,
+                    success,
+                    danger,
+                    purple,
+                    '#0891b2',
+                    '#64748b'
+                ],
+
+                borderRadius: 4,
+
+                borderSkipped: false
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            indexAxis: 'y',
+
+            animation: {
+                duration: 500
+            },
+
+            plugins: {
+
+                legend: {
+                    display: false
+                },
+
+                tooltip: {
+                    enabled: true
+                }
+
+            },
+
+            scales: {
+
+                x: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: 8
+                        },
+                        color: '#8b7553'
+                    },
+
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+
+                },
+
+                y: {
+
+                    ticks: {
+
+                        font: {
+                            size: 8
+                        },
+
+                        color: '#8b7553'
+
+                    },
+
+                    grid: {
+                        display: false
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   REQUEST VOLUME
+   ========================================================= */
+
+const trend = JSON.parse(
+    document.getElementById('volume-trend-data').textContent
+);
+
+
+const trendCanvas = document.getElementById('trendChart');
+
+
+if (trendCanvas && typeof Chart !== 'undefined') {
+
+    new Chart(trendCanvas, {
+
+        type: 'line',
+
+        data: {
+
+            labels: trend.map(t => t.date),
+
+            datasets: [
+
+                {
+
+                    label: '{% trans "Submitted" %}',
+
+                    data: trend.map(t => t.submitted),
+
+                    borderColor: brand,
+
+                    backgroundColor: 'rgba(139,30,44,0.08)',
+
+                    tension: 0.3,
+
+                    fill: true,
+
+                    pointRadius: 1.5,
+
+                    borderWidth: 2
+
+                },
+
+                {
+
+                    label: '{% trans "Resolved" %}',
+
+                    data: trend.map(t => t.resolved),
+
+                    borderColor: success,
+
+                    backgroundColor: 'rgba(22,163,74,0.08)',
+
+                    tension: 0.3,
+
+                    fill: true,
+
+                    pointRadius: 1.5,
+
+                    borderWidth: 2
+
+                },
+
+                {
+
+                    label: '{% trans "Approved" %}',
+
+                    data: trend.map(t => t.approved),
+
+                    borderColor: gold,
+
+                    tension: 0.3,
+
+                    pointRadius: 1.5,
+
+                    borderWidth: 2,
+
+                    borderDash: [4, 4]
+
+                },
+
+                {
+
+                    label: '{% trans "Rejected" %}',
+
+                    data: trend.map(t => t.rejected),
+
+                    borderColor: danger,
+
+                    tension: 0.3,
+
+                    pointRadius: 1.5,
+
+                    borderWidth: 2,
+
+                    borderDash: [4, 4]
+
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            animation: {
+                duration: 500
+            },
+
+            interaction: {
+
+                intersect: false,
+
+                mode: 'index'
+
+            },
+
+            plugins: {
+
+                legend: {
+
+                    position: 'bottom',
+
+                    labels: {
+
+                        font: {
+                            size: 7
+                        },
+
+                        boxWidth: 9,
+
+                        padding: 6
+
+                    }
+
+                },
+
+                tooltip: {
+                    enabled: true
+                }
+
+            },
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    ticks: {
+
+                        stepSize: 1,
+
+                        font: {
+                            size: 7
+                        },
+
+                        color: '#8b7553'
+
+                    },
+
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+
+                },
+
+                x: {
+
+                    ticks: {
+
+                        font: {
+                            size: 6
+                        },
+
+                        color: '#8b7553',
+
+                        maxRotation: 45,
+
+                        minRotation: 45,
+
+                        autoSkip: true,
+
+                        maxTicksLimit: 10
+
+                    },
+
+                    grid: {
+                        display: false
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   DEPARTMENT WORKLOAD
+   ========================================================= */
+
+const departmentData = JSON.parse(
+    document.getElementById(
+        'department-performance-data'
+    ).textContent
+);
+
+
+const departmentCanvas =
+    document.getElementById(
+        'departmentPerformanceChart'
+    );
+
+
+if (
+    departmentCanvas &&
+    typeof Chart !== 'undefined' &&
+    departmentData.length
+) {
+
+    const departmentPerformanceLabelPlugin = {
+
+        id: 'departmentPerformanceLabels',
+
+        afterDatasetsDraw(chart) {
+
+            const ctx = chart.ctx;
+
+            const totalMeta =
+                chart.getDatasetMeta(0);
+
+            ctx.save();
+
+            totalMeta.data.forEach((bar, index) => {
+
+                const row =
+                    departmentData[index];
+
+                const total =
+                    Number(row.total || 0);
+
+                const pending =
+                    Number(row.pending || 0);
+
+                const resolved =
+                    Number(row.resolved || 0);
+
+                const xScale =
+                    chart.scales.x;
+
+                ctx.font =
+                    '700 7px Arial';
+
+                ctx.textBaseline =
+                    'middle';
+
+                ctx.textAlign =
+                    'left';
+
+                ctx.fillStyle =
+                    '#6b5a45';
+
+                let x =
+                    xScale.getPixelForValue(
+                        Math.max(
+                            total,
+                            pending,
+                            resolved
+                        )
+                    ) + 4;
+
+                const rightLimit =
+                    chart.chartArea.right - 2;
+
+                if (
+                    x >
+                    rightLimit - 12
+                ) {
+                    x = rightLimit - 12;
+                }
+
+                ctx.fillText(
+                    String(total),
+                    x,
+                    bar.y
+                );
+
+            });
+
+            ctx.restore();
+
+        }
+
+    };
+
+
+    new Chart(
+        departmentCanvas,
+        {
+
+            type: 'bar',
+
+            data: {
+
+                labels:
+                    departmentData.map(
+                        d => d.display
+                    ),
+
+                datasets: [
+
+                    {
+
+                        label:
+                            '{% trans "Pending / In Progress" %}',
+
+                        data:
+                            departmentData.map(
+                                d =>
+                                    Number(
+                                        d.pending || 0
+                                    )
+                            ),
+
+                        backgroundColor:
+                            danger,
+
+                        borderColor:
+                            '#b91c1c',
+
+                        borderWidth: 1,
+
+                        borderRadius: 4,
+
+                        borderSkipped: false
+
+                    },
+
+                    {
+
+                        label:
+                            '{% trans "Resolved" %}',
+
+                        data:
+                            departmentData.map(
+                                d =>
+                                    Number(
+                                        d.resolved || 0
+                                    )
+                            ),
+
+                        backgroundColor:
+                            success,
+
+                        borderColor:
+                            '#15803d',
+
+                        borderWidth: 1,
+
+                        borderRadius: 4,
+
+                        borderSkipped: false
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                indexAxis: 'y',
+
+                animation: {
+                    duration: 500
+                },
+
+                interaction: {
+
+                    intersect: false,
+
+                    mode: 'index'
+
+                },
+
+                plugins: {
+
+                    legend: {
+
+                        position: 'bottom',
+
+                        labels: {
+
+                            font: {
+                                size: 7
+                            },
+
+                            boxWidth: 9,
+
+                            padding: 6
+
+                        }
+
+                    },
+
+                    tooltip: {
+
+                        enabled: true,
+
+                        callbacks: {
+
+                            title:
+                                function(context) {
+
+                                    return context[0]
+                                        .label;
+
+                                },
+
+                            label:
+                                function(context) {
+
+                                    return ' ' +
+                                        context.dataset.label +
+                                        ': ' +
+                                        context.parsed.x;
+
+                                },
+
+                            afterBody:
+                                function(context) {
+
+                                    const row =
+                                        departmentData[
+                                            context[0]
+                                                .dataIndex
+                                        ];
+
+                                    return [
+
+                                        ' Avg Resolution: ' +
+                                        row.avg_resolution +
+                                        'h',
+
+                                        ' SLA Compliance: ' +
+                                        row.sla_compliance +
+                                        '%'
+
+                                    ];
+
+                                }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+
+                        beginAtZero: true,
+
+                        ticks: {
+
+                            precision: 0,
+
+                            font: {
+                                size: 7
+                            },
+
+                            color: '#8b7553'
+
+                        },
+
+                        grid: {
+
+                            color:
+                                'rgba(0,0,0,0.05)'
+
+                        }
+
+                    },
+
+                    y: {
+
+                        ticks: {
+
+                            font: {
+
+                                size: 7,
+
+                                weight: '600'
+
+                            },
+
+                            color: '#8b7553',
+
+                            callback:
+                                function(
+                                    value
+                                ) {
+
+                                    const label =
+                                        this.getLabelForValue(
+                                            value
+                                        );
+
+                                    return label.length >
+                                        17
+
+                                        ? label.substring(
+                                            0,
+                                            17
+                                        ) + '…'
+
+                                        : label;
+
+                                }
+
+                        },
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   COMPLAINT INTELLIGENCE
+   ========================================================= */
+
+const complaintData = JSON.parse(
+    document.getElementById(
+        'complaint-category-data'
+    ).textContent
+);
+
+
+const complaintCanvas =
+    document.getElementById(
+        'complaintChart'
+    );
+
+
+if (
+    complaintCanvas &&
+    typeof Chart !== 'undefined' &&
+    complaintData.length
+) {
+
+    new Chart(
+        complaintCanvas,
+        {
+
+            type: 'bar',
+
+            data: {
+
+                labels:
+                    complaintData.map(
+                        item => item.name
+                    ),
+
+                datasets: [{
+
+                    label:
+                        '{% trans "Complaints" %}',
+
+                    data:
+                        complaintData.map(
+                            item =>
+                                Number(
+                                    item.count || 0
+                                )
+                        ),
+
+                    backgroundColor:
+                        brand,
+
+                    borderColor:
+                        '#741624',
+
+                    borderWidth: 1,
+
+                    borderRadius: 4,
+
+                    borderSkipped: false
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                indexAxis: 'y',
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+                        enabled: true
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+
+                        beginAtZero: true,
+
+                        ticks: {
+
+                            precision: 0,
+
+                            font: {
+                                size: 7
+                            },
+
+                            color: '#8b7553'
+
+                        },
+
+                        grid: {
+                            color:
+                                'rgba(0,0,0,0.05)'
+                        }
+
+                    },
+
+                    y: {
+
+                        ticks: {
+
+                            font: {
+                                size: 7
+                            },
+
+                            color: '#8b7553',
+
+                            callback:
+                                function(
+                                    value
+                                ) {
+
+                                    const label =
+                                        this.getLabelForValue(
+                                            value
+                                        );
+
+                                    return label.length >
+                                        18
+
+                                        ? label.substring(
+                                            0,
+                                            18
+                                        ) + '…'
+
+                                        : label;
+
+                                }
+
+                        },
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   NOTICE INTELLIGENCE
+   ========================================================= */
+
+const noticeData = JSON.parse(
+    document.getElementById(
+        'notice-priority-data'
+    ).textContent
+);
+
+
+const noticeCanvas =
+    document.getElementById(
+        'noticeChart'
+    );
+
+
+if (
+    noticeCanvas &&
+    typeof Chart !== 'undefined' &&
+    noticeData.length
+) {
+
+    new Chart(
+        noticeCanvas,
+        {
+
+            type: 'doughnut',
+
+            data: {
+
+                labels:
+                    noticeData.map(
+                        item =>
+                            String(
+                                item.priority
+                            ).charAt(0)
+                                .toUpperCase() +
+                            String(
+                                item.priority
+                            ).slice(1)
+                    ),
+
+                datasets: [{
+
+                    data:
+                        noticeData.map(
+                            item =>
+                                Number(
+                                    item.published || 0
+                                )
+                        ),
+
+                    backgroundColor: [
+
+                        danger,
+                        gold,
+                        success,
+                        teal,
+                        purple
+
+                    ],
+
+                    borderWidth: 2,
+
+                    borderColor:
+                        '#ffffff'
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: '58%',
+
+                plugins: {
+
+                    legend: {
+
+                        position: 'bottom',
+
+                        labels: {
+
+                            font: {
+                                size: 7
+                            },
+
+                            boxWidth: 8,
+
+                            padding: 5
+
+                        }
+
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label:
+                                function(
+                                    context
+                                ) {
+
+                                    return ' ' +
+                                        context.label +
+                                        ': ' +
+                                        context.parsed +
+                                        ' {% trans "notices" %}';
+
+                                }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   FEEDBACK INTELLIGENCE
+   ========================================================= */
+
+const feedbackData =
+    JSON.parse(
+        document.getElementById(
+            'feedback-intelligence-data'
+        ).textContent
+    );
+
+
+const feedbackCanvas =
+    document.getElementById(
+        'feedbackChart'
+    );
+
+
+if (
+    feedbackCanvas &&
+    typeof Chart !== 'undefined'
+) {
+
+    new Chart(
+        feedbackCanvas,
+        {
+
+            type: 'doughnut',
+
+            data: {
+
+                labels: [
+
+                    '{% trans "Positive" %}',
+
+                    '{% trans "Neutral" %}',
+
+                    '{% trans "Negative" %}'
+
+                ],
+
+                datasets: [{
+
+                    data: [
+
+                        Number(
+                            feedbackData.positive || 0
+                        ),
+
+                        Number(
+                            feedbackData.neutral || 0
+                        ),
+
+                        Number(
+                            feedbackData.negative || 0
+                        )
+
+                    ],
+
+                    backgroundColor: [
+
+                        success,
+                        gold,
+                        danger
+
+                    ],
+
+                    borderWidth: 2,
+
+                    borderColor:
+                        '#ffffff'
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                cutout: '58%',
+
+                plugins: {
+
+                    legend: {
+
+                        position: 'bottom',
+
+                        labels: {
+
+                            font: {
+                                size: 7
+                            },
+
+                            boxWidth: 8,
+
+                            padding: 5
+
+                        }
+
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label:
+                                function(
+                                    context
+                                ) {
+
+                                    return ' ' +
+                                        context.label +
+                                        ': ' +
+                                        context.parsed +
+                                        '%';
+
+                                }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   ACADEMIC RISK
+   ========================================================= */
+
+const academicRiskData = JSON.parse(
+    document.getElementById(
+        'academic-risk-data'
+    ).textContent
+);
+
+
+const academicRiskCanvas =
+    document.getElementById(
+        'academicRiskChart'
+    );
+
+
+if (
+    academicRiskCanvas &&
+    typeof Chart !== 'undefined'
+) {
+
+    const academicRiskLabelPlugin = {
+
+        id: 'academicRiskLabels',
+
+        afterDatasetsDraw(chart) {
+
+            const ctx =
+                chart.ctx;
+
+            const meta =
+                chart.getDatasetMeta(0);
+
+            ctx.save();
+
+            meta.data.forEach(
+                (bar, index) => {
+
+                    const value =
+                        chart.data.datasets[0]
+                            .data[index];
+
+                    ctx.fillStyle =
+                        '#6b5a45';
+
+                    ctx.font =
+                        '700 8px Arial';
+
+                    ctx.textAlign =
+                        'center';
+
+                    ctx.textBaseline =
+                        'bottom';
+
+                    const y =
+                        value === 0
+
+                            ? chart.scales.y
+                                .getPixelForValue(0) - 3
+
+                            : bar.y - 5;
+
+                    ctx.fillText(
+                        String(value),
+                        bar.x,
+                        y
+                    );
+
+                }
+            );
+
+            ctx.restore();
+
+        }
+
+    };
+
+
+    new Chart(
+        academicRiskCanvas,
+        {
+
+            type: 'bar',
+
+            data: {
+
+                labels:
+                    academicRiskData.map(
+                        item =>
+                            String(
+                                item.batch
+                            )
+                    ),
+
+                datasets: [{
+
+                    label:
+                        '{% trans "At-risk students" %}',
+
+                    data:
+                        academicRiskData.map(
+                            item =>
+                                Number(
+                                    item.at_risk || 0
+                                )
+                        ),
+
+                    backgroundColor:
+                        danger,
+
+                    borderColor:
+                        '#b91c1c',
+
+                    borderWidth: 1,
+
+                    borderRadius: 5,
+
+                    borderSkipped: false,
+
+                    barPercentage: 0.58,
+
+                    categoryPercentage: 0.72
+
+                }]
+
+            },
+
+            plugins: [
+                academicRiskLabelPlugin
+            ],
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                animation: {
+                    duration: 500
+                },
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    },
+
+                    tooltip: {
+
+                        enabled: true,
+
+                        callbacks: {
+
+                            label:
+                                function(
+                                    context
+                                ) {
+
+                                    return ' ' +
+                                        context.parsed.y +
+                                        ' {% trans "students at risk" %}';
+
+                                }
+
+                        }
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        suggestedMax:
+                            Math.max(
+                                5,
+
+                                ...academicRiskData.map(
+                                    item =>
+                                        Number(
+                                            item.at_risk || 0
+                                        )
+                                )
+                            ) + 1,
+
+                        ticks: {
+
+                            precision: 0,
+
+                            font: {
+                                size: 7
+                            },
+
+                            color: '#8b7553'
+
+                        },
+
+                        grid: {
+                            color:
+                                'rgba(0,0,0,0.05)'
+                        }
+
+                    },
+
+                    x: {
+
+                        ticks: {
+
+                            font: {
+
+                                size: 8,
+
+                                weight: '600'
+
+                            },
+
+                            color: '#8b7553'
+
+                        },
+
+                        grid: {
+                            display: false
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+</script>
+
+{% endblock %}

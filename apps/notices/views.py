@@ -3,19 +3,27 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 from apps.core.decorators import admin_required
+from apps.core.permissions import require_perm, Perm
 from apps.core.services import ConfigService
 from .models import Notice, NoticeReadStatus
 from .services import get_notices_for_student, mark_as_read
 from apps.core.constants import BATCH_YEARS, HOSTEL_BLOCKS
 
 
-@login_required
+@require_perm(Perm.VIEW_NOTICES)
 def notice_list(request):
-    """List notices visible to the current user."""
+    from apps.core.scoping import DataScope
+    from .relevance import annotate_notices_for_student
+
+    qs = DataScope.notice_queryset(request.user)
+
     if request.user.is_student():
-        notices = get_notices_for_student(request.user)
+        from .services import get_notices_for_student
+        raw = get_notices_for_student(request.user)
+        notices = annotate_notices_for_student(raw, request.user)
     else:
-        notices = Notice.objects.filter(is_published=True).order_by('-created_at')
+        notices = [{'notice': n, 'priority': n.ai_priority, 'reasons': [], 'score': 100}
+                   for n in qs.order_by('-created_at')]
 
     return render(request, 'notices/list.html', {'notices': notices})
 
@@ -37,7 +45,6 @@ def publish_notice(request):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         content = request.POST.get('content', '').strip()
-        priority = request.POST.get('priority', 'medium')
         target_dept = request.POST.get('target_department', '').strip()
         target_batch = request.POST.get('target_batch', '').strip()
         target_hostel = request.POST.get('target_hostel', '').strip()
@@ -59,7 +66,6 @@ def publish_notice(request):
             notice = Notice.objects.create(
                 title=title,
                 content=content,
-                ai_priority=priority,
                 target_audience=audience,
                 posted_by=request.user,
             )
@@ -72,43 +78,36 @@ def publish_notice(request):
                 save=True
             )
 
-            # Notify targeted students
-            try:
-                from apps.accounts.models import User
-                from apps.notifications.services import NotificationService
+            # Notify targeted students only
+            from apps.accounts.models import User
+            from apps.notifications.services import NotificationService
 
-                targeted = User.objects.filter(
-                    role='student',
-                    is_active=True,
+            targeted = User.objects.filter(
+                role='student',
+                is_active=True
+            )
+
+            aud = notice.target_audience or {}
+
+            if aud.get('department'):
+                targeted = targeted.filter(
+                    department=aud['department']
                 )
 
-                aud = notice.target_audience or {}
-
-                if aud.get('department'):
-                    targeted = targeted.filter(
-                        department=aud['department']
-                    )
-
-                if aud.get('batch_year'):
-                    targeted = targeted.filter(
-                        batch_year=aud['batch_year']
-                    )
-
-                if aud.get('hostel_block'):
-                    targeted = targeted.filter(
-                        hostel_block=aud['hostel_block']
-                    )
-
-                NotificationService.notify_notice_published(
-                    notice,
-                    list(targeted),
+            if aud.get('batch_year'):
+                targeted = targeted.filter(
+                    batch_year=aud['batch_year']
                 )
 
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).exception(
-                    f"Notice notify failed: {e}"
+            if aud.get('hostel_block'):
+                targeted = targeted.filter(
+                    hostel_block=aud['hostel_block']
                 )
+
+            NotificationService.notify_notice_published(
+                notice,
+                list(targeted)
+            )
 
             messages.success(
                 request,

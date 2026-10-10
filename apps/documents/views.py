@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.utils import timezone
 
 from apps.core.decorators import admin_required
+from apps.core.permissions import require_perm, require_any_perm, Perm
 from .models import DocumentTemplate, IssuedDocument
 from .services import DocumentService
 from .renderer import verify_signature
@@ -18,17 +19,14 @@ from .renderer import verify_signature
 # Student views
 # =====================================================================
 
-@login_required
+@require_any_perm(Perm.VIEW_OWN_DOCUMENTS, Perm.VIEW_DOCUMENT_VAULT)
 def my_documents(request):
-    """List documents issued to the current student."""
-    docs = IssuedDocument.objects.filter(
-        student=request.user, is_deleted=False
-    ).order_by('-issued_at')
-
+    from apps.core.scoping import DataScope
+    docs = DataScope.document_queryset(request.user).order_by('-issued_at')
     return render(request, 'documents/my_list.html', {'documents': docs})
 
 
-@login_required
+@require_perm(Perm.VIEW_OWN_DOCUMENTS)
 def document_download(request, pk):
     """Serve the PDF if user is owner or admin."""
     doc = get_object_or_404(IssuedDocument, pk=pk, is_deleted=False)
@@ -56,7 +54,7 @@ def document_download(request, pk):
     return response
 
 
-@login_required
+@require_perm(Perm.REQUEST_DOCUMENT)
 def request_document(request):
     """Student requests a new document."""
     if request.user.is_admin_role():
@@ -150,7 +148,7 @@ def verify_document(request, uuid):
 # Admin views
 # =====================================================================
 
-@admin_required
+@require_perm(Perm.VIEW_DOCUMENT_VAULT)
 def admin_documents_list(request):
     """Admin: view all issued documents."""
     qs = IssuedDocument.objects.filter(is_deleted=False).select_related(
@@ -177,7 +175,7 @@ def admin_documents_list(request):
     })
 
 
-@admin_required
+@require_perm(Perm.REVOKE_DOCUMENT)
 def admin_document_revoke(request, pk):
     doc = get_object_or_404(IssuedDocument, pk=pk)
     if request.method == 'POST':
@@ -187,7 +185,7 @@ def admin_document_revoke(request, pk):
     return redirect('documents:admin_list')
 
 
-@admin_required
+@require_perm(Perm.ISSUE_DOCUMENT)
 def admin_document_reissue(request, pk):
     doc = get_object_or_404(IssuedDocument, pk=pk)
     if request.method == 'POST':

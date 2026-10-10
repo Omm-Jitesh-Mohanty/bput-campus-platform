@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Today's Plan" %}{% endblock %}
+
+{% block content %}
+
+{% include 'partials/_page_header.html' with title="📅 Today's Plan" subtitle=plan.date %}
+
+<div class="card">
+    <h3>{% trans "Your Day" %}</h3>
+    {% for slot in plan.slots %}
+    <div style="display: flex; gap: var(--sp-3); padding: var(--sp-3); margin-bottom: var(--sp-2);
+         border-radius: var(--radius);
+         background: {% if slot.status == 'cancelled' %}#fef2f2{% elif slot.status == 'rescheduled' %}#fef3c7{% else %}#f8fafc{% endif %};">
+        <div style="font-weight: 600; min-width: 100px;">{{ slot.time }}</div>
+        <div style="flex: 1;">
+            <div style="display: flex; gap: var(--sp-2); align-items: center;">
+                <strong>{{ slot.subject }}</strong>
+                {% if slot.status == 'cancelled' %}
+                    <span class="badge badge-red">{% trans "Cancelled" %}</span>
+                {% elif slot.status == 'rescheduled' %}
+                    <span class="badge badge-yellow">{% trans "Rescheduled" %} → {{ slot.replacement_slot }}</span>
+                {% endif %}
+            </div>
+            <div class="text-xs text-muted">
+                {{ slot.faculty }}{% if slot.room %} · Room {{ slot.room }}{% endif %}
+            </div>
+            {% if slot.suggestion %}
+            <div style="margin-top: var(--sp-2); padding: var(--sp-2); background: rgba(30,64,175,0.05);
+                 border-left: 3px solid var(--brand-600); border-radius: 4px; font-size: var(--fs-sm);">
+                💡 {{ slot.suggestion }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">{% trans "No classes scheduled today." %}</p>
+    {% endfor %}
+</div>
+
+{% if plan.attendance_urgency %}
+<div class="card" style="border-left: 4px solid var(--warning-500);">
+    <h3>⚠️ {% trans "Attendance Needs Attention" %}</h3>
+    {% for u in plan.attendance_urgency %}
+    <div style="margin-top: var(--sp-3);">
+        <strong>{{ u.subject }}</strong> — {{ u.percentage }}%
+        <p class="text-sm text-muted">{{ u.message }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if plan.suggestions %}
+<div class="card" style="border-left: 4px solid var(--brand-600);">
+    <h3>💡 {% trans "Suggestions for Today" %}</h3>
+    <ul style="margin-top: var(--sp-3); padding-left: var(--sp-5);">
+        {% for s in plan.suggestions %}
+        <li style="margin-bottom: var(--sp-2);">{{ s }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% endblock %}

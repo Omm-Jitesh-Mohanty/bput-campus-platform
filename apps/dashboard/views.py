@@ -366,6 +366,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.core.cache import cache
 
+from apps.core.permissions import require_perm, Perm
+
 from apps.attendance.services import get_student_attendance_summary
 from apps.tickets.models import CampusTicket
 from apps.notices.services import get_notices_for_student
@@ -379,7 +381,7 @@ from .analytics.anomaly import detect_anomalies
 @login_required
 def student_home(request):
     """Student dashboard (already built in Step 5 — unchanged)."""
-    if request.user.is_admin_role():
+    if not request.user.is_student():
         return redirect('dashboard:admin_home')
 
     user = request.user
@@ -411,11 +413,13 @@ def student_home(request):
     })
 
 
-@login_required
+@require_perm(Perm.VIEW_ADMIN_DASHBOARD)
 def admin_home(request):
     """Full admin dashboard with KPIs, heatmap, charts, and insights."""
-    if not request.user.is_admin_role():
-        return redirect('dashboard:student_home')
+
+    from apps.core.scoping import DataScope
+
+    feedback_qs = DataScope.feedback_queryset(request.user)
 
     # ---- KPI tiles ----
     kpis = dash.get_ticket_kpis()
@@ -497,25 +501,32 @@ def admin_home(request):
         'active_alerts': active_alerts,
         'doc_count': doc_count,
         'doc_revoked': doc_revoked,
+        'feedback_qs': feedback_qs,
     })
 
 
-@login_required
+@require_perm(Perm.VIEW_ANALYTICS)
+def analytics_dashboard(request):
+    ...
+
+
+@require_perm(Perm.VIEW_ANALYTICS)
+def refresh_analytics(request):
+    ...
+
+
+@require_perm(Perm.VIEW_ADMIN_DASHBOARD)
 def refresh_feedback_ai(request):
     """Force regenerate the AI feedback insight (bypasses cache)."""
-    if not request.user.is_admin_role():
-        return redirect('dashboard:student_home')
 
     cache.delete('feedback_ai_insight_v1')
 
     return redirect('dashboard:admin_home')
 
 
-@login_required
+@require_perm(Perm.VIEW_ADMIN_DASHBOARD)
 def ageing_detail(request, bucket):
     """Show all open tickets in a specific ageing bucket."""
-    if not request.user.is_admin_role():
-        return redirect('dashboard:student_home')
 
     if bucket not in [
         'fresh',

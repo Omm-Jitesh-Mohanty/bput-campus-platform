@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "My Students" %}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div style="margin-bottom: var(--sp-6);">
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--sp-4);
+            flex-wrap: wrap;
+        ">
+            <div>
+                <h1>👥 {% trans "My Students" %}</h1>
+
+                <p class="text-muted">
+                    {% trans "Students in your department" %}
+                    {% if user.department %}
+                        · {{ user.department }}
+                    {% endif %}
+                </p>
+            </div>
+
+            <a href="{% url 'teachers:dashboard' %}" class="btn btn-secondary">
+                ← {% trans "Dashboard" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--sp-3);
+            flex-wrap: wrap;
+            margin-bottom: var(--sp-4);
+        ">
+            <h2 style="margin: 0;">
+                {% trans "Student List" %}
+            </h2>
+
+            <span class="badge badge-blue">
+                {{ students|length }} {% trans "Students" %}
+            </span>
+        </div>
+
+        {% if students %}
+
+            <div style="overflow-x: auto;">
+
+                <table class="data-table">
+
+                    <thead>
+                        <tr>
+                            <th>{% trans "Roll No" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Department" %}</th>
+                            <th>{% trans "Batch" %}</th>
+                            <th>{% trans "Hostel" %}</th>
+                            <th>{% trans "Room" %}</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for student in students %}
+
+                            <tr>
+
+                                <td>
+                                    <strong>{{ student.username }}</strong>
+                                </td>
+
+                                <td>
+                                    {{ student.get_full_name|default:student.username }}
+                                </td>
+
+                                <td>
+                                    {{ student.department|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ student.batch_year|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ student.hostel_block|default:"—" }}
+                                </td>
+
+                                <td>
+                                    {{ student.room_number|default:"—" }}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div style="
+                text-align: center;
+                padding: var(--sp-10);
+            ">
+                <div style="font-size: 48px; margin-bottom: var(--sp-3);">
+                    👥
+                </div>
+
+                <h3>
+                    {% trans "No students found" %}
+                </h3>
+
+                <p class="text-muted">
+                    {% trans "There are currently no students in your department." %}
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

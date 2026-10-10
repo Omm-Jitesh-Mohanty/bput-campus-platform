@@ -78,9 +78,43 @@ def get_initials(user):
         return ''.join(p[0].upper() for p in parts[:2])
     return user.username[:2].upper()
 
+
 @register.filter
 def get_item(dictionary, key):
     """Get dict value by key in templates."""
     if dictionary is None:
         return None
     return dictionary.get(key)
+
+
+@register.filter
+def can(user, permission):
+    """
+    Usage in templates:
+        {% load campus_extras %}
+        {% if user|can:"manage_slas" %}...{% endif %}
+    """
+    from apps.core.permissions import has_perm
+    return has_perm(user, permission)
+
+
+@register.filter
+def can_any(user, permissions_csv):
+    """
+    Usage:
+        {% if user|can_any:"manage_slas,manage_workflows" %}
+    """
+    from apps.core.permissions import has_any_perm
+    perms = [
+        p.strip()
+        for p in permissions_csv.split(',')
+        if p.strip()
+    ]
+    return has_any_perm(user, *perms)
+
+
+@register.simple_tag
+def has_perm_tag(user, permission):
+    """Usage: {% has_perm_tag user 'manage_slas' as can_manage %}"""
+    from apps.core.permissions import has_perm
+    return has_perm(user, permission)

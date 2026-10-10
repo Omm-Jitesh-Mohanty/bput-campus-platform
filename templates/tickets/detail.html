@@ -37,6 +37,14 @@
                 {{ ticket.subject }}
             </h1>
 
+            {% if user.role in "principal director chairman" %}
+            <div style="margin-top: 12px;">
+                <a href="{% url 'manage_panel:audit_timeline' 'tickets' ticket.id %}" class="btn btn-secondary btn-sm">
+                    🕒 {% trans "Audit Timeline" %}
+                </a>
+            </div>
+            {% endif %}
+
             {% if user.is_admin_role and ticket.status != 'resolved' %}
             <div style="display: flex; gap: 8px; margin-top: 12px;">
 
@@ -65,25 +73,63 @@
     </div>
 </div>
 
+<!-- ===== Approval Action Banner ===== -->
+
+{% if can_act and current_step %}
+<div class="card" style="background: #eff6ff; border-left: 4px solid #1e40af;">
+    <h3>⚡ {% trans "Action Required" %}</h3>
+
+    <p>
+        <strong>{% trans "Step" %}:</strong>
+        {{ current_step.workflow_step.name }}
+    </p>
+
+    {% if current_step.workflow_step.instructions %}
+        <p class="text-muted">
+            {{ current_step.workflow_step.instructions }}
+        </p>
+    {% endif %}
+
+    <a href="{% url 'tickets:admin_resolve' ticket.id %}"
+       class="btn btn-success"
+       style="margin-top: var(--sp-2);">
+        ✅ {% trans "Take Action" %}
+    </a>
+</div>
+
+{% elif current_step %}
+
+<div class="card" style="background: #fef3c7; border-left: 4px solid #f59e0b;">
+    <p class="text-muted">
+        {% trans "Awaiting action from" %}:
+        <strong>
+            {% if current_step.workflow_step.specific_user %}
+                {{ current_step.workflow_step.specific_user.get_full_name }}
+            {% else %}
+                {{ current_step.workflow_step.role_required|title }}
+            {% endif %}
+        </strong>
+    </p>
+</div>
+
+{% endif %}
+
 <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
 
-<h4 style="margin-bottom: 8px;">
-    {% trans "Your description" %}
-</h4>
+{# Raw description visible only to the student who wrote it #}
+{% if user.is_student and ticket.student == user %}
+<h4 style="margin-bottom: 8px;">{% trans "Your description" %}</h4>
+<p style="background: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap;">{{ ticket.raw_input }}</p>
+{% endif %}
 
-<p style="background: #f8fafc; padding: 12px; border-radius: 6px; white-space: pre-wrap;">
-    {{ ticket.raw_input }}
-</p>
-
+{# AI-formatted application — visible to everyone #}
 {% if ticket.formatted_body %}
-    <h4 style="margin-top: 20px; margin-bottom: 8px;">
-        ✨ {% trans "AI-Formatted Application" %}
-    </h4>
-
-    <p style="background: #eff6ff; padding: 12px; border-radius: 6px;
-              border-left: 4px solid #1e40af; white-space: pre-wrap;">
-        {{ ticket.formatted_body }}
-    </p>
+<h4 style="margin-top: {% if user.is_student and ticket.student == user %}20px{% else %}0{% endif %}; margin-bottom: 8px;">
+    ✨ {% trans "Formal Application" %}
+</h4>
+<p style="background: #eff6ff; padding: 12px; border-radius: 6px;
+          border-left: 4px solid var(--brand-500); white-space: pre-wrap;
+          font-family: var(--font-serif); font-size: 15px;">{{ ticket.formatted_body }}</p>
 {% endif %}
 
 {% if ticket.attachment %}
@@ -171,6 +217,46 @@
 </div>
 {% endif %}
 
+{% if ticket.ai_metadata.signatures %}
+<div class="card" style="border-left: 4px solid var(--gold-500);">
+    <h3 style="margin: 0 0 var(--sp-3) 0;">✍️ {% trans "Digital Signatures" %}</h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-3);">
+        {% for sig in ticket.ai_metadata.signatures %}
+        <div style="padding: var(--sp-3); background: var(--gold-50);
+             border: 1px solid var(--gold-400); border-radius: var(--radius-md);
+             display: flex; gap: var(--sp-3); align-items: flex-start;">
+
+            {% if sig.qr_b64 %}
+            <img src="data:image/png;base64,{{ sig.qr_b64 }}"
+                 alt="Verification QR" style="width: 80px; height: 80px; border-radius: 6px; background: white; padding: 4px;">
+            {% endif %}
+
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600; font-family: var(--font-serif); color: var(--brand-600); font-size: var(--fs-sm);">
+                    {{ sig.step_name }}
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px;">
+                    {{ sig.signed_by_name }} · {{ sig.signed_by_role }}
+                </div>
+                <div style="font-size: var(--fs-xs); color: var(--text-muted);">
+                    {{ sig.signed_at|slice:":16" }}
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 10px;
+                     color: var(--brand-700); margin-top: 6px; word-break: break-all;">
+                    🔐 {{ sig.signature_short }}
+                </div>
+                <a href="{{ sig.verify_url }}" target="_blank"
+                   style="font-size: var(--fs-xs); margin-top: 4px; display: inline-block;">
+                    🔍 {% trans "Verify" %} →
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <!-- ===== Confirmation prompt (if awaiting) ===== -->
 
 {% if ticket.is_awaiting_confirmation and user.is_student %}
@@ -186,7 +272,7 @@
     </p>
 
     <form method="post"
-          action="{% url 'tickets:confirm' ticket.id %}"
+          action="{% url 'tickets:confirm_resolution' ticket.id %}"
           style="display: flex; gap: 12px;">
 
         {% csrf_token %}

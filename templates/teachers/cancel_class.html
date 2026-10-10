@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Cancel Class" %}{% endblock %}
+
+{% block content %}
+<div class="container-narrow" style="max-width: 600px; margin: 0 auto;">
+
+<h1>❌ {% trans "Cancel Class" %}</h1>
+<p class="text-muted">
+    {{ timetable.subject_name }} ({{ timetable.subject_code }}) · {{ timetable.time_slot }}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="form-group">
+            <label>{% trans "Date" %}</label>
+            <input type="date" name="date" value="{% now 'Y-m-d' %}" required>
+        </div>
+
+        <div class="form-group">
+            <label>{% trans "Reason" %}</label>
+            <input type="text" name="reason" placeholder="e.g., Faculty on leave"
+                   maxlength="200">
+        </div>
+
+        <div class="form-group">
+            <label>{% trans "Replacement Slot (optional)" %}</label>
+            <input type="text" name="replacement_slot" placeholder="e.g., 14:00-15:00 tomorrow">
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-danger btn-lg" style="width: 100%;">
+        ❌ {% trans "Cancel Class & Notify Students" %}
+    </button>
+</form>
+
+{% if existing %}
+<div class="card" style="margin-top: var(--sp-4);">
+    <h3>{% trans "Recent Cancellations" %}</h3>
+    {% for c in existing %}
+    <div class="text-sm" style="padding: var(--sp-2); border-bottom: 1px solid var(--border-subtle);">
+        <strong>{{ c.date }}</strong> — {{ c.reason|default:"Cancelled" }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

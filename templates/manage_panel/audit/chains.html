@@ -1,0 +1,119 @@
+{% extends 'manage_panel/base_manage.html' %}
+{% load i18n %}
+
+{% block manage_heading %}📋 {% trans "Request Audit Chains" %}{% endblock %}
+{% block manage_subtitle %}
+    {% trans "Every request, tracked end-to-end. Click any chain to view full details." %}
+{% endblock %}
+
+{% block manage_content %}
+
+<div style="display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5);">
+    <a href="?days=7" class="btn btn-sm {% if days == 7 %}btn-primary{% else %}btn-secondary{% endif %}">7 {% trans "days" %}</a>
+    <a href="?days=30" class="btn btn-sm {% if days == 30 %}btn-primary{% else %}btn-secondary{% endif %}">30 {% trans "days" %}</a>
+    <a href="?days=90" class="btn btn-sm {% if days == 90 %}btn-primary{% else %}btn-secondary{% endif %}">90 {% trans "days" %}</a>
+</div>
+
+{% for chain in chains %}
+<div class="card" style="padding: var(--sp-5); margin-bottom: var(--sp-3);">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--sp-4);">
+        <div>
+            <div style="display: flex; gap: var(--sp-2); align-items: baseline; flex-wrap: wrap;">
+                <a href="{% url 'tickets:detail' chain.ticket.id %}"
+                   style="font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 600; color: var(--brand-600);">
+                    {{ chain.ticket.subject }}
+                </a>
+                <span class="badge badge-gray">#{{ chain.ticket.id }}</span>
+            </div>
+            <div class="text-sm text-muted" style="margin-top: 4px;">
+                {{ chain.ticket.student.get_full_name|default:chain.ticket.student.username }}
+                · {{ chain.ticket.student.department }}
+                {% if chain.ticket.student.hostel_block and chain.ticket.student.hostel_block != 'DAY' %}
+                    · {{ chain.ticket.student.hostel_block }}-{{ chain.ticket.student.room_number }}
+                {% endif %}
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em;">
+                {% trans "Total time" %}
+            </div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--gold-600); font-family: var(--font-serif);">
+                {{ chain.duration }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chain of events -->
+    <div style="display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: var(--sp-3) 0;">
+
+        {% for event in chain.events %}
+        <div style="display: flex; align-items: center; flex-shrink: 0;">
+
+            <!-- Event node -->
+            <div style="text-align: center; min-width: 160px; padding: 0 var(--sp-3);">
+                <div style="width: 44px; height: 44px; border-radius: 50%;
+                     background: {{ event.color }}15;
+                     border: 2px solid {{ event.color }};
+                     display: flex; align-items: center; justify-content: center;
+                     font-size: 18px; margin: 0 auto var(--sp-2);">
+                    {{ event.icon }}
+                </div>
+                <div style="font-size: var(--fs-xs); font-weight: 600; color: var(--text-primary); line-height: 1.3;">
+                    {{ event.label|truncatechars:28 }}
+                </div>
+                {% if event.actor %}
+                <div class="text-xs text-muted" style="margin-top: 2px;">
+                    {{ event.actor.get_short_name|default:event.actor.username }}
+                </div>
+                {% endif %}
+                <div class="text-xs text-muted" style="margin-top: 2px;">
+                    {{ event.timestamp|date:"d M H:i" }}
+                </div>
+            </div>
+
+            <!-- Arrow (between nodes, not after last) -->
+            {% if not forloop.last %}
+            <div style="color: var(--gold-400); font-size: 24px; padding: 0 var(--sp-2); align-self: center;">
+                →
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Optional comment preview -->
+    <!-- Optional comment preview -->
+    {% for event in chain.events %}
+        {% if event.comment %}
+        <div style="margin-top: var(--sp-3); padding: var(--sp-3);
+            background: var(--bg-muted); border-radius: var(--radius);
+            border-left: 3px solid {{ event.color }};">
+            <div class="text-xs text-muted" style="text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                {% if event.actor %}
+                    {{ event.actor.get_short_name|default:event.actor.username }}
+                {% else %}
+                    System
+                {% endif %}
+            </div>
+
+            <div style="font-size: var(--fs-sm); margin-top: 4px; color: var(--text-primary);">
+                {{ event.comment }}
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+</div>
+{% endfor %}
+
+{% if not chains %}
+<div class="card" style="text-align: center; padding: var(--sp-16);">
+    <div style="font-size: 56px;">📭</div>
+    <h3 style="margin-top: var(--sp-3);">{% trans "No requests in this period" %}</h3>
+</div>
+{% endif %}
+
+{% endblock %}

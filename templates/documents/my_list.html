@@ -9,38 +9,77 @@
 {% if documents %}
     {% for doc in documents %}
     <div class="card fade-in" style="display: flex; justify-content: space-between; align-items: center; gap: var(--sp-4);">
+
         <div style="flex: 1;">
+
             <div style="display: flex; gap: var(--sp-2); margin-bottom: var(--sp-1); flex-wrap: wrap;">
-                <span class="badge badge-blue">{{ doc.get_doc_type_display }}</span>
+
+                <span class="badge badge-blue">
+                    {{ doc.get_doc_type_display }}
+                </span>
+
                 {% if doc.is_revoked %}
-                    <span class="badge badge-red">{% trans "Revoked" %}</span>
+                    <span class="badge badge-red">
+                        {% trans "Revoked" %}
+                    </span>
                 {% elif doc.render_status == 'ready' %}
-                    <span class="badge badge-green">{% trans "Ready" %}</span>
+                    <span class="badge badge-green">
+                        {% trans "Ready" %}
+                    </span>
                 {% elif doc.render_status == 'generating' %}
-                    <span class="badge badge-yellow">{% trans "Generating" %}</span>
+                    <span class="badge badge-yellow">
+                        {% trans "Generating" %}
+                    </span>
                 {% else %}
-                    <span class="badge badge-gray">{{ doc.render_status }}</span>
+                    <span class="badge badge-gray">
+                        {{ doc.render_status }}
+                    </span>
                 {% endif %}
+
             </div>
-            <h3 style="margin: 0; font-size: var(--fs-base);">{{ doc.title }}</h3>
+
+            <h3 style="margin: 0; font-size: var(--fs-base);">
+                {{ doc.title }}
+            </h3>
+
             <p style="font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px;">
                 {% trans "Issued" %}: {{ doc.issued_at|date:"d M Y, H:i" }}
                 · ID: {{ doc.verification_uuid|slice:":8" }}…
             </p>
+
+            {% if doc.signature_hash %}
+                <div class="text-xs text-muted" style="margin-top: 4px;">
+                    🔐 {% trans "Signature" %}:
+                    <code>{{ doc.signature_hash|slice:":16" }}...</code>
+                </div>
+            {% endif %}
+
         </div>
+
         <div style="display: flex; gap: var(--sp-2);">
+
             {% if doc.is_downloadable %}
-                <a href="{% url 'documents:download' doc.id %}" class="btn" target="_blank">
+                <a href="{% url 'documents:download' doc.id %}"
+                   class="btn"
+                   target="_blank">
                     ⬇ {% trans "Download" %}
                 </a>
             {% endif %}
-            <a href="/verify/{{ doc.verification_uuid }}/" class="btn btn-secondary" target="_blank">
+
+            <a href="/verify/{{ doc.verification_uuid }}/"
+               class="btn btn-secondary"
+               target="_blank">
                 🔍 {% trans "Verify" %}
             </a>
+
         </div>
+
     </div>
     {% endfor %}
+
 {% else %}
+
     {% include 'partials/_empty.html' with icon="📄" title="No documents yet" message="Request your first document and we'll generate it automatically." action_url="/documents/request/" action_label="Request Document" %}
+
 {% endif %}
 {% endblock %}
