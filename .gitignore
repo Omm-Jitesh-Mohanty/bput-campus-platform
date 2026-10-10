@@ -72,3 +72,5 @@ tmp/
 htmlcov/
 backups/
 *.sqlite3.backup
+
+twilio_test.py
